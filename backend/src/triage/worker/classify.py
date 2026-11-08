@@ -3,6 +3,7 @@
 from sqlalchemy import select
 
 from triage.core import clock
+from triage.core.activity import note, step
 from triage.core.logging import radarr_id_var
 from triage.core.settings import same_folder
 from triage.domain import arrivals
@@ -33,6 +34,13 @@ def new_decision(radarr_id: int, source: str, result: Classification, from_folde
     )
 
 
+def record_decision(decision: Decision, result: Classification) -> None:
+    """The last step of an analysis, for the live activity view."""
+    with step("decision") as deciding:
+        deciding.detail = result.top.name if result.top else None
+    note(outcome=decision.status, decision_id=decision.id)
+
+
 async def classify_job(ctx: JobContext, item: WorkItem) -> None:
     arrival = await ctx.db.get(Arrival, item.ref["arrival_id"])
     if arrival is None or arrival.closed_at is not None:
@@ -44,12 +52,18 @@ async def classify_job(ctx: JobContext, item: WorkItem) -> None:
     if already is not None:
         return  # idempotent: one decision per arrival
     assert ctx.adapters.radarr is not None
-    movie = await ctx.adapters.radarr.movie(arrival.radarr_id)
+    note(radarr_id=arrival.radarr_id)
+    with step("radarr") as reading:
+        movie = await ctx.adapters.radarr.movie(arrival.radarr_id)
+        reading.detail = movie.title if movie else None
     if movie is None:
+        note(outcome="removed_from_radarr")
         await arrivals.close(ctx.db, arrival, "removed_from_radarr")
         return
+    note(title=movie.title)
     if not same_folder(movie.root_folder_path, arrival.intake_path):
         await arrivals.close(ctx.db, arrival, "moved_elsewhere")
+        note(outcome="moved_elsewhere")
         return
     ref = await arrivals.upsert_movie(ctx.db, movie)
 
@@ -68,5 +82,6 @@ async def classify_job(ctx: JobContext, item: WorkItem) -> None:
         decision.status = d.HELD
     ctx.db.add(decision)
     await ctx.db.flush()
+    record_decision(decision, result)
     if decision.status == d.MOVING:
         await queue.enqueue(ctx.db, "move", {"decision_id": decision.id})

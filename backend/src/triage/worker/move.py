@@ -1,6 +1,7 @@
 """Move a movie through Radarr's editor and confirm it before calling it done (research R2)."""
 
 from triage.core import clock
+from triage.core.activity import note, step
 from triage.core.logging import decision_id_var, radarr_id_var
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import arrivals, audit
@@ -21,7 +22,10 @@ async def move_job(ctx: JobContext, item: WorkItem) -> None:
     target = normalize_folder(decision.target_root_folder)
     arrival = await ctx.db.get(Arrival, decision.arrival_id) if decision.arrival_id else None
 
+    note(radarr_id=decision.radarr_id, decision_id=decision.id)
     movie = await radarr.movie(decision.radarr_id)
+    if movie is not None:
+        note(title=movie.title)
     if movie is None:
         await d.transition(ctx.db, decision, d.SUPERSEDED)
         if arrival is not None:
@@ -35,12 +39,15 @@ async def move_job(ctx: JobContext, item: WorkItem) -> None:
             if arrival is not None:
                 await arrivals.close(ctx.db, arrival, "moved_elsewhere")
             return
-        await radarr.move(movie.id, target)
-        after = await radarr.movie(movie.id)
-        if after is None or not same_folder(after.root_folder_path, target):
-            raise JobError("Radarr did not move the movie to the target folder", retryable=True)
+        with step("radarr_move", target):
+            await radarr.move(movie.id, target)
+        with step("verify"):
+            after = await radarr.movie(movie.id)
+            if after is None or not same_folder(after.root_folder_path, target):
+                raise JobError("Radarr did not move the movie to the target folder", retryable=True)
 
     await d.transition(ctx.db, decision, d.MOVED)
+    note(outcome=d.MOVED)
     decision.error = None
     ref = await ctx.db.get(MovieRef, movie.id)
     if ref is not None:

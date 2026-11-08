@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from triage.adapters.types import ServiceError
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
+from triage.core.activity import Entry
 from triage.core.errors import NotFound
 from triage.domain import decisions as d
 from triage.domain.categories import active
@@ -107,3 +108,58 @@ async def retry(item_id: int, db: Db, state: State) -> None:
         await d.transition(db, decision, d.MOVING)  # the move is being tried again
     await db.commit()
     state.worker.wake()
+
+
+class StepOut(BaseModel):
+    name: str
+    state: str
+    detail: str | None
+    ms: int | None
+
+
+class EntryOut(BaseModel):
+    id: int
+    kind: str
+    title: str | None
+    radarr_id: int | None
+    started_at: datetime
+    finished_at: datetime | None
+    outcome: str | None
+    decision_id: int | None
+    error: str | None
+    retry: bool
+    steps: list[StepOut]
+
+
+class RunOut(BaseModel):
+    started_at: datetime
+    finished_at: datetime | None
+    done: int
+    failed: int
+    pending: int
+
+
+class ActivityOut(BaseModel):
+    running: EntryOut | None
+    run: RunOut | None
+    recent: list[EntryOut]
+
+
+def _entry(entry: Entry) -> EntryOut:
+    return EntryOut(
+        **{k: v for k, v in entry.__dict__.items() if k != "steps"},
+        steps=[StepOut(**s.__dict__) for s in entry.steps],
+    )
+
+
+@router.get("/activity", response_model=ActivityOut)
+async def activity(db: Db, state: State) -> ActivityOut:
+    """What the worker is doing now, how far the current run is, and the last jobs with their steps."""
+    tracker = state.worker.activity
+    pending = (await queue.counts(db)).get(queue.PENDING, 0)
+    run = tracker.run
+    return ActivityOut(
+        running=_entry(tracker.current) if tracker.current else None,
+        run=RunOut(**run.__dict__, pending=pending) if run else None,
+        recent=[_entry(e) for e in tracker.recent],
+    )

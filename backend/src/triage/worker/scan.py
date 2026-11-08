@@ -3,6 +3,7 @@
 from sqlalchemy import select
 
 from triage.core import clock
+from triage.core.activity import note, step
 from triage.core.logging import radarr_id_var
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import decisions as d
@@ -10,7 +11,7 @@ from triage.domain.arrivals import upsert_movie
 from triage.domain.classify import classify_movie
 from triage.models import Decision, Scan, WorkItem
 from triage.worker import queue
-from triage.worker.classify import new_decision
+from triage.worker.classify import new_decision, record_decision
 from triage.worker.runner import JobContext
 
 RUNNING = "running"
@@ -44,7 +45,12 @@ async def scan_movie_job(ctx: JobContext, item: WorkItem) -> None:
     radarr_id = item.ref["radarr_id"]
     radarr_id_var.set(radarr_id)
     assert ctx.adapters.radarr is not None
-    movie = await ctx.adapters.radarr.movie(radarr_id)
+    note(radarr_id=radarr_id)
+    with step("radarr") as reading:
+        movie = await ctx.adapters.radarr.movie(radarr_id)
+        reading.detail = movie.title if movie else None
+    if movie is not None:
+        note(title=movie.title)
     pending = await ctx.db.scalar(
         select(Decision.id).where(Decision.radarr_id == radarr_id, Decision.status.in_(list(d.OPEN))).limit(1)
     )
@@ -60,6 +66,8 @@ async def scan_movie_job(ctx: JobContext, item: WorkItem) -> None:
         else:
             decision.status = d.HELD
         ctx.db.add(decision)
+        await ctx.db.flush()
+        record_decision(decision, result)
     scan.done += 1
     if scan.done >= scan.total:
         scan.state = DONE

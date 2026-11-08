@@ -80,6 +80,17 @@
   border-color: var(--c);
 }
 
+html {
+  /* a compact scale: every size is in rem, so this shrinks the whole interface evenly */
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+}
+
 html,
 body,
 #root {

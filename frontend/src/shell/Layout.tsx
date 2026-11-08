@@ -5,6 +5,7 @@ import {
   History,
   Inbox,
   LayoutDashboard,
+  ListTree,
   LogOut,
   Moon,
   Settings,
@@ -14,6 +15,7 @@ import {
 import { NavLink, Outlet } from 'react-router'
 import { api } from '../api/client'
 import { cx } from '../design-system'
+import { ActivityIndicator } from '../features/activity/ActivityIndicator'
 import { type Locale, useLocale, useT } from '../i18n'
 import { useTheme } from './theme'
 
@@ -24,6 +26,7 @@ const NAV = [
   { to: '/review', key: 'nav.review', icon: Inbox, mobile: true, badge: true },
   { to: '/history', key: 'nav.history', icon: History, mobile: true },
   { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: false },
+  { to: '/activity', key: 'nav.activity', icon: ListTree, mobile: false },
   { to: '/categories', key: 'nav.categories', icon: Shapes, mobile: true },
   { to: '/status', key: 'nav.status', icon: Activity, mobile: false },
   { to: '/settings', key: 'nav.settings', icon: Settings, mobile: true },
@@ -93,6 +96,9 @@ export function Layout() {
         <nav aria-label={t('nav.main')} className="flex flex-col gap-1">
           {NAV.map((item) => link(item))}
         </nav>
+        <div className="mt-3">
+          <ActivityIndicator />
+        </div>
         <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
           <label className="flex items-center justify-between text-sm text-muted">
             {t('nav.language')}
@@ -132,6 +138,7 @@ export function Layout() {
         <Outlet />
       </main>
 
+      <ActivityIndicator floating />
       <nav
         aria-label={t('nav.main')}
         className="fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"

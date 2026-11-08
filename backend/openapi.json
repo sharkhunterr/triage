@@ -1,6 +1,44 @@
 {
   "components": {
     "schemas": {
+      "ActivityOut": {
+        "properties": {
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/EntryOut"
+            },
+            "title": "Recent",
+            "type": "array"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "running": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "running",
+          "run",
+          "recent"
+        ],
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "Applied": {
         "properties": {
           "applied": {
@@ -898,6 +936,116 @@
         "title": "DecisionSummary",
         "type": "object"
       },
+      "EntryOut": {
+        "properties": {
+          "decision_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "radarr_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Radarr Id"
+          },
+          "retry": {
+            "title": "Retry",
+            "type": "boolean"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepOut"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "radarr_id",
+          "started_at",
+          "finished_at",
+          "outcome",
+          "decision_id",
+          "error",
+          "retry",
+          "steps"
+        ],
+        "title": "EntryOut",
+        "type": "object"
+      },
       "FailedItem": {
         "properties": {
           "attempts": {
@@ -1350,6 +1498,48 @@
         "title": "RuleOut",
         "type": "object"
       },
+      "RunOut": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "integer"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "started_at",
+          "finished_at",
+          "done",
+          "failed",
+          "pending"
+        ],
+        "title": "RunOut",
+        "type": "object"
+      },
       "ScanIn": {
         "properties": {
           "root_folder_path": {
@@ -1576,6 +1766,48 @@
         "title": "StatusOut",
         "type": "object"
       },
+      "StepOut": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ms"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "state",
+          "detail",
+          "ms"
+        ],
+        "title": "StepOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -1637,6 +1869,28 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/activity": {
+      "get": {
+        "description": "What the worker is doing now, how far the current run is, and the last jobs with their steps.",
+        "operationId": "activity_api_v1_activity_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Activity",
+        "tags": [
+          "status"
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "login_api_v1_auth_login_post",

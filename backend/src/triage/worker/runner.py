@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from triage.adapters.factory import AdapterFactory
 from triage.adapters.types import Adapters, ServiceError
 from triage.core import clock
+from triage.core.activity import Activity, current_entry
 from triage.core.logging import work_item_id_var
 from triage.core.settings import AppSettings, load_settings
 from triage.models import WorkItem
@@ -56,6 +57,7 @@ class Worker:
         self.give_up = give_up or {}
         self._poll = poll
         self._after_drain = after_drain
+        self.activity = Activity()
         self._wake = asyncio.Event()
         self._stop = asyncio.Event()
         self._task: asyncio.Task[None] | None = None
@@ -116,6 +118,7 @@ class Worker:
                 item = await queue.claim_next(db)
                 await db.commit()
             if item is None:
+                self.activity.idle()
                 return processed
             await self._process(item.id)
             processed += 1
@@ -129,12 +132,15 @@ class Worker:
                 assert item is not None
                 settings = await load_settings(db)
                 handler = self.handlers.get(item.kind)
+                entry = self.activity.start(item_id, item.kind)
+                entry_token = current_entry.set(entry)
                 try:
                     if handler is None:
                         raise JobError(f"no handler for {item.kind}")
                     await handler(JobContext(db, settings, self.adapter_factory(settings)), item)
                     await queue.complete(db, item)
                     await db.commit()
+                    self.activity.finish(entry)
                 except (ServiceError, JobError) as exc:
                     await db.rollback()
                     item = await db.get(WorkItem, item_id)
@@ -143,6 +149,7 @@ class Worker:
                     retried = await queue.fail(db, item, message, retryable=exc.retryable)
                     await self._maybe_give_up(db, item, settings, retried)
                     await db.commit()
+                    self.activity.finish(entry, error=message, retry=retried)
                     log.warning(
                         "work item failed", extra={"kind": item.kind, "error": message, "retry": retried}
                     )
@@ -153,7 +160,10 @@ class Worker:
                     retried = await queue.fail(db, item, f"{exc.__class__.__name__}: {exc}", retryable=True)
                     await self._maybe_give_up(db, item, settings, retried)
                     await db.commit()
+                    self.activity.finish(entry, error=str(exc), retry=retried)
                     log.exception("work item crashed", extra={"kind": item.kind})
+                finally:
+                    current_entry.reset(entry_token)
         finally:
             work_item_id_var.reset(token)
 

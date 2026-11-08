@@ -82,9 +82,10 @@ test('decide all and analyze all again open with every waiting movie', async ({ 
   await go(page, 'Review')
   await page.getByRole('button', { name: 'Decide all…' }).click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog.getByLabel('Who Framed Roger Rabbit')).toHaveValue('later')
+  const roger = dialog.getByRole('group', { name: /Who Framed Roger Rabbit/ })
+  await expect(roger.getByRole('radio', { name: 'Later' })).toBeChecked()
   await dialog.getByRole('button', { name: 'Best guess everywhere' }).click()
-  await expect(dialog.getByLabel('Who Framed Roger Rabbit')).not.toHaveValue('later')
+  await expect(roger.getByRole('radio', { name: 'Later' })).not.toBeChecked()
   await expectAccessible(page)
   await dialog.getByRole('button', { name: 'Cancel' }).click()
 
@@ -129,6 +130,15 @@ test('undo moves: the list first, then every movie goes back', async ({ page }) 
   await expectAccessible(page)
   await dialog.getByRole('button', { name: /^Undo \d+ moves?$/ }).click()
   await expect(page.getByText(/going back/)).toBeVisible()
+})
+
+test('the activity page shows the last analyses step by step', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/activity')
+  await expect(page.getByRole('heading', { name: 'Last jobs' })).toBeVisible()
+  await expect(page.getByText('Classify a movie').first()).toBeVisible()
+  await expect(page.getByText('Rules').first()).toBeVisible()
+  await expectAccessible(page)
 })
 
 test('settings and status pages', async ({ page }) => {

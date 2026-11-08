@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { isUnauthorized } from './api/client'
 import { ToastProvider } from './design-system'
+import { ActivityPage } from './features/activity/ActivityPage'
 import { CategoriesPage } from './features/categories/CategoriesPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
 import { DecisionPage } from './features/decisions/DecisionPage'
@@ -47,6 +48,7 @@ export function App() {
                       <Route path="categories" element={<CategoriesPage />} />
                       <Route path="settings" element={<SettingsPage />} />
                       <Route path="status" element={<StatusPage />} />
+                      <Route path="activity" element={<ActivityPage />} />
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Route>
                   </Route>

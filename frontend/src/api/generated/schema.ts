@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Activity
+         * @description What the worker is doing now, how far the current run is, and the last jobs with their steps.
+         */
+        get: operations["activity_api_v1_activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -683,6 +703,13 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ActivityOut */
+        ActivityOut: {
+            /** Recent */
+            recent: components["schemas"]["EntryOut"][];
+            run: components["schemas"]["RunOut"] | null;
+            running: components["schemas"]["EntryOut"] | null;
+        };
         /** Applied */
         Applied: {
             /** Applied */
@@ -957,6 +984,34 @@ export interface components {
             target_root_folder: string | null;
             top_category: components["schemas"]["CategoryRef"] | null;
         };
+        /** EntryOut */
+        EntryOut: {
+            /** Decision Id */
+            decision_id: number | null;
+            /** Error */
+            error: string | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Outcome */
+            outcome: string | null;
+            /** Radarr Id */
+            radarr_id: number | null;
+            /** Retry */
+            retry: boolean;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+            /** Steps */
+            steps: components["schemas"]["StepOut"][];
+            /** Title */
+            title: string | null;
+        };
         /** FailedItem */
         FailedItem: {
             /** Attempts */
@@ -1144,6 +1199,22 @@ export interface components {
              */
             weight: number;
         };
+        /** RunOut */
+        RunOut: {
+            /** Done */
+            done: number;
+            /** Failed */
+            failed: number;
+            /** Finished At */
+            finished_at: string | null;
+            /** Pending */
+            pending: number;
+            /**
+             * Started At
+             * Format: date-time
+             */
+            started_at: string;
+        };
         /** ScanIn */
         ScanIn: {
             /** Root Folder Path */
@@ -1221,6 +1292,17 @@ export interface components {
                 [key: string]: components["schemas"]["ServiceOut"];
             };
         };
+        /** StepOut */
+        StepOut: {
+            /** Detail */
+            detail: string | null;
+            /** Ms */
+            ms: number | null;
+            /** Name */
+            name: string;
+            /** State */
+            state: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1248,6 +1330,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    activity_api_v1_activity_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityOut"];
+                };
+            };
+        };
+    };
     login_api_v1_auth_login_post: {
         parameters: {
             query?: never;

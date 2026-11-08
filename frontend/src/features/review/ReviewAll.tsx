@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ListChecks, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useCategories } from '../../api/categories'
 import { api } from '../../api/client'
 import type { DecisionSummary } from '../../api/decisions'
-import { Button, cx, Dialog, Select, Spinner, useToast } from '../../design-system'
+import { Button, cx, Dialog, Spinner, useToast } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryDot, tint } from '../categories/colors'
 import { Poster } from '../decisions/parts'
@@ -94,42 +95,66 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
             <ul className="flex flex-col divide-y divide-border">
               {items.map((d) => {
                 const choice = choiceOf(d)
-                const categoryId = choice.startsWith('cat:') ? Number(choice.slice(4)) : undefined
-                return (
-                  <li key={d.id} className="flex items-center gap-3 py-2">
-                    <Poster url={d.movie.poster_url} title={d.movie.title} size="sm" />
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <p className="truncate text-sm font-medium" id={`review-all-${d.id}`}>
-                        {d.movie.title}
-                        {d.movie.year ? <span className="text-muted"> ({d.movie.year})</span> : null}
-                      </p>
-                      <p className="text-xs text-muted">
-                        {t(`status.${d.status}`)} · {Math.round(d.confidence * 100)}%
-                      </p>
-                    </div>
-                    <Select
-                      aria-labelledby={`review-all-${d.id}`}
-                      className={cx('w-40 shrink-0 font-medium', categoryId != null && 'cat-tint')}
+                const proposed = d.target_category ?? d.top_category
+                const pill = (value: Choice, label: string, categoryId?: number) => {
+                  const selected = choice === value
+                  return (
+                    <label
+                      key={value}
+                      className={cx(
+                        'cursor-pointer rounded-full border px-2.5 py-1 text-xs font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2',
+                        categoryId != null
+                          ? selected
+                            ? 'cat-fill'
+                            : 'cat-tint hover:brightness-95'
+                          : selected
+                            ? 'border-text bg-text text-surface'
+                            : 'border-border text-muted hover:bg-surface-2',
+                      )}
                       style={categoryId != null ? tint(categoryId) : undefined}
-                      value={choice}
-                      onChange={(e) => set(d.id, e.target.value as Choice)}
                     >
-                      <option value="later">{t('reviewAll.later')}</option>
-                      {libraries.map((c) => (
-                        <option key={c.id} value={`cat:${c.id}`}>
-                          → {c.name}
-                        </option>
-                      ))}
-                      <option value="intake">
-                        {d.status === 'proposed' ? t('decision.dismiss') : t('decision.leave')}
-                      </option>
-                    </Select>
+                      <input
+                        type="radio"
+                        className="sr-only"
+                        name={`review-all-choice-${d.id}`}
+                        checked={selected}
+                        onChange={() => set(d.id, value)}
+                      />
+                      {label}
+                    </label>
+                  )
+                }
+                return (
+                  <li key={d.id} className="flex flex-col gap-2 py-2.5">
+                    <div className="flex items-center gap-3">
+                      <Poster url={d.movie.poster_url} title={d.movie.title} size="sm" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium" id={`review-all-${d.id}`}>
+                          {d.movie.title}
+                          {d.movie.year ? <span className="text-muted"> ({d.movie.year})</span> : null}
+                        </p>
+                        <p className="flex items-center gap-1.5 text-xs text-muted">
+                          {t(`status.${d.status}`)} · {Math.round(d.confidence * 100)}%
+                          {proposed && (
+                            <>
+                              {' '}
+                              · <CategoryDot id={proposed.id} className="size-2" /> {proposed.name}
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <fieldset aria-labelledby={`review-all-${d.id}`} className="flex flex-wrap gap-1.5">
+                      {libraries.map((c) => pill(`cat:${c.id}`, c.name, c.id))}
+                      {pill('intake', d.status === 'proposed' ? t('decision.dismiss') : t('decision.leave'))}
+                      {pill('later', t('reviewAll.later'))}
+                    </fieldset>
                   </li>
                 )
               })}
             </ul>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+          <div className="sticky -bottom-5 -mx-5 flex flex-wrap items-center justify-between gap-2 border-t border-border bg-surface px-5 py-3">
             <p className="flex items-center gap-2 text-sm text-muted">
               {libraries.map((c) => {
                 const n = items.filter((d) => choiceOf(d) === `cat:${c.id}`).length
@@ -162,6 +187,7 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
 /** Classifies every waiting movie again with today's rules, after saying how many. */
 export function Reanalyze() {
   const t = useT()
+  const navigate = useNavigate()
   const toast = useToast()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -177,6 +203,7 @@ export function Reanalyze() {
     onSuccess: (result) => {
       toast(t('reanalyze.started', { count: result.count }), 'success')
       setOpen(false)
+      navigate('/activity')
       return queryClient.invalidateQueries()
     },
     onError: (error) => toast(error.message, 'danger'),

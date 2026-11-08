@@ -9,8 +9,9 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from triage.adapters.types import Adapters, RadarrMovie, ServiceError, TmdbDetails
+from triage.adapters.types import Adapters, AiVerdict, RadarrMovie, ServiceError, TmdbDetails
 from triage.core import clock
+from triage.core.activity import FAILED, skip, step
 from triage.core.settings import AppSettings
 from triage.domain.ai_prompt import build_prompt
 from triage.domain.categories import definitions
@@ -68,6 +69,18 @@ async def tmdb_details(
     return details
 
 
+def _verdict(names: dict[str, str], key: str | None, confidence: float) -> str:
+    return f"{names.get(key, key)} · {round(confidence * 100)} %" if key else "—"
+
+
+def _why_not_asked(settings: AppSettings, adapters: Adapters, conclusive: bool) -> str:
+    if adapters.ollama is None:
+        return "off"
+    if settings.ollama.ask == "never":
+        return "never"
+    return "rules_sure" if conclusive else "conflict"
+
+
 def _should_ask(mode: str, conclusive: bool) -> bool:
     return mode == "always" or (mode == "when_unsure" and not conclusive)
 
@@ -80,15 +93,22 @@ async def classify_movie(
     if not categories:
         return Classification([], {}, [{"code": "no_categories"}], 0.0, False, None, None, snapshot)
 
-    facts = gather_facts(movie, await tmdb_details(db, adapters, movie.tmdb_id, settings.tmdb.language))
+    with step("metadata") as metadata:
+        details = await tmdb_details(db, adapters, movie.tmdb_id, settings.tmdb.language)
+        metadata.detail = "TMDB" if details is not None else "Radarr"
+    facts = gather_facts(movie, details)
     sorting = settings.sorting
-    result = score(facts, categories, threshold=sorting.threshold, margin=sorting.margin)
+    names = {c.key: c.name for c in categories}
+    with step("rules") as rules:
+        result = score(facts, categories, threshold=sorting.threshold, margin=sorting.margin)
+        rules.detail = _verdict(names, result.top, result.confidence)
     reasons = list(result.reasons)
     ai: dict[str, Any] | None = None
 
     if not facts.has_metadata:
         reasons = [{"code": "no_metadata"}]
         result.conclusive = False
+        skip("ai", "no_metadata")
     elif (
         adapters.ollama is not None
         and _should_ask(settings.ollama.ask, result.conclusive)
@@ -96,13 +116,20 @@ async def classify_movie(
     ):
         asked = "unsure" if not result.conclusive else "always"
         system, user = build_prompt(facts, categories)
-        try:
-            verdict = await adapters.ollama.classify(system, user, [c.key for c in categories])
-        except ServiceError as exc:
+        verdict: AiVerdict | None = None
+        with step("ai") as asking:
+            try:
+                verdict = await adapters.ollama.classify(system, user, [c.key for c in categories])
+            except ServiceError as exc:
+                asking.state, asking.detail = FAILED, exc.message
+            else:
+                chosen = None if verdict.category == UNSURE else verdict.category
+                asking.detail = f"{settings.ollama.model} · " + _verdict(names, chosen, verdict.confidence)
+        if verdict is None:
             # A second opinion that fails never blocks what the rules are sure of (Constitution IV).
-            ai = {"error": exc.message, "asked": asked}
+            ai = {"error": asking.detail, "asked": asked}
             if not result.conclusive:
-                reasons.append({"code": "ai_unavailable", "error": exc.message})
+                reasons.append({"code": "ai_unavailable", "error": asking.detail})
         else:
             ai = {
                 "asked": asked,
@@ -123,6 +150,8 @@ async def classify_movie(
             reasons = list(result.reasons)
             if verdict.category == UNSURE and not result.conclusive:
                 reasons.append({"code": "ai_unsure"})
+    else:
+        skip("ai", _why_not_asked(settings, adapters, result.conclusive))
 
     top = next((c for c in categories if c.key == result.top), None)
     conclusive = result.conclusive
