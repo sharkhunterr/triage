@@ -1037,6 +1037,50 @@
         "title": "ReorderBody",
         "type": "object"
       },
+      "RevertBody": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          }
+        },
+        "title": "RevertBody",
+        "type": "object"
+      },
+      "Reverted": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "title": "Reverted",
+        "type": "object"
+      },
       "ReviewCount": {
         "properties": {
           "review": {
@@ -1979,6 +2023,48 @@
         ]
       }
     },
+    "/api/v1/decisions/revert": {
+      "post": {
+        "description": "Undo every move made since ``since`` (all of them without it). ``dry_run`` only lists them.",
+        "operationId": "revert_many_api_v1_decisions_revert_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevertBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reverted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revert Many",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/decisions/{decision_id}": {
       "get": {
         "operationId": "get_decision_api_v1_decisions__decision_id__get",
@@ -2162,6 +2248,49 @@
           }
         },
         "summary": "Dismiss",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/decisions/{decision_id}/revert": {
+      "post": {
+        "description": "Undo a move: back to the folder the movie came from.",
+        "operationId": "revert_api_v1_decisions__decision_id__revert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revert",
         "tags": [
           "review"
         ]

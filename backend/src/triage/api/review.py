@@ -1,5 +1,6 @@
 """The review queue, the owner's choice on a decision, and the one-click email links."""
 
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Form, Query
@@ -231,3 +232,39 @@ async def correct(
     await db.commit()
     state.worker.wake()
     return await detail(db, correction)
+
+
+@router.post("/decisions/{decision_id}/revert", response_model=DecisionDetail)
+async def revert(decision_id: int, db: Db, state: State) -> DecisionDetail:
+    """Undo a move: back to the folder the movie came from."""
+    decision = await _decision(db, decision_id)
+    correction = await actions.revert(db, decision)
+    await db.commit()
+    state.worker.wake()
+    return await detail(db, correction)
+
+
+class RevertBody(BaseModel):
+    since: datetime | None = None
+    dry_run: bool = False
+
+
+class Reverted(BaseModel):
+    count: int
+    items: list[DecisionSummary]
+
+
+@router.post("/decisions/revert", response_model=Reverted)
+async def revert_many(body: RevertBody, db: Db, state: State) -> Reverted:
+    """Undo every move made since ``since`` (all of them without it). ``dry_run`` only lists them."""
+    since = body.since
+    if since is not None and since.tzinfo is None:
+        since = since.replace(tzinfo=UTC)  # a time without a zone is taken as UTC
+    moves = await actions.revertable(db, since)
+    listed = await summaries(db, moves)
+    if not body.dry_run and moves:
+        for decision in moves:
+            await actions.revert(db, decision)
+        await db.commit()
+        state.worker.wake()
+    return Reverted(count=len(moves), items=listed)

@@ -1,10 +1,14 @@
 """The owner's choices on a decision, shared by the app and the email links."""
 
+from datetime import datetime
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from triage.core import clock
 from triage.core.errors import Conflict, NotFound
+from triage.core.settings import same_folder
 from triage.domain import audit
 from triage.domain import decisions as d
 from triage.domain.categories import to_def
@@ -78,6 +82,46 @@ async def correct(
         if not any(c.get("id") == category.id for c in snapshot):
             snapshot.append(to_def(category).to_dict())
 
+    return await _move_again(db, decision, target, category_id, snapshot)
+
+
+async def revert(db: AsyncSession, decision: Decision) -> Decision:
+    """Undo a move: the movie goes back to the very folder it was moved from (the intake folder,
+    or the library a scan found it in). Like any correction, Triage only proposes for it afterwards."""
+    if decision.status != d.MOVED:
+        raise Conflict("Only a moved movie can be undone", code="not_moved")
+    if not decision.from_root_folder:
+        raise Conflict("The folder this movie came from is unknown", code="no_origin")
+    snapshot = list(decision.categories_snapshot or [])
+    origin = next(
+        (
+            c
+            for c in await db.scalars(select(Category).where(Category.deleted_at.is_(None)))
+            if same_folder(c.root_folder_path, decision.from_root_folder)
+        ),
+        None,
+    )
+    if origin is not None and not any(c.get("id") == origin.id for c in snapshot):
+        snapshot.append(to_def(origin).to_dict())
+    category_id = origin.id if origin is not None else None
+    return await _move_again(db, decision, decision.from_root_folder, category_id, snapshot)
+
+
+async def revertable(db: AsyncSession, since: datetime | None = None) -> list[Decision]:
+    """Moves that can be undone, newest first. The owner's own corrections are left out."""
+    query = select(Decision).where(
+        Decision.status == d.MOVED,
+        Decision.source != "correction",
+        Decision.from_root_folder.is_not(None),
+    )
+    if since is not None:
+        query = query.where(Decision.decided_at >= since)
+    return list(await db.scalars(query.order_by(Decision.decided_at.desc(), Decision.id.desc())))
+
+
+async def _move_again(
+    db: AsyncSession, decision: Decision, target: str, category_id: int | None, snapshot: list[Any]
+) -> Decision:
     ref = await db.get(MovieRef, decision.radarr_id)
     if ref is not None:
         ref.corrected = True

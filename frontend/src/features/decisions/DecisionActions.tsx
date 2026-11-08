@@ -19,7 +19,7 @@ export function useDecisionAction() {
       body,
     }: {
       id: number
-      action: 'apply' | 'dismiss' | 'correct'
+      action: 'apply' | 'dismiss' | 'correct' | 'revert'
       body?: Target
     }) => api(`/decisions/${id}/${action}`, { method: 'POST', body: body ?? {} }),
     onSuccess: () => {
@@ -86,13 +86,13 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
                 {t('decision.moveTo', { category: c.name })}
               </Button>
             ))}
-        {correctable && decision.source === 'intake' && (
+        {correctable && decision.from_root_folder && (
           <Button
             icon={<Undo2 className="size-4" aria-hidden />}
             loading={action.isPending}
-            onClick={() => action.mutate({ id: decision.id, action: 'correct', body: { target: 'intake' } })}
+            onClick={() => action.mutate({ id: decision.id, action: 'revert' })}
           >
-            {t('decision.backToIntake')}
+            {t('decision.undo', { folder: decision.from_root_folder })}
           </Button>
         )}
         {decision.status === 'held' && decision.source === 'intake' && (

@@ -154,7 +154,6 @@
   "decision.correctTitle": "Correct this move",
   "decision.correctHint": "Move it elsewhere. Triage will never sort this movie on its own again.",
   "decision.moveTo": "Move to {category}",
-  "decision.backToIntake": "Back to the intake folder",
   "decision.leave": "Leave in intake",
   "decision.dismiss": "Dismiss",
   "decision.retry": "Retry the move",
@@ -349,5 +348,18 @@
   "wizard.finish.done": "configured",
   "wizard.finish.notSet": "not configured",
   "wizard.finish.scan": "Scan {folder} now",
-  "wizard.finish.scanHint": "Shows what Triage would do with the movies already waiting there. A scan never moves anything."
+  "wizard.finish.scanHint": "Shows what Triage would do with the movies already waiting there. A scan never moves anything.",
+  "decision.undo": "Undo the move (back to {folder})",
+  "undo.open": "Undo moves…",
+  "undo.title": "Undo moves",
+  "undo.text": "Every movie goes back to the folder it was moved from, through Radarr. Triage then only proposes for them: it never sorts them again on its own. Your own corrections are left as they are.",
+  "undo.period": "Moves made",
+  "undo.hour": "in the last hour",
+  "undo.day": "in the last 24 hours",
+  "undo.week": "in the last 7 days",
+  "undo.all": "at any time",
+  "undo.none": "No move to undo for this period.",
+  "undo.more": "and {count} more",
+  "undo.confirm": "{count, plural, one {Undo # move} other {Undo # moves}}",
+  "undo.started": "{count, plural, one {# movie is going back} other {# movies are going back}}"
 }

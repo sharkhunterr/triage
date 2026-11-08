@@ -33,3 +33,5 @@ Thumbs.db
 .vscode/
 .idea/
 .e2e-data/
+.dev-config/
+.dev-radarr/

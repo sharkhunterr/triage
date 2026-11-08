@@ -179,6 +179,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/decisions/revert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revert Many
+         * @description Undo every move made since ``since`` (all of them without it). ``dry_run`` only lists them.
+         */
+        post: operations["revert_many_api_v1_decisions_revert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/decisions/{decision_id}": {
         parameters: {
             query?: never;
@@ -241,6 +261,26 @@ export interface paths {
         put?: never;
         /** Dismiss */
         post: operations["dismiss_api_v1_decisions__decision_id__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/decisions/{decision_id}/revert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revert
+         * @description Undo a move: back to the folder the movie came from.
+         */
+        post: operations["revert_api_v1_decisions__decision_id__revert_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -931,6 +971,23 @@ export interface components {
             /** Ids */
             ids: number[];
         };
+        /** RevertBody */
+        RevertBody: {
+            /**
+             * Dry Run
+             * @default false
+             */
+            dry_run: boolean;
+            /** Since */
+            since?: string | null;
+        };
+        /** Reverted */
+        Reverted: {
+            /** Count */
+            count: number;
+            /** Items */
+            items: components["schemas"]["DecisionSummary"][];
+        };
         /** ReviewCount */
         ReviewCount: {
             /** Review */
@@ -1444,6 +1501,39 @@ export interface operations {
             };
         };
     };
+    revert_many_api_v1_decisions_revert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevertBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Reverted"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_decision_api_v1_decisions__decision_id__get: {
         parameters: {
             query?: never;
@@ -1546,6 +1636,37 @@ export interface operations {
         };
     };
     dismiss_api_v1_decisions__decision_id__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                decision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revert_api_v1_decisions__decision_id__revert_post: {
         parameters: {
             query?: never;
             header?: never;

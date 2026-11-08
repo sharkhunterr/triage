@@ -103,6 +103,18 @@ test('history shows the moves and a decision explains itself', async ({ page }) 
   await expectAccessible(page)
 })
 
+test('undo moves: the list first, then every movie goes back', async ({ page }) => {
+  await signIn(page)
+  await go(page, 'History')
+  await page.getByRole('button', { name: 'Undo moves…' }).click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Moves made').selectOption('all')
+  await expect(dialog.getByText('Toy Story')).toBeVisible()
+  await expectAccessible(page)
+  await dialog.getByRole('button', { name: /^Undo \d+ moves?$/ }).click()
+  await expect(page.getByText(/going back/)).toBeVisible()
+})
+
 test('settings and status pages', async ({ page }) => {
   await signIn(page)
   await go(page, 'Settings')

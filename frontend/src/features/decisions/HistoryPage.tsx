@@ -6,6 +6,7 @@ import { type DecisionFilters, useDecisionPages } from '../../api/decisions'
 import { Button, EmptyState, ErrorState, Input, PageHeader, Select, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
 import { DecisionCard } from './parts'
+import { UndoMoves } from './UndoMoves'
 
 const STATUSES = [
   'moved',
@@ -41,7 +42,7 @@ export function HistoryPage() {
 
   return (
     <>
-      <PageHeader title={t('history.title')} description={t('history.subtitle')} />
+      <PageHeader title={t('history.title')} description={t('history.subtitle')} actions={<UndoMoves />} />
       <form
         aria-label={t('history.search')}
         className="mb-4 grid gap-2 sm:grid-cols-4"

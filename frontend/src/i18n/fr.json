@@ -154,7 +154,6 @@
   "decision.correctTitle": "Corriger ce déplacement",
   "decision.correctHint": "Déplacez-le ailleurs. Triage ne rangera plus jamais ce film tout seul.",
   "decision.moveTo": "Déplacer vers {category}",
-  "decision.backToIntake": "Remettre dans le dossier d'entrée",
   "decision.leave": "Laisser dans l'entrée",
   "decision.dismiss": "Ignorer",
   "decision.retry": "Relancer le déplacement",
@@ -349,5 +348,18 @@
   "wizard.finish.done": "configuré",
   "wizard.finish.notSet": "non configuré",
   "wizard.finish.scan": "Scanner {folder} maintenant",
-  "wizard.finish.scanHint": "Montre ce que Triage ferait des films qui y attendent déjà. Un scan ne déplace jamais rien."
+  "wizard.finish.scanHint": "Montre ce que Triage ferait des films qui y attendent déjà. Un scan ne déplace jamais rien.",
+  "decision.undo": "Annuler le déplacement (retour dans {folder})",
+  "undo.open": "Annuler des déplacements…",
+  "undo.title": "Annuler des déplacements",
+  "undo.text": "Chaque film retourne, via Radarr, dans le dossier d'où il a été déplacé. Triage ne fera ensuite que proposer pour eux : il ne les rangera plus jamais tout seul. Vos propres corrections ne sont pas touchées.",
+  "undo.period": "Déplacements faits",
+  "undo.hour": "dans la dernière heure",
+  "undo.day": "dans les dernières 24 heures",
+  "undo.week": "dans les 7 derniers jours",
+  "undo.all": "depuis toujours",
+  "undo.none": "Aucun déplacement à annuler sur cette période.",
+  "undo.more": "et {count} de plus",
+  "undo.confirm": "{count, plural, one {Annuler # déplacement} other {Annuler # déplacements}}",
+  "undo.started": "{count, plural, one {# film retourne à sa place} other {# films retournent à leur place}}"
 }
