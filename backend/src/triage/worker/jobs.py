@@ -8,6 +8,7 @@ from triage.worker.email import notify_held, send_email_job
 from triage.worker.move import move_given_up, move_job
 from triage.worker.poller import poll
 from triage.worker.runner import Handler, Worker
+from triage.worker.scan import scan_movie_job, scan_start_job
 
 
 def build_worker(
@@ -17,6 +18,8 @@ def build_worker(
         "classify": classify_job,
         "move": move_job,
         "send_email": send_email_job,
+        "scan_start": scan_start_job,
+        "scan_movie": scan_movie_job,
     }
     return Worker(
         session_factory,

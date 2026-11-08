@@ -55,7 +55,7 @@ async def test_connection_tests(owner: AsyncClient, env: Env):
 async def test_a_connection_test_can_use_unsaved_values(owner: AsyncClient, env: Env):
     seen = []
 
-    def factory(settings):  # noqa: ANN001, ANN202
+    def factory(settings):
         seen.append(settings.radarr.url)
         return env.fakes.factory(settings)
 

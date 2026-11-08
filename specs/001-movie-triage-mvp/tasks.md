@@ -192,13 +192,13 @@ it, moves nothing alone, and moves it when applied.
 
 ### Tests for User Story 5
 
-- [ ] T070 [P] [US5] Write integration tests for scans (start returns 202; one running at a time → 409; proposals with in_place flag; progress; cancel keeps partial results; corrected movies still proposed; apply-confident limited to the scan and to movies not in place) in backend/tests/integration/test_scans.py
+- [X] T070 [P] [US5] Write integration tests for scans (start returns 202; one running at a time → 409; proposals with in_place flag; progress; cancel keeps partial results; corrected movies still proposed; apply-confident limited to the scan and to movies not in place) in backend/tests/integration/test_scans.py
 
 ### Implementation for User Story 5
 
-- [ ] T071 [US5] Implement the scan runner (enumerate movies of the folder from Radarr, enqueue scan_movie items, classify as proposals, progress counters, cancellation) in backend/src/triage/worker/scan.py
-- [ ] T072 [US5] Implement `/scans`, `/scans/{id}`, `/scans/{id}/results`, `/scans/{id}/cancel` in backend/src/triage/api/scans.py
-- [ ] T073 [P] [US5] Implement the scans screen (folder picker, start, live progress, results grouped "to move" / "in place" / "doubtful", apply one, apply all confident, cancel) in frontend/src/features/scans/
+- [X] T071 [US5] Implement the scan runner (enumerate movies of the folder from Radarr, enqueue scan_movie items, classify as proposals, progress counters, cancellation) in backend/src/triage/worker/scan.py
+- [X] T072 [US5] Implement `/scans`, `/scans/{id}`, `/scans/{id}/results`, `/scans/{id}/cancel` in backend/src/triage/api/scans.py
+- [X] T073 [P] [US5] Implement the scans screen (folder picker, start, live progress, results grouped "to move" / "in place" / "doubtful", apply one, apply all confident, cancel) in frontend/src/features/scans/
 - [ ] T074 [US5] Add scan strings (EN/FR) and a Playwright test running a scan and applying results in frontend/tests/e2e/scans.spec.ts
 
 **Checkpoint**: the existing backlog and past mistakes can be cleaned up safely.
