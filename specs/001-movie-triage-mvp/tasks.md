@@ -19,12 +19,12 @@ by its fake from T019–T023.
 
 **Purpose**: project skeletons and tooling, mirroring Portalab's configuration scaled down.
 
-- [ ] T001 Create the backend uv project in backend/pyproject.toml (package `triage` under backend/src/triage, Python 3.12, dependencies from plan.md, dev deps pytest, pytest-asyncio, ruff, mypy, httpx test client; console script `triage = triage.app.cli:main`) and run `uv lock`
-- [ ] T002 [P] Configure ruff (line length 110, rules E F W I B UP S ASYNC RUF SIM PTH DTZ as in Portalab), mypy strict and pytest (asyncio_mode=auto, testpaths) in backend/pyproject.toml
-- [ ] T003 [P] Create the frontend Vite 7 + React 19 + TypeScript 5.9 project in frontend/ (package.json scripts dev, build, lint, typecheck, test, gen:api, check:api-drift; tsconfig.json; vite.config.ts proxying /api to http://127.0.0.1:9393)
-- [ ] T004 [P] Add Biome config frontend/biome.json (recommended + a11y, 2 spaces, width 110) and Tailwind 4 setup in frontend/src/styles.css
-- [ ] T005 [P] Add Vitest + Testing Library config in frontend/vite.config.ts and Playwright + @axe-core/playwright config with 360 px and 1280 px projects in frontend/playwright.config.ts
-- [ ] T006 [P] Create .gitignore, .editorconfig and README.md skeleton (English: what Triage does, quick start placeholder) at the repository root
+- [X] T001 Create the backend uv project in backend/pyproject.toml (package `triage` under backend/src/triage, Python 3.12, dependencies from plan.md, dev deps pytest, pytest-asyncio, ruff, mypy, httpx test client; console script `triage = triage.app.cli:main`) and run `uv lock`
+- [X] T002 [P] Configure ruff (line length 110, rules E F W I B UP S ASYNC RUF SIM PTH DTZ as in Portalab), mypy strict and pytest (asyncio_mode=auto, testpaths) in backend/pyproject.toml
+- [X] T003 [P] Create the frontend Vite 7 + React 19 + TypeScript 5.9 project in frontend/ (package.json scripts dev, build, lint, typecheck, test, gen:api, check:api-drift; tsconfig.json; vite.config.ts proxying /api to http://127.0.0.1:9393)
+- [X] T004 [P] Add Biome config frontend/biome.json (recommended + a11y, 2 spaces, width 110) and Tailwind 4 setup in frontend/src/styles.css
+- [X] T005 [P] Add Vitest + Testing Library config in frontend/vite.config.ts and Playwright + @axe-core/playwright config with 360 px and 1280 px projects in frontend/playwright.config.ts
+- [X] T006 [P] Create .gitignore, .editorconfig and README.md skeleton (English: what Triage does, quick start placeholder) at the repository root
 
 ---
 

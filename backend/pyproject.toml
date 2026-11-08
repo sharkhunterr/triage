@@ -1,0 +1,67 @@
+[project]
+name = "triage"
+version = "0.1.0"
+description = "Sorts newly requested movies into the right Radarr library, with metadata rules and a local AI."
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.8,<3",
+    "sqlalchemy[asyncio]>=2.0.30,<2.1",
+    "aiosqlite>=0.20",
+    "alembic>=1.13",
+    "httpx>=0.27",
+    "aiosmtplib>=3.0",
+    "argon2-cffi>=23.1",
+    "python-multipart>=0.0.9",
+]
+
+[project.scripts]
+triage = "triage.app.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/triage"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "ASYNC", "RUF", "SIM", "PTH", "DTZ"]
+ignore = ["S101"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency markers are immutable declarations, not calls evaluated per request
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Form"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S104", "S105", "S106", "S311"]
+"migrations/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+packages = ["triage"]
+plugins = ["pydantic.mypy"]
+strict = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+pythonpath = ["src", "."]
