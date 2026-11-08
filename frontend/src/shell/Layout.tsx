@@ -24,9 +24,9 @@ type Counts = { review: number }
 const NAV = [
   { to: '/', key: 'nav.dashboard', short: 'nav.home', icon: LayoutDashboard, mobile: true },
   { to: '/review', key: 'nav.review', icon: Inbox, mobile: true, badge: true },
+  { to: '/activity', key: 'nav.activity', icon: ListTree, mobile: true },
   { to: '/history', key: 'nav.history', icon: History, mobile: true },
   { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: false },
-  { to: '/activity', key: 'nav.activity', icon: ListTree, mobile: false },
   { to: '/categories', key: 'nav.categories', icon: Shapes, mobile: true },
   { to: '/status', key: 'nav.status', icon: Activity, mobile: false },
   { to: '/settings', key: 'nav.settings', icon: Settings, mobile: true },
@@ -60,7 +60,9 @@ export function Layout() {
       className={({ isActive }) =>
         cx(
           'relative flex items-center gap-3 rounded-lg text-sm font-medium transition-colors',
-          compact ? 'min-w-0 flex-1 flex-col gap-0.5 py-1.5 text-[11px] leading-tight' : 'px-3 py-2.5',
+          compact
+            ? 'min-w-0 flex-1 flex-col gap-0.5 px-0.5 py-1.5 text-[10.5px] leading-tight'
+            : 'px-3 py-2.5',
           isActive ? 'bg-accent/12 text-accent' : 'text-muted hover:bg-surface-2 hover:text-text',
         )
       }
@@ -141,7 +143,7 @@ export function Layout() {
       <ActivityIndicator floating />
       <nav
         aria-label={t('nav.main')}
-        className="fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t border-border bg-surface px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex gap-0.5 border-t border-border bg-surface px-1 pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         {NAV.filter((i) => i.mobile).map((item) => link(item, true))}
       </nav>
