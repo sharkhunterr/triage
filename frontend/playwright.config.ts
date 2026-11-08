@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// End-to-end runs against Triage in demo mode (in-memory Radarr/TMDB library, fresh database),
+// End-to-end runs against Triage in demo mode (in-memory Radarr/TMDB library). Each project gets
+// a fresh server and database: run them one after the other (`npm run e2e`). The journey runs
 // at a phone width and a desktop width (Constitution IX).
 const port = Number(process.env.TRIAGE_E2E_PORT ?? 9494)
 const executablePath = process.env.PW_CHROMIUM_PATH || undefined
