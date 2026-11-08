@@ -8,15 +8,18 @@ from pydantic import BaseModel, model_validator
 from sqlalchemy import select
 
 from triage.api.decisions import DecisionDetail, DecisionSummary, detail, summaries
-from triage.api.deps import Db, Owner, Settings, State
-from triage.core.errors import Gone, NotFound
+from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
+from triage.core.errors import Conflict, Gone, NotFound
 from triage.core.tokens import usable_link, use
 from triage.domain import actions
 from triage.domain import decisions as d
+from triage.domain.arrivals import upsert_movie
+from triage.domain.classify import classify_movie
 from triage.models import Decision, MovieRef
 from triage.models import Owner as OwnerRow
 from triage.templates.messages import text
 from triage.templates.render import app_link, confirm_form, page
+from triage.worker.classify import new_decision
 
 router = APIRouter(tags=["review"], dependencies=[Owner])
 public = APIRouter(tags=["review links"])
@@ -157,3 +160,63 @@ async def link_confirm(
             link=app_link(settings.base_url, text(locale, "page.openApp")),
         )
     )
+
+
+# ---------------------------------------------------------------------- preview (US4)
+@router.post("/decisions/{decision_id}/dismiss", response_model=DecisionDetail)
+async def dismiss(decision_id: int, db: Db) -> DecisionDetail:
+    decision = await _decision(db, decision_id)
+    if decision.status != d.PROPOSED:
+        raise Conflict("Only a proposal can be dismissed", code="not_a_proposal")
+    await actions.choose(db, decision, actions.INTAKE)
+    await db.commit()
+    return await detail(db, decision)
+
+
+class ApplyConfidentBody(BaseModel):
+    scan_id: int | None = None
+
+
+class Applied(BaseModel):
+    applied: int
+
+
+@router.post("/decisions/apply-confident", response_model=Applied)
+async def apply_confident(body: ApplyConfidentBody, db: Db, settings: Settings, state: State) -> Applied:
+    """Apply every proposal at or above the threshold (optionally of one scan)."""
+    query = select(Decision).where(
+        Decision.status == d.PROPOSED, Decision.confidence >= settings.sorting.threshold
+    )
+    if body.scan_id is not None:
+        query = query.where(Decision.scan_id == body.scan_id)
+    applied = 0
+    for decision in await db.scalars(query.order_by(Decision.id)):
+        if decision.target_category_id is None:
+            continue
+        try:
+            await actions.choose(db, decision, decision.target_category_id)
+        except NotFound:
+            continue  # its category lost its library since: leave the proposal
+        applied += 1
+    await db.commit()
+    if applied:
+        state.worker.wake()
+    return Applied(applied=applied)
+
+
+@router.post("/movies/{radarr_id}/simulate", response_model=DecisionDetail)
+async def simulate(radarr_id: int, db: Db, settings: Settings, adapters: AdaptersDep) -> DecisionDetail:
+    """What Triage would decide for this movie now. Recorded for display only: never moves,
+    never emails, never appears in history or review."""
+    if adapters.radarr is None:
+        raise NotFound("Radarr is not connected", code="radarr_not_configured")
+    movie = await adapters.radarr.movie(radarr_id)
+    if movie is None:
+        raise NotFound("Radarr has no such movie")
+    await upsert_movie(db, movie)
+    result = await classify_movie(db, settings, adapters, movie)
+    decision = new_decision(movie.id, "simulation", result, movie.root_folder_path)
+    decision.status = d.SIMULATED
+    db.add(decision)
+    await db.commit()
+    return await detail(db, decision)

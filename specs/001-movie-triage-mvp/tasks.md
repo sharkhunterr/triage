@@ -169,14 +169,14 @@ one moves only that one; simulate never moves.
 
 ### Tests for User Story 4
 
-- [ ] T064 [P] [US4] Write integration tests for preview mode (default mode, proposals only, apply one, apply confident, pick another category, dismiss, switching to automatic leaves pending proposals untouched) in backend/tests/integration/test_preview.py
-- [ ] T065 [P] [US4] Write integration tests for simulate (returns a decision with status simulated, no move, no review link, no email) in backend/tests/integration/test_simulate.py
+- [X] T064 [P] [US4] Write integration tests for preview mode (default mode, proposals only, apply one, apply confident, pick another category, dismiss, switching to automatic leaves pending proposals untouched) in backend/tests/integration/test_preview.py
+- [X] T065 [P] [US4] Write integration tests for simulate (returns a decision with status simulated, no move, no review link, no email) in backend/tests/integration/test_simulate.py
 
 ### Implementation for User Story 4
 
-- [ ] T066 [US4] Implement `/decisions/{id}/dismiss`, `/decisions/apply-confident` and `/movies/{radarr_id}/simulate` in backend/src/triage/api/decisions.py
-- [ ] T067 [P] [US4] Add proposals to the review screen (tab "Proposals", apply / change category / dismiss, "Apply all confident" with count confirmation) in frontend/src/features/review/Proposals.tsx
-- [ ] T068 [P] [US4] Add the mode switch with explanation (Preview ↔ Automatic, confirmation when enabling automatic) in frontend/src/features/settings/ModeSwitch.tsx and a "Simulate" action on movie rows in frontend/src/features/decisions/SimulateButton.tsx
+- [X] T066 [US4] Implement `/decisions/{id}/dismiss`, `/decisions/apply-confident` and `/movies/{radarr_id}/simulate` in backend/src/triage/api/decisions.py
+- [X] T067 [P] [US4] Add proposals to the review screen (tab "Proposals", apply / change category / dismiss, "Apply all confident" with count confirmation) in frontend/src/features/review/Proposals.tsx
+- [X] T068 [P] [US4] Add the mode switch with explanation (Preview ↔ Automatic, confirmation when enabling automatic) in frontend/src/features/settings/ModeSwitch.tsx and a "Simulate" action on movie rows in frontend/src/features/decisions/SimulateButton.tsx
 - [ ] T069 [US4] Add preview strings (EN/FR) and a Playwright test applying a proposal in frontend/tests/e2e/preview.spec.ts
 
 **Checkpoint**: the owner can check Triage's judgement before letting it act.
@@ -255,12 +255,12 @@ unreachable service on the status page; secrets never come back in responses.
 
 ### Tests for User Story 8
 
-- [ ] T083 [P] [US8] Write integration tests for settings (PATCH validation incl. intake folders existing in Radarr; secrets write-only and never serialized; test endpoints with unsaved values; `/ollama/models`, `/radarr/root-folders`) in backend/tests/integration/test_settings.py
+- [X] T083 [P] [US8] Write integration tests for settings (PATCH validation incl. intake folders existing in Radarr; secrets write-only and never serialized; test endpoints with unsaved values; `/ollama/models`, `/radarr/root-folders`) in backend/tests/integration/test_settings.py
 - [ ] T084 [P] [US8] Write integration tests for `/status` (per-service states ok/degraded/down/disabled, last/next poll, queue counts, failed items) and `/work-items/{id}/retry`, `/poll` in backend/tests/integration/test_status.py
 
 ### Implementation for User Story 8
 
-- [ ] T085 [US8] Implement `/settings`, `/settings/test/{service}`, `/radarr/root-folders`, `/ollama/models` in backend/src/triage/api/settings.py
+- [X] T085 [US8] Implement `/settings`, `/settings/test/{service}`, `/radarr/root-folders`, `/ollama/models` in backend/src/triage/api/settings.py
 - [ ] T086 [US8] Implement health probes (cached 60 s) and `/status`, `/poll`, `/work-items/{id}/retry` in backend/src/triage/api/status.py and backend/src/triage/domain/health.py
 - [ ] T087 [P] [US8] Implement the settings screens (sections Radarr + intake folders, TMDB, AI, Seerr + webhook URL/secret to copy, Email, Sorting thresholds; Test buttons with results; secret fields showing "set") in frontend/src/features/settings/
 - [ ] T088 [P] [US8] Implement the status page (service cards, queue, failed items with retry, folder warnings) in frontend/src/features/status/
