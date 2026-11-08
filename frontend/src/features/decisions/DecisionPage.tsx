@@ -17,7 +17,7 @@ import { Badge, Card, cx, ErrorState, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryDot, categoryColor, tint } from '../categories/colors'
 import { DecisionActions } from './DecisionActions'
-import { ConfidenceMeter, Poster, ReasonText, StatusBadge } from './parts'
+import { ConfidenceMeter, isUndo, Poster, ReasonText, StatusBadge } from './parts'
 import { RequestBadge } from './RequestBadge'
 import { SimulateButton } from './SimulateButton'
 
@@ -73,7 +73,8 @@ export function DecisionPage() {
 
 function Header({ decision }: { decision: DecisionDetail }) {
   const t = useT()
-  const category = decision.target_category ?? decision.top_category
+  const undo = isUndo(decision)
+  const category = undo ? null : (decision.target_category ?? decision.top_category)
   return (
     <Card className="flex flex-col gap-4">
       <div className="flex gap-4">
@@ -86,18 +87,20 @@ function Header({ decision }: { decision: DecisionDetail }) {
             ) : null}
           </h1>
           <div className="flex flex-wrap items-center gap-1.5">
-            <StatusBadge status={decision.status} />
+            {undo ? <Badge>{t('status.undone')}</Badge> : <StatusBadge status={decision.status} />}
             <Badge>{t(`source.${decision.source}`)}</Badge>
             {decision.actor === 'owner' && <Badge tone="info">{t('decision.byOwner')}</Badge>}
             <RequestBadge check={decision.request_check} />
           </div>
-          <p className="mt-1 text-sm text-muted">{t(`verdict.${decision.status}`)}</p>
+          <p className="mt-1 text-sm text-muted">
+            {undo ? t('verdict.undone') : t(`verdict.${decision.status}`)}
+          </p>
           <p
             className="flex items-center gap-2 text-lg font-semibold"
             style={category ? { color: categoryColor(category.id) } : undefined}
           >
             {category && <CategoryDot id={category.id} className="size-3" />}
-            {category?.name ?? t('decision.noCategory')}
+            {undo ? decision.target_root_folder : (category?.name ?? t('decision.noCategory'))}
           </p>
         </div>
       </div>

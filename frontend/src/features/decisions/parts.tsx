@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Film } from 'lucide-react'
+import { ArrowRight, Bot, Film, Undo2 } from 'lucide-react'
 import { Link } from 'react-router'
 import type { DecisionSummary } from '../../api/decisions'
 import { Badge, Card, type Tone } from '../../design-system'
@@ -98,9 +98,14 @@ export function ReasonText({ reason }: { reason: Reason }) {
   return <>{t(`reason.${code}`, values)}</>
 }
 
+/** A correction with no category: the movie was put back in the folder it came from (an undo). */
+export const isUndo = (decision: DecisionSummary) =>
+  decision.source === 'correction' && !decision.target_category
+
 export function DecisionCard({ decision }: { decision: DecisionSummary }) {
   const t = useT()
-  const category = decision.target_category ?? decision.top_category
+  const undo = isUndo(decision)
+  const category = undo ? null : (decision.target_category ?? decision.top_category)
   return (
     <Link to={`/decisions/${decision.id}`} className="block min-w-0 rounded-card focus-visible:outline-2">
       <Card className="flex gap-3 transition-colors hover:bg-surface-2">
@@ -111,10 +116,15 @@ export function DecisionCard({ decision }: { decision: DecisionSummary }) {
               {decision.movie.title}
               {decision.movie.year ? <span className="text-muted"> ({decision.movie.year})</span> : null}
             </p>
-            <StatusBadge status={decision.status} />
+            {undo ? <Badge>{t('status.undone')}</Badge> : <StatusBadge status={decision.status} />}
           </div>
           <p className="mt-1 flex items-center gap-1 text-sm text-muted">
-            {category ? (
+            {undo ? (
+              <>
+                <Undo2 className="size-3.5" aria-hidden />
+                <code className="truncate">{decision.target_root_folder}</code>
+              </>
+            ) : category ? (
               <>
                 <ArrowRight className="size-3.5" aria-hidden />
                 <span>{category.name}</span>

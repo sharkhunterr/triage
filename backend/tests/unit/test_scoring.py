@@ -187,3 +187,29 @@ def test_an_exclusion_also_overrides_the_ai():
 def test_without_the_excluded_genre_the_category_still_wins():
     result = score(facts(genres=["Animation"]), [ANIMATION_NO_HORROR, FILMS], threshold=0.8, margin=20)
     assert result.top == "animation" and result.decisive == "animation"
+
+
+def test_the_preset_sends_adult_animation_to_the_films():
+    from triage.domain.presets import MOVIES_ANIMATION
+
+    def category(index: int, key: str) -> CategoryDef:
+        spec = MOVIES_ANIMATION.categories[index]
+        return CategoryDef(
+            id=index + 1,
+            key=key,
+            name=key,
+            description="",
+            root_folder_path=f"/media/{key}",
+            is_fallback=spec.is_fallback,
+            version=1,
+            rules=tuple(
+                RuleDef(i, r.field, r.operator, r.value, r.weight, r.decisive, r.excludes)
+                for i, r in enumerate(spec.rules)
+            ),
+        )
+
+    preset = [category(0, "animation"), category(1, "films")]
+    adult = facts(genres=["Animation", "Comedy"], keywords=["adult animation", "sex party"])
+    assert score(adult, preset, threshold=0.8, margin=20).top == "films"
+    family = facts(genres=["Animation", "Family"], companies=["Pixar"])
+    assert score(family, preset, threshold=0.8, margin=20).top == "animation"

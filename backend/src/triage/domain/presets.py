@@ -44,6 +44,11 @@ ANIMATION_STUDIOS = (
     "Cartoon Saloon",
 )
 
+# TMDB keywords of adult content ("contains": "sex" also catches "sex party", "sexuality"…)
+ADULT_KEYWORDS = ("adult animation", "sex", "erotic", "nudity", "hentai", "gore", "rape")
+# Age ratings for adults: US R / NC-17 (also what Radarr reports), French -16 / -18.
+ADULT_RATINGS = ("R", "NC-17", "16", "18")
+
 MOVIES_ANIMATION = Preset(
     key="movies-animation",
     names={"en": "Movies / Animation", "fr": "Films / Dessins animés"},
@@ -74,6 +79,9 @@ MOVIES_ANIMATION = Preset(
                 # horror and thrillers are never cartoons for the family, even when animated
                 PresetRule("genre", "is", "Horror", 1, excludes=True),
                 PresetRule("genre", "is", "Thriller", 1, excludes=True),
+                # adult content and adult age ratings: the movie goes with the films
+                *(PresetRule("keyword", "contains", word, 1, excludes=True) for word in ADULT_KEYWORDS),
+                *(PresetRule("certification", "is", rating, 1, excludes=True) for rating in ADULT_RATINGS),
             ),
         ),
         PresetCategory(

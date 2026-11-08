@@ -454,5 +454,7 @@
   "activity.outcome.moved_elsewhere": "déplacé ailleurs",
   "why.aiSignal": "Avis de l'IA",
   "choice.excluded": "exclu",
-  "choice.ai": "le choix de l'IA"
+  "choice.ai": "le choix de l'IA",
+  "status.undone": "Remis en place",
+  "verdict.undone": "Déplacement annulé — retour dans"
 }

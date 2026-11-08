@@ -454,5 +454,7 @@
   "activity.outcome.moved_elsewhere": "moved elsewhere",
   "why.aiSignal": "AI opinion",
   "choice.excluded": "ruled out",
-  "choice.ai": "the AI's choice"
+  "choice.ai": "the AI's choice",
+  "status.undone": "Put back",
+  "verdict.undone": "Move undone — back in"
 }
