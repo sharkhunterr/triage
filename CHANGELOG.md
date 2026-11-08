@@ -2,3 +2,48 @@
 
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
+
+## 0.1.0 (2026-11-08)
+
+
+### Features
+
+* **activity:** analyses asked from the movie page show in Activity ([86e1ee0](https://github.com/sharkhunterr/triage/commit/86e1ee0031feb3e439fb793ba2880decac9801a2))
+* **activity:** live progress of every analysis, step by step ([d8726dd](https://github.com/sharkhunterr/triage/commit/d8726dda6cea3c1cd6f545928a4aa688258d86d7))
+* adult content stays out of Animation; undone moves shown as such ([9191f1f](https://github.com/sharkhunterr/triage/commit/9191f1f131b6782aa10072363e7d1898cc7cc1e4))
+* **ai:** the AI reads each category's folder and rules, and what they found ([140c524](https://github.com/sharkhunterr/triage/commit/140c524cc9747c49513a9820015cecf62f4be253))
+* **categories:** categories and rules, movies/animation preset, editor (US3, T039–T044) ([9cffa66](https://github.com/sharkhunterr/triage/commit/9cffa66c2b079c161471f6739f65ea7e0146e3f1))
+* **decision:** Analyze now, at the top of the movie page ([7fca111](https://github.com/sharkhunterr/triage/commit/7fca1112892421cd765eadeb379abb33ee578df7))
+* **decision:** category colors and every keyword shown ([f0df457](https://github.com/sharkhunterr/triage/commit/f0df457559603ff7d289ed3b73867be586b8022f))
+* Docker image (PUID/PGID), GitLab CI, README with screenshots, release notes; hide superseded decisions by default (T092–T098) ([b5e8daa](https://github.com/sharkhunterr/triage/commit/b5e8daaa183e13fb349a0f3907bf85961bfe8792))
+* exclusion rules, AI second opinion, clearer movie page ([44dbea2](https://github.com/sharkhunterr/triage/commit/44dbea2f592fef3224b719fc6cd4dff5ace87d20))
+* foundations — models and migration, settings, auth, adapters with fakes, scoring engine, decision states, work queue, frontend shell (T007–T037) ([bd54ed7](https://github.com/sharkhunterr/triage/commit/bd54ed72c5174391e7701f527608cab58f656d32))
+* **history:** undo a move, or every move of a period ([83b0de6](https://github.com/sharkhunterr/triage/commit/83b0de6a922942516151582ca3f66c2f7ef2acdb))
+* **nav:** Activity in the phone bottom bar ([a9b5a1b](https://github.com/sharkhunterr/triage/commit/a9b5a1b10b9fc0fdb2497f9d48e429ce0b379e27))
+* **preset:** '3d animation' keyword counts for Animation ([be97068](https://github.com/sharkhunterr/triage/commit/be97068bfc9281214ff78039035b64223b250f19))
+* **preset:** live action remakes go to Movies (decisive keyword) ([73cede5](https://github.com/sharkhunterr/triage/commit/73cede5295e62b62d679456535499b6935131f39))
+* **preview:** preview mode, apply/dismiss/apply-confident, simulate; settings API and page with mode switch (US4 T064–T068, US8 T083/T085) ([ed787de](https://github.com/sharkhunterr/triage/commit/ed787dee7dcc428791843a4575fb11afa7beed5e))
+* request verification, corrections and history, status page, Seerr webhook (US6, US7, US8, US9) ([115bc0d](https://github.com/sharkhunterr/triage/commit/115bc0d5f398f0019abbd7c7f63abc6c995effb1))
+* **review:** Analyze… everything, waiting, or new only ([a4258a5](https://github.com/sharkhunterr/triage/commit/a4258a548805bf456bcf9012e5b2dae55c19758a))
+* **review:** decide all, analyze all again, colored choices; phone fixes ([58f77f3](https://github.com/sharkhunterr/triage/commit/58f77f3c6b2fedd59b90931cf1236ed00dd2a8f6))
+* **review:** hold doubtful movies, one email per run with single-use links, review queue (US2, T057–T062) ([246308b](https://github.com/sharkhunterr/triage/commit/246308bb1de7e795a7a2b05fe81e768b992ff2d6))
+* **scans:** scan any root folder into proposals, with progress, cancel and scoped apply (US5, T070–T073) ([933af68](https://github.com/sharkhunterr/triage/commit/933af68179fbb908a126f45edf84b9a4c9248b4b))
+* **setup:** guided setup wizard with a test for every service ([5042c1b](https://github.com/sharkhunterr/triage/commit/5042c1bb4970d5b8091786ad5391024202cddfd6))
+* **sorting:** poll intake folders, classify with rules then AI, move through Radarr's editor; dashboard and decision detail (US1, T046–T055) ([bc01823](https://github.com/sharkhunterr/triage/commit/bc018235b6fbfa10fbbc7ad288a333e066eaa30a))
+* titles in the TMDB language, confidence on every choice, AI points shown ([be84fcf](https://github.com/sharkhunterr/triage/commit/be84fcfa464e25ae28c660dba2d99271b1e4fde4))
+* **tmdb:** language and country setting ([9228ce1](https://github.com/sharkhunterr/triage/commit/9228ce16d08e2c249c726aa3cc23bee86109b8f7))
+
+
+### Bug Fixes
+
+* an undone move waits for the owner again; Analyze all again takes it ([0e5f1b3](https://github.com/sharkhunterr/triage/commit/0e5f1b333ccf6a5a29732c694a75c26ad5f742c7))
+* **categories:** stable keys for rule rows in the editor ([9d16eec](https://github.com/sharkhunterr/triage/commit/9d16eec8d308b0876b9a983178bc775e74d23bda))
+* **dashboard:** undone moves are not counted as sorted ([7147d0b](https://github.com/sharkhunterr/triage/commit/7147d0b2c071755d8bf4741841cbd1a51a8e5744))
+* owner actions go first in the queue; French titles never taken from Quebec ([3cbc063](https://github.com/sharkhunterr/triage/commit/3cbc0638723ee2b84246d8a77d7740c96a355c26))
+* **webhook:** check again shortly after a Seerr notification ([cd0a877](https://github.com/sharkhunterr/triage/commit/cd0a877909c5703e30e5d76481a635dba080aa86))
+* **worker:** never hold the database lock while waiting on TMDB or the AI ([9994753](https://github.com/sharkhunterr/triage/commit/99947530d66aad9c6212b5a1b008da8c7a3de187))
+
+# Changelog
+
+All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
+[GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
