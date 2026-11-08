@@ -145,15 +145,15 @@ decided".
 
 ### Tests for User Story 2
 
-- [ ] T057 [P] [US2] Write integration tests for holding (below threshold or close second → held, never moved; one email per poll run grouping held movies; SMTP failure → retried, review item still visible) in backend/tests/integration/test_hold_and_email.py
-- [ ] T058 [P] [US2] Write integration tests for review links (GET shows confirmation and never acts; POST moves and marks used; second use and expired → 410; decided in UI → links revoked; "leave in intake" → left_in_intake, never proposed again for that arrival) in backend/tests/integration/test_review_links.py
+- [X] T057 [P] [US2] Write integration tests for holding (below threshold or close second → held, never moved; one email per poll run grouping held movies; SMTP failure → retried, review item still visible) in backend/tests/integration/test_hold_and_email.py
+- [X] T058 [P] [US2] Write integration tests for review links (GET shows confirmation and never acts; POST moves and marks used; second use and expired → 410; decided in UI → links revoked; "leave in intake" → left_in_intake, never proposed again for that arrival) in backend/tests/integration/test_review_links.py
 
 ### Implementation for User Story 2
 
-- [ ] T059 [US2] Implement review-link tokens (32 random bytes, SHA-256 storage, expiry, single use, revocation) in backend/src/triage/core/tokens.py
-- [ ] T060 [US2] Implement the email batcher job and templates (HTML + text, poster, reasons, one link per category + leave in intake, EN/FR by owner locale) in backend/src/triage/worker/email.py and backend/src/triage/templates/
-- [ ] T061 [US2] Implement `/review`, `/decisions/{id}/apply` and the public `/r/{token}` GET (confirmation page) and POST in backend/src/triage/api/review.py
-- [ ] T062 [P] [US2] Implement the review queue (cards with poster, reasons, one button per category, leave in intake; optimistic update; empty state "nothing to review") in frontend/src/features/review/
+- [X] T059 [US2] Implement review-link tokens (32 random bytes, SHA-256 storage, expiry, single use, revocation) in backend/src/triage/core/tokens.py
+- [X] T060 [US2] Implement the email batcher job and templates (HTML + text, poster, reasons, one link per category + leave in intake, EN/FR by owner locale) in backend/src/triage/worker/email.py and backend/src/triage/templates/
+- [X] T061 [US2] Implement `/review`, `/decisions/{id}/apply` and the public `/r/{token}` GET (confirmation page) and POST in backend/src/triage/api/review.py
+- [X] T062 [P] [US2] Implement the review queue (cards with poster, reasons, one button per category, leave in intake; optimistic update; empty state "nothing to review") in frontend/src/features/review/
 - [ ] T063 [US2] Add review strings (EN/FR) and a Playwright test deciding a held movie in one tap on mobile in frontend/tests/e2e/review.spec.ts
 
 **Checkpoint**: doubt never moves a movie, and the owner settles it in one tap.

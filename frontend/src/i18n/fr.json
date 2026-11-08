@@ -175,5 +175,17 @@
   "audit.leave": "Laissé dans l'entrée",
   "audit.dismiss": "Ignoré",
   "actor.triage": "Triage",
-  "actor.owner": "vous"
+  "actor.owner": "vous",
+  "review.subtitle": "Les films que Triage a mis de côté, et ce qu'il propose. Un geste suffit.",
+  "review.held": "À trancher ({count})",
+  "review.proposals": "Propositions ({count})",
+  "review.wouldMove": "Triage le déplacerait vers {category}.",
+  "review.emptyHeld": "Rien à trancher",
+  "review.emptyHeldText": "Quand Triage hésite sur un film, il l'attend ici pour vous — et vous recevez un email.",
+  "review.emptyProposals": "Aucune proposition",
+  "review.emptyProposalsText": "En mode aperçu, et après un scan, ce que Triage ferait apparaît ici avant que rien ne bouge.",
+  "review.applyConfident": "Appliquer les propositions sûres",
+  "review.applyConfidentTitle": "Appliquer {count, plural, one {# proposition} other {# propositions}} ?",
+  "review.applyConfidentText": "Seules les propositions au-dessus du seuil de confiance sont appliquées. Les autres restent ici.",
+  "review.appliedCount": "{count, plural, =0 {Rien d'appliqué} one {# film en cours de déplacement} other {# films en cours de déplacement}}"
 }

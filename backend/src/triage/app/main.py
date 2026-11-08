@@ -65,9 +65,9 @@ async def shutdown(app: FastAPI) -> None:
 
 
 def _routers() -> list[APIRouter]:
-    from triage.api import auth, categories, decisions, settings
+    from triage.api import auth, categories, decisions, review, settings
 
-    return [auth.router, categories.router, decisions.router, settings.router]
+    return [auth.router, categories.router, decisions.router, review.router, settings.router]
 
 
 def create_app(
@@ -98,6 +98,9 @@ def create_app(
     install_error_handlers(app)
     for router in _routers():
         app.include_router(router, prefix=API_PREFIX)
+    from triage.api.review import public as review_links
+
+    app.include_router(review_links)  # /r/{token}: email links, outside the API
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> JSONResponse:

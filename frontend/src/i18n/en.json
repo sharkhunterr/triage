@@ -175,5 +175,17 @@
   "audit.leave": "Left in intake",
   "audit.dismiss": "Dismissed",
   "actor.triage": "Triage",
-  "actor.owner": "you"
+  "actor.owner": "you",
+  "review.subtitle": "Movies Triage kept aside, and what it proposes. One tap decides.",
+  "review.held": "To decide ({count})",
+  "review.proposals": "Proposals ({count})",
+  "review.wouldMove": "Triage would move it to {category}.",
+  "review.emptyHeld": "Nothing to decide",
+  "review.emptyHeldText": "When Triage is not sure where a movie goes, it waits here for you — and you get an email.",
+  "review.emptyProposals": "No proposal",
+  "review.emptyProposalsText": "In preview mode, and after a scan, what Triage would do appears here before anything moves.",
+  "review.applyConfident": "Apply the confident proposals",
+  "review.applyConfidentTitle": "Apply {count, plural, one {# proposal} other {# proposals}}?",
+  "review.applyConfidentText": "Only proposals at or above the confidence threshold are applied. The others stay here.",
+  "review.appliedCount": "{count, plural, =0 {Nothing applied} one {# movie is being moved} other {# movies are being moved}}"
 }
