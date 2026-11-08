@@ -28,16 +28,17 @@ def _certifications(data: dict[str, Any], country: str) -> list[str]:
     )
 
 
-def _overview(data: dict[str, Any], language: str, country: str) -> str | None:
+def _translated(data: dict[str, Any], language: str, country: str, key: str) -> str | None:
+    """A translated field (overview, title): the country's variant first, then any of the language."""
     translations = [
         t
         for t in (data.get("translations") or {}).get("translations") or []
-        if t.get("iso_639_1") == language and (t.get("data") or {}).get("overview")
+        if t.get("iso_639_1") == language and (t.get("data") or {}).get(key)
     ]
     best = next((t for t in translations if t.get("iso_3166_1") == country), None) or next(
         iter(translations), None
     )
-    return str(best["data"]["overview"]) if best else None
+    return str(best["data"][key]) if best else None
 
 
 def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:
@@ -52,7 +53,8 @@ def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:
         companies=tuple(c["name"] for c in data.get("production_companies") or [] if c.get("name")),
         certifications=tuple(certifications),
         original_language=data.get("original_language") or None,
-        overview=_overview(data, lang, country) or data.get("overview") or None,
+        overview=_translated(data, lang, country, "overview") or data.get("overview") or None,
+        title=_translated(data, lang, country, "title"),
     )
 
 

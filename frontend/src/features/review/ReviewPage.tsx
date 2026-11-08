@@ -19,7 +19,7 @@ import {
 import { useT } from '../../i18n'
 import { categoryButton } from '../categories/colors'
 import { useDecisionAction } from '../decisions/DecisionActions'
-import { ConfidenceMeter, Poster, ReasonText, StatusBadge } from '../decisions/parts'
+import { ChoiceInfo, ConfidenceMeter, Poster, ReasonText, StatusBadge } from '../decisions/parts'
 import { Reanalyze, ReviewAll } from './ReviewAll'
 
 const useReview = () =>
@@ -76,6 +76,7 @@ function ReviewCard({ decision }: { decision: DecisionSummary }) {
             }
           >
             {category.name}
+            <ChoiceInfo decision={decision} categoryKey={category.key} />
           </Button>
         ))}
         <Button

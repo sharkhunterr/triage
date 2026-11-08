@@ -6,6 +6,7 @@ import type { DecisionSummary } from '../../api/decisions'
 import { Button, Card, useToast } from '../../design-system'
 import { useT } from '../../i18n'
 import { categoryButton } from '../categories/colors'
+import { ChoiceInfo } from './parts'
 
 type Target = { category_id: number } | { target: 'intake' }
 
@@ -85,6 +86,7 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
                 }
               >
                 {t('decision.moveTo', { category: c.name })}
+                {!correctable && <ChoiceInfo decision={decision} categoryKey={c.key} />}
               </Button>
             ))}
         {correctable && decision.from_root_folder && (

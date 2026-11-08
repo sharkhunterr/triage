@@ -51,3 +51,29 @@ async def test_changing_the_tmdb_language_refreshes_the_cached_metadata(owner: A
     await env.settings(tmdb={"language": "fr-FR"})
     await owner.post("/api/v1/movies/1/simulate")
     assert env.fakes.tmdb.calls == [862, 862]
+
+
+async def test_titles_follow_the_tmdb_language(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    add_toy_story(env)
+    assert env.fakes.tmdb is not None
+    env.fakes.tmdb.set(862, genres=["Animation"], companies=["Pixar"], title="Toy Story VF")
+    await env.state.worker.tick(poll=True)
+    (item,) = (await owner.get("/api/v1/decisions")).json()["items"]
+    assert item["movie"]["title"] == "Toy Story VF"
+    found = (await owner.get("/api/v1/decisions", params={"q": "vf"})).json()["items"]
+    assert len(found) == 1
+
+
+async def test_changing_the_language_retitles_the_history_too(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    await env.settings(tmdb={"api_key": "k"})
+    add_toy_story(env)
+    await env.state.worker.tick(poll=True)  # moved, with Radarr's title
+    assert env.fakes.tmdb is not None
+    env.fakes.tmdb.set(862, genres=["Animation"], title="Toy Story (FR)")
+    await owner.patch("/api/v1/settings", json={"tmdb": {"language": "fr-FR"}})
+    await env.state.worker.tick()
+    (item,) = (await owner.get("/api/v1/decisions")).json()["items"]
+    assert item["movie"]["title"] == "Toy Story (FR)"

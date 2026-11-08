@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ListChecks, RefreshCw } from 'lucide-react'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useCategories } from '../../api/categories'
 import { api } from '../../api/client'
@@ -8,7 +8,7 @@ import type { DecisionSummary } from '../../api/decisions'
 import { Button, cx, Dialog, Spinner, useToast } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryDot, tint } from '../categories/colors'
-import { Poster } from '../decisions/parts'
+import { ChoiceInfo, Poster } from '../decisions/parts'
 
 /** `cat:<id>` moves to that category, `intake` leaves (or dismisses), `later` does nothing. */
 type Choice = `cat:${number}` | 'intake' | 'later'
@@ -96,7 +96,7 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
               {items.map((d) => {
                 const choice = choiceOf(d)
                 const proposed = d.target_category ?? d.top_category
-                const pill = (value: Choice, label: string, categoryId?: number) => {
+                const pill = (value: Choice, label: ReactNode, categoryId?: number) => {
                   const selected = choice === value
                   return (
                     <label
@@ -145,7 +145,15 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
                       </div>
                     </div>
                     <fieldset aria-labelledby={`review-all-${d.id}`} className="flex flex-wrap gap-1.5">
-                      {libraries.map((c) => pill(`cat:${c.id}`, c.name, c.id))}
+                      {libraries.map((c) =>
+                        pill(
+                          `cat:${c.id}`,
+                          <>
+                            {c.name} <ChoiceInfo decision={d} categoryKey={c.key} />
+                          </>,
+                          c.id,
+                        ),
+                      )}
                       {pill('intake', d.status === 'proposed' ? t('decision.dismiss') : t('decision.leave'))}
                       {pill('later', t('reviewAll.later'))}
                     </fieldset>

@@ -51,6 +51,7 @@ class TmdbDetails:
     certifications: tuple[str, ...] = ()
     original_language: str | None = None
     overview: str | None = None
+    title: str | None = None  # in the configured language, when TMDB has a translation
 
 
 @dataclass(frozen=True)

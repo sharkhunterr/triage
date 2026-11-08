@@ -385,7 +385,7 @@
   "why.asked.unsure": "interrogée : règles incertaines",
   "why.asked.always": "interrogée : second avis",
   "why.aiAdded": "Cela a ajouté {points} points.",
-  "why.aiIgnored": "Ignoré : cette catégorie est exclue par une règle d'exclusion.",
+  "why.aiIgnored": "L'IA a choisi {category}, mais votre règle d'exclusion « {rule} » l'écarte : son avis n'a pas compté.",
   "sheet.title": "Le film",
   "sheet.noOverview": "Aucun synopsis disponible.",
   "sheet.sources": "Métadonnées issues de Radarr et TMDB.",
@@ -451,5 +451,8 @@
   "activity.skip.conflict": "règles en conflit",
   "activity.skip.no_metadata": "pas de métadonnées",
   "activity.outcome.removed_from_radarr": "retiré de Radarr",
-  "activity.outcome.moved_elsewhere": "déplacé ailleurs"
+  "activity.outcome.moved_elsewhere": "déplacé ailleurs",
+  "why.aiSignal": "Avis de l'IA",
+  "choice.excluded": "exclu",
+  "choice.ai": "le choix de l'IA"
 }

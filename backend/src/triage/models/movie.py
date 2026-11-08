@@ -15,6 +15,8 @@ class MovieRef(Base):
     radarr_id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     tmdb_id: Mapped[int | None]
     title: Mapped[str] = mapped_column(String(300))
+    # the title in the TMDB language, when TMDB has one; Radarr's own title otherwise
+    local_title: Mapped[str | None] = mapped_column(String(300))
     year: Mapped[int | None]
     poster_url: Mapped[str | None] = mapped_column(String(500))
     root_folder_path: Mapped[str | None] = mapped_column(String(500))

@@ -98,6 +98,7 @@ async def test_tmdb_in_french_gives_the_french_rating_and_synopsis():
     details = await TmdbClient("v3key", rec.client(), RateLimiter(1000), language="fr-FR").details(862)
     assert details.certifications == ("U",)
     assert details.overview == "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair."
+    assert details.title == "Toy Story : les jouets"
     assert details.genres[0] == "Animation"  # genres stay in English, the language rules are written in
 
 

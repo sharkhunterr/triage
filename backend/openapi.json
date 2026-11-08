@@ -584,6 +584,13 @@
             ],
             "title": "Error"
           },
+          "excluded": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
           "facts": {
             "additionalProperties": {
               "items": {
@@ -748,9 +755,10 @@
           "request_check",
           "created_at",
           "decided_at",
-          "signals",
-          "ai",
           "scores",
+          "excluded",
+          "ai",
+          "signals",
           "facts",
           "threshold",
           "margin",
@@ -794,6 +802,18 @@
             "title": "Actor",
             "type": "string"
           },
+          "ai": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai"
+          },
           "confidence": {
             "title": "Confidence",
             "type": "number"
@@ -825,6 +845,13 @@
               }
             ],
             "title": "Error"
+          },
+          "excluded": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Excluded",
+            "type": "array"
           },
           "from_root_folder": {
             "anyOf": [
@@ -874,6 +901,13 @@
               }
             ],
             "title": "Scan Id"
+          },
+          "scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Scores",
+            "type": "object"
           },
           "source": {
             "title": "Source",
@@ -931,7 +965,10 @@
           "scan_id",
           "request_check",
           "created_at",
-          "decided_at"
+          "decided_at",
+          "scores",
+          "excluded",
+          "ai"
         ],
         "title": "DecisionSummary",
         "type": "object"

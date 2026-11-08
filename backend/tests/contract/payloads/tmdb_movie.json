@@ -80,7 +80,8 @@
         "iso_3166_1": "US",
         "iso_639_1": "en",
         "data": {
-          "overview": "Led by Woody, Andy's toys live happily in his room..."
+          "overview": "Led by Woody, Andy's toys live happily in his room...",
+          "title": ""
         }
       },
       {
@@ -94,7 +95,8 @@
         "iso_3166_1": "FR",
         "iso_639_1": "fr",
         "data": {
-          "overview": "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair."
+          "overview": "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair.",
+          "title": "Toy Story : les jouets"
         }
       },
       {

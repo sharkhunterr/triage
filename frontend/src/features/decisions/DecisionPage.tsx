@@ -247,7 +247,7 @@ function Why({
         </h3>
         <ul className="flex flex-col gap-3">
           {ranked.map(([key, value]) => {
-            const own = signals.filter((s) => s.category_key === key && s.kind !== 'inference')
+            const own = signals.filter((s) => s.category_key === key)
             const excluded = exclusions.some((s) => s.category_key === key)
             return (
               <li key={key}>
@@ -300,6 +300,20 @@ function SignalChip({ signal, categoryId }: { signal: Signal; categoryId?: numbe
         +{String(signal.weight)} · {t('decision.fallbackSignal')}
       </span>
     )
+  if (signal.kind === 'inference')
+    return (
+      <span
+        className={cx(
+          'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium',
+          signal.ignored
+            ? 'border-transparent bg-surface-2 text-muted line-through'
+            : 'border-info/40 bg-info/10 text-info',
+        )}
+      >
+        <Bot className="size-3" aria-hidden />+{String(signal.weight)} · {t('why.aiSignal')}
+        {signal.ignored ? <span className="sr-only">({t('why.ignored')})</span> : null}
+      </span>
+    )
   const label = (
     <>
       {t(`field.${signal.field}`)} {t(`operator.${signal.operator}`)} <strong>{String(signal.value)}</strong>
@@ -326,6 +340,13 @@ function SignalChip({ signal, categoryId }: { signal: Signal; categoryId?: numbe
   )
 }
 
+function exclusionOf(decision: DecisionDetail, key: string, t: (id: string) => string): string {
+  return (decision.signals as Signal[])
+    .filter((s) => s.kind === 'exclusion' && s.category_key === key)
+    .map((s) => `${t(`field.${s.field}`)} ${t(`operator.${s.operator}`)} ${String(s.value)}`)
+    .join(', ')
+}
+
 function AiOpinion({ decision, name }: { decision: DecisionDetail; name: (key: unknown) => string }) {
   const t = useT()
   const ai = decision.ai
@@ -350,8 +371,16 @@ function AiOpinion({ decision, name }: { decision: DecisionDetail; name: (key: u
             {inference && !inference.ignored
               ? ` ${t('why.aiAdded', { points: String(inference.weight) })}`
               : ''}
-            {inference?.ignored ? ` ${t('why.aiIgnored')}` : ''}
           </p>
+          {inference?.ignored ? (
+            <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-danger/10 px-2.5 py-1.5 text-sm text-danger">
+              <Ban className="mt-0.5 size-4 shrink-0" aria-hidden />
+              {t('why.aiIgnored', {
+                category: name(ai.category),
+                rule: exclusionOf(decision, String(ai.category), t),
+              })}
+            </p>
+          ) : null}
           <blockquote className="mt-2 border-l-2 border-info pl-3 text-sm italic">
             {String(ai.reasoning)}
           </blockquote>

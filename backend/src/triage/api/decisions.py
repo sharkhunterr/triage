@@ -50,6 +50,11 @@ class DecisionSummary(BaseModel):
     request_check: dict[str, Any] | None
     created_at: datetime
     decided_at: datetime | None
+    # points per category key, the categories ruled out by an exclusion, and the AI's answer:
+    # enough to show every choice with its confidence
+    scores: dict[str, float]
+    excluded: list[str]
+    ai: dict[str, Any] | None
 
 
 class AuditOut(BaseModel):
@@ -64,8 +69,6 @@ class AuditOut(BaseModel):
 
 class DecisionDetail(DecisionSummary):
     signals: list[dict[str, Any]]
-    ai: dict[str, Any] | None
-    scores: dict[str, float]
     facts: dict[str, list[str]]
     overview: str | None = None
     threshold: float | None
@@ -124,7 +127,7 @@ def _movie(ref: MovieRef | None, radarr_id: int) -> MovieOut:
     return MovieOut(
         radarr_id=ref.radarr_id,
         tmdb_id=ref.tmdb_id,
-        title=ref.title,
+        title=ref.local_title or ref.title,
         year=ref.year,
         poster_url=ref.poster_url,
         root_folder_path=ref.root_folder_path,
@@ -150,6 +153,11 @@ def summary(decision: Decision, ref: MovieRef | None) -> DecisionSummary:
         request_check=decision.request_check,
         created_at=decision.created_at,
         decided_at=decision.decided_at,
+        scores=(decision.scores or {}).get("categories", {}),
+        excluded=sorted(
+            {str(s["category_key"]) for s in decision.signals or [] if s.get("kind") == "exclusion"}
+        ),
+        ai=decision.ai,
     )
 
 
@@ -177,8 +185,6 @@ async def detail(db: Db, decision: Decision) -> DecisionDetail:
     return DecisionDetail(
         **summary(decision, ref).model_dump(),
         signals=decision.signals or [],
-        ai=decision.ai,
-        scores=scores.get("categories", {}),
         facts=scores.get("facts", {}),
         overview=scores.get("overview") or await _cached_overview(db, ref),
         threshold=scores.get("threshold"),
@@ -273,7 +279,10 @@ async def list_decisions(
             or_(Decision.top_category_id == category, Decision.target_category_id == category)
         )
     if q:
-        matching = select(MovieRef.radarr_id).where(MovieRef.title.ilike(f"%{q.strip()}%"))
+        pattern = f"%{q.strip()}%"
+        matching = select(MovieRef.radarr_id).where(
+            MovieRef.title.ilike(pattern) | MovieRef.local_title.ilike(pattern)
+        )
         query = query.where(Decision.radarr_id.in_(matching))
     if since:
         query = query.where(Decision.created_at >= since)

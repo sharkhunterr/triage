@@ -11,13 +11,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from triage.adapters.types import Adapters, AiVerdict, RadarrMovie, ServiceError, TmdbDetails
 from triage.core import clock
-from triage.core.activity import FAILED, skip, step
+from triage.core.activity import FAILED, note, skip, step
 from triage.core.settings import AppSettings
 from triage.domain.ai_prompt import build_prompt
 from triage.domain.categories import definitions
 from triage.domain.scoring import UNSURE, CategoryDef, score
 from triage.domain.signals import gather_facts
-from triage.models import MetadataCache
+from triage.models import MetadataCache, MovieRef
 
 CACHE_TTL = timedelta(days=7)
 
@@ -47,7 +47,13 @@ async def tmdb_details(
         return None
     cached = await db.get(MetadataCache, tmdb_id)
     fresh = cached is not None and clock.now() - cached.fetched_at < CACHE_TTL
-    if cached is not None and fresh and cached.payload.get("language", "en-US") == language:
+    # an entry from before titles were kept ("title" missing) is read again
+    if (
+        cached is not None
+        and fresh
+        and cached.payload.get("language", "en-US") == language
+        and "title" in cached.payload
+    ):
         payload = cached.payload
         return TmdbDetails(
             genres=tuple(payload.get("genres") or ()),
@@ -56,6 +62,7 @@ async def tmdb_details(
             certifications=tuple(payload.get("certifications") or ()),
             original_language=payload.get("original_language"),
             overview=payload.get("overview"),
+            title=payload.get("title"),
         )
     details = await adapters.tmdb.details(tmdb_id)
     payload = {k: list(v) if isinstance(v, tuple) else v for k, v in details.__dict__.items()}
@@ -99,6 +106,11 @@ async def classify_movie(
     with step("metadata") as metadata:
         details = await tmdb_details(db, adapters, movie.tmdb_id, settings.tmdb.language)
         metadata.detail = "TMDB" if details is not None else "Radarr"
+    if details is not None and details.title:
+        ref = await db.get(MovieRef, movie.id)
+        if ref is not None:
+            ref.local_title = details.title
+        note(title=details.title)
     facts = gather_facts(movie, details)
     sorting = settings.sorting
     names = {c.key: c.name for c in categories}
@@ -118,7 +130,7 @@ async def classify_movie(
         and not any(r["code"] == "decisive_conflict" for r in reasons)
     ):
         asked = "unsure" if not result.conclusive else "always"
-        system, user = build_prompt(facts, categories, result)
+        system, user = build_prompt(facts, categories, result, settings.tmdb.language)
         await db.commit()
         verdict: AiVerdict | None = None
         with step("ai") as asking:

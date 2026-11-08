@@ -17,7 +17,7 @@ The rules are the owner's own criteria:
 - The fallback category is used when nothing else fits.
 Use the rules as guidance and your knowledge of the movie (overview, style, audience) for the rest.
 If you cannot decide with reasonable certainty, answer "unsure".
-Give a confidence between 0 and 1 and one or two sentences of reasoning.
+Give a confidence between 0 and 1 and one or two sentences of reasoning, written in {language}.
 
 Categories:
 {categories}"""
@@ -28,6 +28,16 @@ LABELS = {
     "company": "Production companies",
     "certification": "Age ratings",
     "original_language": "Original language",
+}
+# the reasoning is shown to the owner: it follows the TMDB language ("fr-FR" → French)
+LANGUAGES = {
+    "fr": "French",
+    "en": "English",
+    "de": "German",
+    "es": "Spanish",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "nl": "Dutch",
 }
 OPERATORS = {"is": "is", "contains": "contains", "is_not": "is not"}
 
@@ -80,9 +90,15 @@ def _findings(result: ScoreResult, categories: list[CategoryDef]) -> list[str]:
 
 
 def build_prompt(
-    facts: MovieFacts, categories: list[CategoryDef], result: ScoreResult | None = None
+    facts: MovieFacts,
+    categories: list[CategoryDef],
+    result: ScoreResult | None = None,
+    language: str = "en-US",
 ) -> tuple[str, str]:
-    system = SYSTEM.format(categories="\n".join(_category(c) for c in categories))
+    system = SYSTEM.format(
+        categories="\n".join(_category(c) for c in categories),
+        language=LANGUAGES.get(language.split("-")[0], "English"),
+    )
 
     summary = facts.summary()
     user_lines = [f"Title: {facts.title}" + (f" ({facts.year})" if facts.year else "")]

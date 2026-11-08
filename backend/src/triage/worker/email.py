@@ -51,7 +51,7 @@ async def send_email_job(ctx: JobContext, item: WorkItem) -> None:
         ref = await ctx.db.get(MovieRef, decision.radarr_id)
         movies.append(
             HeldMovie(
-                title=ref.title if ref else "?",
+                title=(ref.local_title or ref.title) if ref else "?",
                 year=ref.year if ref else None,
                 poster_url=ref.poster_url if ref else None,
                 reasons=decision.reasons or [],

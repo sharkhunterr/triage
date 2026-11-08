@@ -1,4 +1,4 @@
-import { ArrowRight, Film } from 'lucide-react'
+import { ArrowRight, Bot, Film } from 'lucide-react'
 import { Link } from 'react-router'
 import type { DecisionSummary } from '../../api/decisions'
 import { Badge, Card, type Tone } from '../../design-system'
@@ -134,5 +134,41 @@ export function DecisionCard({ decision }: { decision: DecisionSummary }) {
         </div>
       </Card>
     </Link>
+  )
+}
+
+const PRIOR = 20 // the scoring engine's prior (domain/scoring.py)
+
+/** A category's confidence were it chosen: its points against the best other one, as the rules compute it. */
+export function choiceConfidence(decision: DecisionSummary, key: string): number {
+  if (decision.excluded.includes(key)) return 0
+  const own = decision.scores[key] ?? 0
+  if (own <= 0) return 0
+  const best = Math.max(
+    0,
+    ...Object.entries(decision.scores)
+      .filter(([k]) => k !== key)
+      .map(([, v]) => v),
+  )
+  return own / (own + best + PRIOR)
+}
+
+/** What a choice is worth: the rules' confidence, and the AI's when it picked this category. */
+export function ChoiceInfo({ decision, categoryKey }: { decision: DecisionSummary; categoryKey: string }) {
+  const t = useT()
+  const ai = decision.ai
+  const aiPicked = ai && !ai.error && ai.category === categoryKey
+  if (decision.excluded.includes(categoryKey))
+    return <span className="text-[0.8em] font-normal">· {t('choice.excluded')}</span>
+  return (
+    <span className="inline-flex items-center gap-1 text-[0.8em] font-normal tabular-nums">
+      · {Math.round(choiceConfidence(decision, categoryKey) * 100)} %
+      {aiPicked && (
+        <span className="inline-flex items-center gap-0.5" title={t('choice.ai')}>
+          · <Bot className="size-3" aria-hidden />
+          <span className="sr-only">{t('choice.ai')}</span> {Math.round(Number(ai.confidence) * 100)} %
+        </span>
+      )}
+    </span>
   )
 }

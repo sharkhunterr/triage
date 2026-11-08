@@ -9,6 +9,7 @@ from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
 from triage.core.errors import TriageError
 from triage.core.security import new_token
 from triage.core.settings import AppSettings, merge_update, public_view, same_folder, save_settings
+from triage.worker import queue
 
 router = APIRouter(tags=["settings"], dependencies=[Owner])
 
@@ -79,6 +80,8 @@ async def update_settings(
                     details={"paths": unknown},
                 )
     await save_settings(db, merged)
+    if merged.tmdb.api_key and merged.tmdb.language != settings.tmdb.language:
+        await queue.enqueue(db, "refresh_titles", {})
     await db.commit()
     state.worker.wake()
     return _view(merged)

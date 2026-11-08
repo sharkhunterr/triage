@@ -385,7 +385,7 @@
   "why.asked.unsure": "asked: rules unsure",
   "why.asked.always": "asked: second opinion",
   "why.aiAdded": "That added {points} points.",
-  "why.aiIgnored": "Ignored: that category is ruled out by an exclusion rule.",
+  "why.aiIgnored": "The AI chose {category}, but your exclusion rule “{rule}” rules it out: its opinion did not count.",
   "sheet.title": "The movie",
   "sheet.noOverview": "No synopsis available.",
   "sheet.sources": "Metadata from Radarr and TMDB.",
@@ -451,5 +451,8 @@
   "activity.skip.conflict": "rules disagree",
   "activity.skip.no_metadata": "no metadata",
   "activity.outcome.removed_from_radarr": "removed from Radarr",
-  "activity.outcome.moved_elsewhere": "moved elsewhere"
+  "activity.outcome.moved_elsewhere": "moved elsewhere",
+  "why.aiSignal": "AI opinion",
+  "choice.excluded": "ruled out",
+  "choice.ai": "the AI's choice"
 }

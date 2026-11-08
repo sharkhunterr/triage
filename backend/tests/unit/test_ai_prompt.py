@@ -10,6 +10,9 @@ def test_the_ai_sees_each_category_with_its_folder_and_rules():
     assert "Never when: genre is Horror; genre is Thriller" in system
     assert "live action" in system and "(fallback" in system
     assert "never choose a category ruled out" in system.lower()
+    assert "written in English" in system
+    french, _ = build_prompt(facts(genres=["Animation"]), [ANIMATION_NO_HORROR, FILMS], language="fr-FR")
+    assert "written in French" in french
 
 
 def test_the_ai_sees_what_the_rules_found_for_this_movie():

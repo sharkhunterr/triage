@@ -20,6 +20,7 @@ from triage.models import Decision, MovieRef
 from triage.models import Owner as OwnerRow
 from triage.templates.messages import text
 from triage.templates.render import app_link, confirm_form, page
+from triage.worker import queue
 from triage.worker.classify import new_decision
 
 router = APIRouter(tags=["review"], dependencies=[Owner])
@@ -283,6 +284,7 @@ async def reanalyze(body: ReanalyzeBody, db: Db, state: State) -> Count:
     """Every movie waiting in the intake folder, classified again with today's rules."""
     count = await categories.reanalyze_waiting(db, dry_run=body.dry_run)
     if not body.dry_run:
+        await queue.enqueue(db, "refresh_titles", {})
         await db.commit()
         if count:
             state.worker.wake()

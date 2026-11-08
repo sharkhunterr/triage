@@ -896,6 +896,8 @@ export interface components {
             decided_at: string | null;
             /** Error */
             error: string | null;
+            /** Excluded */
+            excluded: string[];
             /** Facts */
             facts: {
                 [key: string]: string[];
@@ -949,6 +951,10 @@ export interface components {
         DecisionSummary: {
             /** Actor */
             actor: string;
+            /** Ai */
+            ai: {
+                [key: string]: unknown;
+            } | null;
             /** Confidence */
             confidence: number;
             /**
@@ -960,6 +966,8 @@ export interface components {
             decided_at: string | null;
             /** Error */
             error: string | null;
+            /** Excluded */
+            excluded: string[];
             /** From Root Folder */
             from_root_folder: string | null;
             /** Id */
@@ -975,6 +983,10 @@ export interface components {
             } | null;
             /** Scan Id */
             scan_id: number | null;
+            /** Scores */
+            scores: {
+                [key: string]: number;
+            };
             /** Source */
             source: string;
             /** Status */
