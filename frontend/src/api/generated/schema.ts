@@ -348,6 +348,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/movies/{radarr_id}/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze
+         * @description Analyse this movie now, with today's rules, settings and AI. In an intake folder it gets a
+         *     new decision (the one waiting is superseded, never deleted); elsewhere the result is only
+         *     shown, like a simulation.
+         */
+        post: operations["analyze_api_v1_movies__radarr_id__analyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/movies/{radarr_id}/simulate": {
         parameters: {
             query?: never;
@@ -1951,6 +1973,37 @@ export interface operations {
             header?: never;
             path: {
                 decision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyze_api_v1_movies__radarr_id__analyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                radarr_id: number;
             };
             cookie?: never;
         };

@@ -16,12 +16,13 @@ from triage.domain import actions, categories
 from triage.domain import decisions as d
 from triage.domain.arrivals import upsert_movie
 from triage.domain.classify import classify_movie
-from triage.models import Decision, MovieRef
+from triage.models import Arrival, Decision, MovieRef
 from triage.models import Owner as OwnerRow
 from triage.templates.messages import text
 from triage.templates.render import app_link, confirm_form, page
 from triage.worker import queue
-from triage.worker.classify import new_decision
+from triage.worker.classify import classify_arrival, new_decision
+from triage.worker.runner import JobContext
 
 router = APIRouter(tags=["review"], dependencies=[Owner])
 public = APIRouter(tags=["review links"])
@@ -204,6 +205,35 @@ async def apply_confident(body: ApplyConfidentBody, db: Db, settings: Settings, 
     if applied:
         state.worker.wake()
     return Applied(applied=applied)
+
+
+@router.post("/movies/{radarr_id}/analyze", response_model=DecisionDetail)
+async def analyze(
+    radarr_id: int, db: Db, settings: Settings, adapters: AdaptersDep, state: State
+) -> DecisionDetail:
+    """Analyse this movie now, with today's rules, settings and AI. In an intake folder it gets a
+    new decision (the one waiting is superseded, never deleted); elsewhere the result is only
+    shown, like a simulation."""
+    arrival = await db.scalar(
+        select(Arrival).where(Arrival.radarr_id == radarr_id, Arrival.closed_at.is_(None))
+    )
+    if arrival is not None:
+        for current in await db.scalars(
+            select(Decision).where(Decision.arrival_id == arrival.id, Decision.status != d.SUPERSEDED)
+        ):
+            if current.status in (d.HELD, d.PROPOSED):
+                await d.transition(db, current, d.SUPERSEDED)
+            elif current.source == "correction":
+                current.arrival_id = None  # put back in the intake folder: its stay is open again
+            else:
+                raise Conflict("This movie is being moved or was just decided", code="busy")
+        decision = await classify_arrival(JobContext(db, settings, adapters), arrival.id)
+        if decision is not None:
+            await db.commit()
+            state.worker.wake()
+            return await detail(db, decision)
+        await db.rollback()
+    return await simulate(radarr_id, db, settings, adapters)
 
 
 @router.post("/movies/{radarr_id}/simulate", response_model=DecisionDetail)

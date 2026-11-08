@@ -42,15 +42,21 @@ def record_decision(decision: Decision, result: Classification) -> None:
 
 
 async def classify_job(ctx: JobContext, item: WorkItem) -> None:
-    arrival = await ctx.db.get(Arrival, item.ref["arrival_id"])
+    await classify_arrival(ctx, item.ref["arrival_id"])
+
+
+async def classify_arrival(ctx: JobContext, arrival_id: int) -> Decision | None:
+    """Classify the movie of an open arrival and route the decision. None when there is nothing
+    to decide (closed arrival, already decided, movie gone or moved elsewhere)."""
+    arrival = await ctx.db.get(Arrival, arrival_id)
     if arrival is None or arrival.closed_at is not None:
-        return
+        return None
     radarr_id_var.set(arrival.radarr_id)
     already = await ctx.db.scalar(
         select(Decision.id).where(Decision.arrival_id == arrival.id, Decision.status != d.SUPERSEDED).limit(1)
     )
     if already is not None:
-        return  # idempotent: one decision per arrival
+        return None  # idempotent: one decision per arrival
     assert ctx.adapters.radarr is not None
     note(radarr_id=arrival.radarr_id)
     with step("radarr") as reading:
@@ -59,12 +65,12 @@ async def classify_job(ctx: JobContext, item: WorkItem) -> None:
     if movie is None:
         note(outcome="removed_from_radarr")
         await arrivals.close(ctx.db, arrival, "removed_from_radarr")
-        return
+        return None
     note(title=movie.title)
     if not same_folder(movie.root_folder_path, arrival.intake_path):
         await arrivals.close(ctx.db, arrival, "moved_elsewhere")
         note(outcome="moved_elsewhere")
-        return
+        return None
     ref = await arrivals.upsert_movie(ctx.db, movie)
 
     result = await classify_movie(ctx.db, ctx.settings, ctx.adapters, movie)
@@ -85,3 +91,4 @@ async def classify_job(ctx: JobContext, item: WorkItem) -> None:
     record_decision(decision, result)
     if decision.status == d.MOVING:
         await queue.enqueue(ctx.db, "move", {"decision_id": decision.id})
+    return decision

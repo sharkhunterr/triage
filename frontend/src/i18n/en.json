@@ -184,7 +184,6 @@
   "review.applyConfidentTitle": "Apply {count, plural, one {# proposal} other {# proposals}}?",
   "review.applyConfidentText": "Only proposals at or above the confidence threshold are applied. The others stay here.",
   "review.appliedCount": "{count, plural, =0 {Nothing applied} one {# movie is being moved} other {# movies are being moved}}",
-  "decision.simulate": "Simulate with today's rules",
   "settings.subtitle": "Connections, sorting thresholds and notifications.",
   "settings.test": "Test",
   "settings.notConfigured": "Not configured",
@@ -461,5 +460,8 @@
   "reanalyze.scope.waiting": "Waiting for a decision",
   "reanalyze.scope.waitingHint": "The proposals and the movies to decide, again with today's rules.",
   "reanalyze.scope.new": "New only",
-  "reanalyze.scope.newHint": "Movies never analyzed, or put back in the intake folder (undone moves) since their last analysis."
+  "reanalyze.scope.newHint": "Movies never analyzed, or put back in the intake folder (undone moves) since their last analysis.",
+  "decision.analyze": "Analyze",
+  "decision.analyzing": "Analyzing…",
+  "decision.analyzed": "Analyzed with today's rules"
 }

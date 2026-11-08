@@ -123,6 +123,8 @@ test('history shows the moves and a decision explains itself', async ({ page }) 
   await expect(page.getByText('Metadata (facts)')).toBeVisible()
   await expect(page.getByText('Local AI (interpretation)')).toBeVisible()
   await expectAccessible(page)
+  await page.getByRole('button', { name: 'Analyze' }).click()
+  await expect(page.getByText("Analyzed with today's rules")).toBeVisible()
 })
 
 test('undo moves: the list first, then every movie goes back', async ({ page }) => {

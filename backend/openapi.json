@@ -2814,6 +2814,49 @@
         ]
       }
     },
+    "/api/v1/movies/{radarr_id}/analyze": {
+      "post": {
+        "description": "Analyse this movie now, with today's rules, settings and AI. In an intake folder it gets a\nnew decision (the one waiting is superseded, never deleted); elsewhere the result is only\nshown, like a simulation.",
+        "operationId": "analyze_api_v1_movies__radarr_id__analyze_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "radarr_id",
+            "required": true,
+            "schema": {
+              "title": "Radarr Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/movies/{radarr_id}/simulate": {
       "post": {
         "description": "What Triage would decide for this movie now. Recorded for display only: never moves,\nnever emails, never appears in history or review.",

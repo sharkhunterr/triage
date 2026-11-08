@@ -16,10 +16,10 @@ import { type DecisionDetail, useDecision } from '../../api/decisions'
 import { Badge, Card, cx, ErrorState, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryDot, categoryColor, tint } from '../categories/colors'
+import { AnalyzeButton } from './AnalyzeButton'
 import { DecisionActions } from './DecisionActions'
 import { ConfidenceMeter, isUndo, Poster, ReasonText, StatusBadge } from './parts'
 import { RequestBadge } from './RequestBadge'
-import { SimulateButton } from './SimulateButton'
 
 type Signal = DecisionDetail['signals'][number]
 type Cat = { id: number; key: string; name: string; folder: string | null }
@@ -57,9 +57,12 @@ export function DecisionPage() {
 
   return (
     <article className="flex flex-col gap-4">
-      <Link to="/history" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
-        <ArrowLeft className="size-4" aria-hidden /> {t('nav.history')}
-      </Link>
+      <div className="flex items-center justify-between gap-2">
+        <Link to="/history" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
+          <ArrowLeft className="size-4" aria-hidden /> {t('nav.history')}
+        </Link>
+        <AnalyzeButton radarrId={decision.movie.radarr_id} />
+      </div>
       <Header decision={decision} />
       <DecisionActions decision={decision} />
       <Why decision={decision} name={name} cats={cats} />
@@ -501,10 +504,7 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
           </div>
         ))}
       </dl>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted">
-        <span>{t('sheet.sources')}</span>
-        <SimulateButton radarrId={decision.movie.radarr_id} />
-      </div>
+      <p className="border-t border-border pt-3 text-xs text-muted">{t('sheet.sources')}</p>
     </Card>
   )
 }
