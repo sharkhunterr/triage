@@ -9,13 +9,11 @@ import { useT } from '../../i18n'
 const FIELDS: RuleInput['field'][] = ['genre', 'keyword', 'company', 'certification', 'original_language']
 const OPERATORS: NonNullable<RuleInput['operator']>[] = ['is', 'contains', 'is_not']
 
-const emptyRule = (): RuleInput => ({
-  field: 'genre',
-  operator: 'is',
-  value: '',
-  weight: 30,
-  decisive: false,
-})
+// Rows get a client-side key so React keeps each rule's inputs while rows are added or removed.
+type Row = RuleInput & { key: number }
+let nextKey = 1
+const row = (rule: RuleInput): Row => ({ ...rule, key: nextKey++ })
+const emptyRule = (): Row => row({ field: 'genre', operator: 'is', value: '', weight: 30, decisive: false })
 
 function initial(category?: Category): CategoryInput {
   if (!category) return { name: '', description: '', root_folder_path: null, is_fallback: false, rules: [] }
@@ -47,14 +45,14 @@ export function CategoryEditor({
 }) {
   const t = useT()
   const [form, setForm] = useState<CategoryInput>(() => initial(category))
+  const [rules, setRules] = useState<Row[]>(() => (form.rules ?? []).map(row))
   const save = useSaveCategory()
-  const rules = form.rules ?? []
-  const setRule = (index: number, patch: Partial<RuleInput>) =>
-    setForm({ ...form, rules: rules.map((r, i) => (i === index ? { ...r, ...patch } : r)) })
+  const setRule = (key: number, patch: Partial<RuleInput>) =>
+    setRules(rules.map((r) => (r.key === key ? { ...r, ...patch } : r)))
 
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    const body = { ...form, rules: rules.filter((r) => r.value.trim()) }
+    const body = { ...form, rules: rules.filter((r) => r.value.trim()).map(({ key: _key, ...rule }) => rule) }
     save.mutate({ id: category?.id, body }, { onSuccess: () => onOpenChange(false) })
   }
   const errorCode = save.error instanceof ApiError ? save.error.code : undefined
@@ -134,17 +132,16 @@ export function CategoryEditor({
           <legend className="mb-1 text-sm font-medium">{t('categories.rules')}</legend>
           <p className="text-xs text-muted">{t('categories.rulesHint')}</p>
           {rules.length === 0 && <p className="text-sm text-muted">{t('categories.noRules')}</p>}
-          {rules.map((rule, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: rows have no identity until saved
+          {rules.map((rule) => (
             <div
-              key={index}
+              key={rule.key}
               className="grid grid-cols-2 gap-2 rounded-lg border border-border p-3 sm:grid-cols-12"
             >
               <Select
                 aria-label={t('categories.ruleField')}
                 className="sm:col-span-3"
                 value={rule.field}
-                onChange={(e) => setRule(index, { field: e.target.value as RuleInput['field'] })}
+                onChange={(e) => setRule(rule.key, { field: e.target.value as RuleInput['field'] })}
               >
                 {FIELDS.map((f) => (
                   <option key={f} value={f}>
@@ -156,7 +153,7 @@ export function CategoryEditor({
                 aria-label={t('categories.ruleOperator')}
                 className="sm:col-span-2"
                 value={rule.operator}
-                onChange={(e) => setRule(index, { operator: e.target.value as RuleInput['operator'] })}
+                onChange={(e) => setRule(rule.key, { operator: e.target.value as RuleInput['operator'] })}
               >
                 {OPERATORS.map((o) => (
                   <option key={o} value={o}>
@@ -169,7 +166,7 @@ export function CategoryEditor({
                 className="col-span-2 sm:col-span-4"
                 placeholder={t(`field.${rule.field}.placeholder`)}
                 value={rule.value}
-                onChange={(e) => setRule(index, { value: e.target.value })}
+                onChange={(e) => setRule(rule.key, { value: e.target.value })}
               />
               <Input
                 aria-label={t('categories.ruleWeight')}
@@ -178,13 +175,13 @@ export function CategoryEditor({
                 max={100}
                 className="sm:col-span-1"
                 value={rule.weight}
-                onChange={(e) => setRule(index, { weight: Number(e.target.value) })}
+                onChange={(e) => setRule(rule.key, { weight: Number(e.target.value) })}
               />
               <label className="flex items-center gap-2 text-xs sm:col-span-1">
                 <input
                   type="checkbox"
                   checked={rule.decisive ?? false}
-                  onChange={(e) => setRule(index, { decisive: e.target.checked })}
+                  onChange={(e) => setRule(rule.key, { decisive: e.target.checked })}
                 />
                 {t('categories.decisive')}
               </label>
@@ -193,7 +190,7 @@ export function CategoryEditor({
                 size="sm"
                 className="justify-self-end sm:col-span-1"
                 aria-label={t('categories.removeRule')}
-                onClick={() => setForm({ ...form, rules: rules.filter((_, i) => i !== index) })}
+                onClick={() => setRules(rules.filter((r) => r.key !== rule.key))}
               >
                 <Trash2 className="size-4" aria-hidden />
               </Button>
@@ -202,7 +199,7 @@ export function CategoryEditor({
           <Button
             size="sm"
             icon={<Plus className="size-4" aria-hidden />}
-            onClick={() => setForm({ ...form, rules: [...rules, emptyRule()] })}
+            onClick={() => setRules([...rules, emptyRule()])}
           >
             {t('categories.addRule')}
           </Button>
