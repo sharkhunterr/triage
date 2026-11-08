@@ -15,12 +15,18 @@ import { Link, useParams } from 'react-router'
 import { type DecisionDetail, useDecision } from '../../api/decisions'
 import { Badge, Card, cx, ErrorState, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
+import { CategoryDot, categoryColor, tint } from '../categories/colors'
 import { DecisionActions } from './DecisionActions'
 import { ConfidenceMeter, Poster, ReasonText, StatusBadge } from './parts'
 import { RequestBadge } from './RequestBadge'
 import { SimulateButton } from './SimulateButton'
 
 type Signal = DecisionDetail['signals'][number]
+type Cat = { id: number; key: string; name: string; folder: string | null }
+type Cats = Record<string, Cat>
+
+/** Same comparison as the backend: case- and accent-insensitive. */
+const norm = (value: unknown) => String(value).normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().trim()
 
 export function DecisionPage() {
   const t = useT()
@@ -36,8 +42,18 @@ export function DecisionPage() {
       />
     )
   const decision = query.data
-  const names = Object.fromEntries(decision.categories.map((c) => [String(c.key), String(c.name)]))
-  const name = (key: unknown) => names[String(key)] ?? String(key)
+  const cats: Cats = Object.fromEntries(
+    decision.categories.map((c) => [
+      String(c.key),
+      {
+        id: Number(c.id),
+        key: String(c.key),
+        name: String(c.name),
+        folder: c.root_folder_path ? String(c.root_folder_path) : null,
+      },
+    ]),
+  )
+  const name = (key: unknown) => cats[String(key)]?.name ?? String(key)
 
   return (
     <article className="flex flex-col gap-4">
@@ -46,8 +62,8 @@ export function DecisionPage() {
       </Link>
       <Header decision={decision} />
       <DecisionActions decision={decision} />
-      <Why decision={decision} name={name} />
-      <MovieSheet decision={decision} />
+      <Why decision={decision} name={name} cats={cats} />
+      <MovieSheet decision={decision} cats={cats} />
       <Trail decision={decision} />
     </article>
   )
@@ -76,7 +92,13 @@ function Header({ decision }: { decision: DecisionDetail }) {
             <RequestBadge check={decision.request_check} />
           </div>
           <p className="mt-1 text-sm text-muted">{t(`verdict.${decision.status}`)}</p>
-          <p className="text-lg font-semibold">{category?.name ?? t('decision.noCategory')}</p>
+          <p
+            className="flex items-center gap-2 text-lg font-semibold"
+            style={category ? { color: categoryColor(category.id) } : undefined}
+          >
+            {category && <CategoryDot id={category.id} className="size-3" />}
+            {category?.name ?? t('decision.noCategory')}
+          </p>
         </div>
       </div>
 
@@ -99,7 +121,11 @@ function Header({ decision }: { decision: DecisionDetail }) {
           <div className="flex flex-col gap-0.5 text-sm">
             <FolderLine label={t('decision.from')} path={decision.from_root_folder} />
             <ArrowDown className="ml-1 size-3.5 text-muted" aria-hidden />
-            <FolderLine label={t('decision.to')} path={decision.target_root_folder} strong />
+            <FolderLine
+              label={t('decision.to')}
+              path={decision.target_root_folder}
+              categoryId={category?.id}
+            />
           </div>
         </div>
       </div>
@@ -112,19 +138,42 @@ function Header({ decision }: { decision: DecisionDetail }) {
   )
 }
 
-function FolderLine({ label, path, strong }: { label: string; path?: string | null; strong?: boolean }) {
+function FolderLine({
+  label,
+  path,
+  categoryId,
+}: {
+  label: string
+  path?: string | null
+  categoryId?: number
+}) {
+  const colored = categoryId != null && path
   return (
-    <p className="flex min-w-0 items-start gap-2">
-      <FolderOpen className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
+    <p
+      className={cx(
+        'flex min-w-0 items-start gap-2',
+        colored && 'cat-tint rounded-lg border px-2 py-1 font-semibold',
+      )}
+      style={colored ? tint(categoryId) : undefined}
+    >
+      <FolderOpen className={cx('mt-0.5 size-4 shrink-0', !colored && 'text-muted')} aria-hidden />
       <span className="sr-only">{label}</span>
-      <code className={cx('min-w-0 break-words', strong && 'font-semibold')}>{path ?? '—'}</code>
+      <code className="min-w-0 break-words">{path ?? '—'}</code>
     </p>
   )
 }
 
 // ------------------------------------------------------------------ why
 
-function Why({ decision, name }: { decision: DecisionDetail; name: (key: unknown) => string }) {
+function Why({
+  decision,
+  name,
+  cats,
+}: {
+  decision: DecisionDetail
+  name: (key: unknown) => string
+  cats: Cats
+}) {
   const t = useT()
   const signals = decision.signals as Signal[]
   const exclusions = signals.filter((s) => s.kind === 'exclusion')
@@ -203,22 +252,31 @@ function Why({ decision, name }: { decision: DecisionDetail; name: (key: unknown
             return (
               <li key={key}>
                 <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className={cx('font-medium', excluded && 'text-muted line-through')}>
+                  <span
+                    className={cx(
+                      'flex items-center gap-2 font-medium',
+                      excluded && 'text-muted line-through',
+                    )}
+                  >
+                    <CategoryDot id={cats[key]?.id} />
                     {name(key)}
                   </span>
                   <span className="tabular-nums text-muted">{t('why.points', { count: value })}</span>
                 </div>
                 <div className="mt-1 h-2 rounded-full bg-surface-2">
                   <div
-                    className={cx('h-full rounded-full', excluded ? 'bg-danger/40' : 'bg-accent')}
-                    style={{ width: `${(value / max) * 100}%` }}
+                    className={cx('h-full rounded-full', excluded && 'bg-danger/40')}
+                    style={{
+                      width: `${(value / max) * 100}%`,
+                      background: excluded ? undefined : categoryColor(cats[key]?.id),
+                    }}
                   />
                 </div>
                 {own.length > 0 && (
                   <ul className="mt-2 flex flex-wrap gap-1.5">
                     {own.map((s) => (
                       <li key={`${s.kind}-${s.rule_id ?? 'f'}-${s.value}`}>
-                        <SignalChip signal={s} />
+                        <SignalChip signal={s} categoryId={cats[key]?.id} />
                       </li>
                     ))}
                   </ul>
@@ -234,7 +292,7 @@ function Why({ decision, name }: { decision: DecisionDetail; name: (key: unknown
   )
 }
 
-function SignalChip({ signal }: { signal: Signal }) {
+function SignalChip({ signal, categoryId }: { signal: Signal; categoryId?: number }) {
   const t = useT()
   if (signal.kind === 'fallback')
     return (
@@ -256,9 +314,10 @@ function SignalChip({ signal }: { signal: Signal }) {
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs',
-        signal.ignored ? 'bg-surface-2 text-muted line-through' : 'bg-accent/10',
+        'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs',
+        signal.ignored ? 'border-transparent bg-surface-2 text-muted line-through' : 'cat-tint',
       )}
+      style={signal.ignored ? undefined : tint(categoryId)}
     >
       +{String(signal.weight)} · {label}
       {signal.decisive ? <span className="font-semibold">· {t('categories.decisive')}</span> : null}
@@ -309,9 +368,10 @@ function AiOpinion({ decision, name }: { decision: DecisionDetail; name: (key: u
 
 const LANGUAGES = typeof Intl.DisplayNames === 'function' ? Intl.DisplayNames : undefined
 
-function MovieSheet({ decision }: { decision: DecisionDetail }) {
+function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }) {
   const t = useT()
   const facts = decision.facts
+  const signals = (decision.signals as Signal[]).filter((s) => s.kind === 'fact' || s.kind === 'exclusion')
   const language = (code: string) => {
     try {
       return LANGUAGES
@@ -321,13 +381,34 @@ function MovieSheet({ decision }: { decision: DecisionDetail }) {
       return code
     }
   }
-  const rows: [string, string[]][] = [
-    ['genre', facts.genre ?? []],
-    ['company', facts.company ?? []],
-    ['certification', facts.certification ?? []],
-    ['original_language', (facts.original_language ?? []).map(language)],
+  // Radarr names the language ("English"), TMDB gives its code ("en"): keep one, preferably the code
+  const english = (code: string) => {
+    try {
+      return LANGUAGES ? (new LANGUAGES(['en'], { type: 'language' }).of(code) ?? code) : code
+    } catch {
+      return code
+    }
+  }
+  const languages = (values: string[]) => {
+    const seen = new Map<string, string>()
+    for (const v of [...values].sort((a, b) => a.length - b.length)) {
+      const key = norm(v.length <= 3 ? english(v) : v)
+      if (!seen.has(key)) seen.set(key, v)
+    }
+    return [...seen.values()]
+  }
+  // the matching is done on the raw value; the language is only translated for display
+  const rows: [string, string[], (v: string) => string][] = [
+    ['genre', facts.genre ?? [], (v) => v],
+    ['company', facts.company ?? [], (v) => v],
+    ['certification', [...(facts.certification ?? [])].sort(), (v) => v],
+    ['original_language', languages(facts.original_language ?? []), language],
+    ['keyword', facts.keyword ?? [], (v) => v],
   ]
-  const keywords = facts.keyword ?? []
+  const destination = (decision.target_category ?? decision.top_category)?.id
+  const used = Object.values(cats).filter(
+    (c) => c.id === destination || signals.some((s) => s.category_key === c.key),
+  )
   return (
     <Card className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 text-lg font-semibold">
@@ -344,26 +425,50 @@ function MovieSheet({ decision }: { decision: DecisionDetail }) {
         </h3>
         <p className="text-xs text-muted">{t('decision.metadataHint')}</p>
       </div>
+      {used.length > 0 && (
+        <div className="flex flex-col gap-1.5 rounded-lg bg-surface-2 p-3 text-xs">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1">
+            {used.map((c) => (
+              <li
+                key={c.key}
+                className="flex items-center gap-1.5 font-medium"
+                style={{ color: categoryColor(c.id) }}
+              >
+                <CategoryDot id={c.id} />
+                {c.name}
+                {c.folder && <code className="font-normal text-muted">{c.folder}</code>}
+              </li>
+            ))}
+          </ul>
+          <p className="text-muted">{t('sheet.legend')}</p>
+        </div>
+      )}
       <dl className="grid gap-4 sm:grid-cols-2">
-        {rows.map(([field, values]) => (
-          <div key={field}>
+        {rows.map(([field, values, display]) => (
+          <div key={field} className={field === 'keyword' ? 'sm:col-span-2' : undefined}>
             <dt className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">
               {t(`field.${field}`)}
             </dt>
             <dd>
-              <Chips values={values} />
+              {values.length === 0 ? (
+                <span className="text-sm text-muted">—</span>
+              ) : (
+                <ul className="flex flex-wrap gap-1.5">
+                  {values.map((v) => (
+                    <li key={v}>
+                      <FactChip
+                        label={display(v)}
+                        matches={signals.filter((s) => s.field === field && norm(s.value) === norm(v))}
+                        cats={cats}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </dd>
           </div>
         ))}
       </dl>
-      <details className="text-sm">
-        <summary className="cursor-pointer text-muted">
-          {t('sheet.keywords', { count: keywords.length })}
-        </summary>
-        <div className="mt-2">
-          <Chips values={keywords} />
-        </div>
-      </details>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted">
         <span>{t('sheet.sources')}</span>
         <SimulateButton radarrId={decision.movie.radarr_id} />
@@ -372,16 +477,39 @@ function MovieSheet({ decision }: { decision: DecisionDetail }) {
   )
 }
 
-function Chips({ values }: { values: string[] }) {
-  if (values.length === 0) return <span className="text-sm text-muted">—</span>
+/** A metadata value, in the color of the category whose rule it triggered (red when it excludes one). */
+function FactChip({ label, matches, cats }: { label: string; matches: Signal[]; cats: Cats }) {
+  const t = useT()
+  const exclusion = matches.find((s) => s.kind === 'exclusion')
+  const counted = matches.filter((s) => s.kind === 'fact' && !s.ignored)
+  const ignored = matches.filter((s) => s.kind === 'fact' && s.ignored)
+  const base = 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs'
+  if (exclusion) {
+    const category = cats[String(exclusion.category_key)]
+    return (
+      <span className={cx(base, 'border-danger/40 bg-danger/10 font-medium text-danger')}>
+        <Ban className="size-3" aria-hidden />
+        {label}
+        <span className="sr-only">({t('sheet.excludes', { category: category?.name ?? '' })})</span>
+      </span>
+    )
+  }
+  const main = counted[0] ?? ignored[0]
+  if (!main) return <span className={cx(base, 'border-transparent bg-surface-2')}>{label}</span>
+  const category = cats[String(main.category_key)]
   return (
-    <ul className="flex flex-wrap gap-1.5">
-      {values.map((v) => (
-        <li key={v} className="rounded-full bg-surface-2 px-2.5 py-1 text-xs">
-          {v}
-        </li>
+    <span
+      className={cx(base, 'cat-tint font-medium', counted.length === 0 && 'line-through opacity-70')}
+      style={tint(category?.id)}
+    >
+      {label}
+      {counted.slice(1).map((s) => (
+        <CategoryDot key={String(s.category_key)} id={cats[String(s.category_key)]?.id} className="size-2" />
       ))}
-    </ul>
+      <span className="sr-only">
+        ({counted.map((s) => cats[String(s.category_key)]?.name).join(', ') || t('why.ignored')})
+      </span>
+    </span>
   )
 }
 

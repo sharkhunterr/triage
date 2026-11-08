@@ -22,6 +22,7 @@ import {
 } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryEditor } from './CategoryEditor'
+import { CategoryDot } from './colors'
 
 export function PresetCard() {
   const t = useT()
@@ -112,7 +113,10 @@ export function CategoriesPage() {
             <Card className="flex flex-col gap-3 sm:flex-row sm:items-start">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-semibold">{category.name}</h2>
+                  <h2 className="flex items-center gap-2 font-semibold">
+                    <CategoryDot id={category.id} />
+                    {category.name}
+                  </h2>
                   {category.is_fallback && <Badge>{t('categories.fallbackBadge')}</Badge>}
                   <Badge tone="info">{t('categories.ruleCount', { count: category.rules.length })}</Badge>
                 </div>

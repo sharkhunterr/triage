@@ -388,7 +388,6 @@
   "why.aiIgnored": "Ignored: that category is ruled out by an exclusion rule.",
   "sheet.title": "The movie",
   "sheet.noOverview": "No synopsis available.",
-  "sheet.keywords": "{count, plural, =0 {No keyword} one {# keyword} other {# keywords}}",
   "sheet.sources": "Metadata from Radarr and TMDB.",
   "settings.aiAsk": "Ask the AI",
   "settings.aiAsk.when_unsure": "When the rules are unsure",
@@ -401,5 +400,7 @@
   "categories.effect.weight": "Adds its weight",
   "categories.effect.decisive": "Decisive (settles the category)",
   "categories.effect.excludes": "Excludes this category",
-  "categories.effect.excludesHint": "When it matches, the movie can never go to this category."
+  "categories.effect.excludesHint": "When it matches, the movie can never go to this category.",
+  "sheet.legend": "A colored value triggered a rule of the category in that color; a red one rules a category out.",
+  "sheet.excludes": "excludes {category}"
 }

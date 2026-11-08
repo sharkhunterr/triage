@@ -388,7 +388,6 @@
   "why.aiIgnored": "Ignoré : cette catégorie est exclue par une règle d'exclusion.",
   "sheet.title": "Le film",
   "sheet.noOverview": "Aucun synopsis disponible.",
-  "sheet.keywords": "{count, plural, =0 {Aucun mot-clé} one {# mot-clé} other {# mots-clés}}",
   "sheet.sources": "Métadonnées issues de Radarr et TMDB.",
   "settings.aiAsk": "Interroger l'IA",
   "settings.aiAsk.when_unsure": "Quand les règles hésitent",
@@ -401,5 +400,7 @@
   "categories.effect.weight": "Ajoute son poids",
   "categories.effect.decisive": "Décisive (tranche la catégorie)",
   "categories.effect.excludes": "Exclut cette catégorie",
-  "categories.effect.excludesHint": "Quand elle correspond, le film ne peut jamais aller dans cette catégorie."
+  "categories.effect.excludesHint": "Quand elle correspond, le film ne peut jamais aller dans cette catégorie.",
+  "sheet.legend": "Une valeur en couleur a fait jouer une règle de la catégorie de cette couleur ; en rouge, elle exclut une catégorie.",
+  "sheet.excludes": "exclut {category}"
 }
