@@ -5,7 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, not_, or_, select
 
 from triage.api.deps import Db, Owner, Settings
 from triage.core import clock
@@ -216,16 +216,18 @@ async def detail(db: Db, decision: Decision) -> DecisionDetail:
 
 
 VISIBLE = Decision.status != d.SIMULATED
+# A move back to where the movie came from (an undo, "back to the intake folder"): no category.
+PUT_BACK = and_(Decision.source == "correction", Decision.target_category_id.is_(None))
+SORTED = and_(Decision.status == d.MOVED, not_(PUT_BACK))
 
 
 @router.get("/dashboard", response_model=Dashboard)
 async def dashboard(db: Db, settings: Settings) -> Dashboard:
     rows = await db.execute(select(Decision.status, func.count()).where(VISIBLE).group_by(Decision.status))
     by_status = {status: int(n) for status, n in rows.all()}
+    sorted_ = await db.scalar(select(func.count()).where(SORTED))
     week = await db.scalar(
-        select(func.count()).where(
-            Decision.status == d.MOVED, Decision.decided_at >= clock.now() - timedelta(days=7)
-        )
+        select(func.count()).where(SORTED, Decision.decided_at >= clock.now() - timedelta(days=7))
     )
     latest = list(
         await db.scalars(
@@ -238,7 +240,7 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
     return Dashboard(
         mode=settings.sorting.mode,
         counts=Counts(
-            moved=by_status.get(d.MOVED, 0),
+            moved=int(sorted_ or 0),
             held=by_status.get(d.HELD, 0),
             proposed=by_status.get(d.PROPOSED, 0),
             failed=by_status.get(d.FAILED, 0),
@@ -268,6 +270,8 @@ async def list_decisions(
     query = select(Decision).where(VISIBLE)
     if status:
         query = query.where(Decision.status.in_(status))
+        if d.MOVED in status:
+            query = query.where(not_(PUT_BACK))  # "sorted" means sorted into a library
     else:
         # Superseded decisions (the movie left the intake folder, or was classified again) are
         # history noise: shown only when asked for.

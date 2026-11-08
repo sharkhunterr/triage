@@ -83,3 +83,18 @@ async def test_only_a_moved_movie_can_be_undone(owner: AsyncClient, env: Env):
     response = await owner.post(f"/api/v1/decisions/{proposal.id}/revert")
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "not_moved"
+
+
+async def test_undone_moves_are_not_counted_as_sorted(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    add_toy_story(env)
+    await env.state.worker.tick(poll=True)
+    assert (await owner.get("/api/v1/dashboard")).json()["counts"]["moved"] == 1
+    (moved,) = await decisions(env)
+    await owner.post(f"/api/v1/decisions/{moved.id}/revert")
+    await env.state.worker.tick()
+    counts = (await owner.get("/api/v1/dashboard")).json()["counts"]
+    assert counts["moved"] == 0 and counts["moved_last_7_days"] == 0
+    sorted_ = (await owner.get("/api/v1/decisions", params={"status": "moved"})).json()["items"]
+    assert sorted_ == []
