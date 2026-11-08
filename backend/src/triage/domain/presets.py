@@ -75,6 +75,7 @@ MOVIES_ANIMATION = Preset(
                 PresetRule("keyword", "contains", "stop motion", 30),
                 PresetRule("keyword", "contains", "cartoon", 30),
                 PresetRule("keyword", "is", "computer animation", 30),
+                PresetRule("keyword", "contains", "3d animation", 30),
                 *(PresetRule("company", "contains", studio, 40) for studio in ANIMATION_STUDIOS),
                 # horror and thrillers are never cartoons for the family, even when animated
                 PresetRule("genre", "is", "Horror", 1, excludes=True),
