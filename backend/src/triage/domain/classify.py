@@ -118,7 +118,7 @@ async def classify_movie(
         and not any(r["code"] == "decisive_conflict" for r in reasons)
     ):
         asked = "unsure" if not result.conclusive else "always"
-        system, user = build_prompt(facts, categories)
+        system, user = build_prompt(facts, categories, result)
         await db.commit()
         verdict: AiVerdict | None = None
         with step("ai") as asking:
