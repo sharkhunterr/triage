@@ -72,6 +72,8 @@ services:
 Open `http://<host>:9393` and create your account. A **setup wizard** then walks you through it,
 with a *Test* button for every service:
 
+![Setup wizard](docs/images/wizard.png)
+
 1. **Radarr** — address and API key.
 2. **Intake folder** — the root folder where requested movies land.
 3. **Categories** — apply the *Movies / Animation* preset and pick a library for each category.
