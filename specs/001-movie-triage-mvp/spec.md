@@ -8,7 +8,9 @@ user-defined Radarr libraries. Requests from non-admin users land in an intake r
 ('Nouveaux/Non Triés'); today the owner moves each one by hand to 'Films' or 'Dessins Animés'.
 Triage classifies each movie from its metadata and a local AI, moves it when confident, holds
 it and notifies the owner (email + web) when in doubt. Categories are user-defined; movies
-only; single Docker image."
+only; single Docker image. Follow-up: a preview mode to see what Triage would do before it
+acts; a scan mode for the movies already present in a folder; moves must not break the
+request portal's (Overseerr/Jellyseerr) requests."
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -103,7 +105,94 @@ movie, and check it is sorted there.
 
 ---
 
-### User Story 4 - I can see, undo, and correct what Triage did (Priority: P2)
+### User Story 4 - Preview what Triage would do before it acts (Priority: P1)
+
+The owner does not want Triage to touch the library until they trust it. In preview mode,
+Triage classifies every movie as usual but moves nothing: each movie shows the category it
+would go to, the confidence, and the reasons. From the preview list the owner can apply one
+proposal, apply all confident proposals at once, choose another category, or dismiss. When
+satisfied, the owner switches to automatic mode. The owner can also ask "what would you do
+with this movie?" for any single movie before anything happens.
+
+**Why this priority**: the safety net that lets the owner check Triage's judgement on their
+own library before letting it act.
+
+**Independent Test**: in preview mode, add movies to the intake folder; check none moves,
+each shows its proposed category and reasons, and "apply" on one moves only that one.
+
+**Acceptance Scenarios**:
+
+1. **Given** preview mode, **When** movies arrive in the intake folder, **Then** none is moved
+   and each appears in the preview list with its proposed category, confidence, and reasons.
+2. **Given** proposals in the preview list, **When** the owner applies one, applies all
+   proposals at or above the threshold, or picks another category, **Then** exactly those
+   movies are moved and recorded as decided by the owner.
+3. **Given** preview mode, **When** the owner switches to automatic mode, **Then** only movies
+   arriving afterwards are moved automatically; pending proposals stay for the owner to apply
+   or dismiss.
+4. **Given** a single movie, **When** the owner asks Triage to simulate its decision, **Then**
+   the proposed category and reasons are shown and nothing is moved or recorded as a move.
+
+---
+
+### User Story 5 - Scan movies already in a folder (Priority: P1)
+
+At first start, the intake folder already holds a backlog, and the owner suspects some movies
+in "Films" are actually animated. The owner starts a scan of a chosen folder: the intake
+folder (default) or any category's library. Triage classifies every movie in it and shows the
+results as a preview — never moving anything by itself — listing for each movie its current
+library, the proposed category, the confidence, and the reasons. The owner applies the moves
+they agree with, individually or all confident ones at once.
+
+**Why this priority**: the existing backlog and past manual mistakes are where the owner sees
+value on day one.
+
+**Independent Test**: start a scan of a library holding a misplaced animated movie; check the
+scan proposes moving it, moves nothing on its own, and moves it when the owner applies.
+
+**Acceptance Scenarios**:
+
+1. **Given** movies already in the intake folder, **When** the owner scans it, **Then** each
+   movie gets a proposal and nothing is moved until the owner applies.
+2. **Given** a category's library, **When** the owner scans it, **Then** movies whose proposal
+   matches their current library are shown as "in place", and the others as proposed moves.
+3. **Given** a scan in progress, **When** the owner looks at it, **Then** progress (movies done
+   out of total) is shown and the owner can cancel it; partial results are kept.
+4. **Given** scan results, **When** the owner applies all confident proposals, **Then** only
+   movies at or above the threshold whose proposal differs from their current library are
+   moved.
+
+---
+
+### User Story 6 - Requests keep working after a move (Priority: P1)
+
+A household member requested a movie in the request portal; Triage moves it to its library.
+The request still shows the movie's status (requested, downloading, available), the movie is
+not downloaded twice, and it becomes available to the household in the right media library.
+
+**Why this priority**: a sorting tool that breaks the request flow would be worse than sorting
+by hand.
+
+**Independent Test**: request a movie, let Triage move it, then check in the request portal
+that the request still tracks the same movie and becomes available once downloaded.
+
+**Acceptance Scenarios**:
+
+1. **Given** a requested movie in the intake folder, **When** Triage moves it, **Then** the
+   movie keeps the same entry in the movie manager (never removed and re-added), so the
+   request portal keeps tracking it.
+2. **Given** the request portal is connected, **When** a requested movie is moved, **Then** the
+   request's recorded destination folder is updated to the new library where the portal
+   allows it, so that re-processing the request does not send the movie back to the intake
+   folder.
+3. **Given** a movie is moved before it is downloaded, **When** the download completes,
+   **Then** the file lands in the new library and the request becomes available.
+4. **Given** the categories' libraries, **When** the owner opens the status page, **Then** it
+   warns about any category library the movie manager cannot write to.
+
+---
+
+### User Story 7 - I can see, undo, and correct what Triage did (Priority: P2)
 
 The owner opens Triage from a phone or a computer and sees recent decisions: what was moved
 where, what is waiting, and why. For any automatic move, the owner can move the movie back to
@@ -130,11 +219,11 @@ history and check the movie changed library and the history shows both decisions
 
 ---
 
-### User Story 5 - I configure the connections and see their health (Priority: P2)
+### User Story 8 - I configure the connections and see their health (Priority: P2)
 
-From the settings, the owner connects the movie manager, the metadata provider, the local AI
-(optional), and the mail server; picks the intake folder(s); sets the confidence threshold;
-and turns automatic moving on or off. Each connection has a "test" action. A status page shows
+From the settings, the owner connects the movie manager, the metadata provider, the request
+portal (optional), the local AI (optional), and the mail server; picks the intake folder(s);
+sets the confidence threshold; and chooses between preview and automatic mode. Each connection has a "test" action. A status page shows
 whether each service is reachable, the last processing run, and items that failed.
 
 **Why this priority**: required to run, but simple; the defaults make it a one-time task.
@@ -151,12 +240,12 @@ reflects a reachable and an unreachable service.
 3. **Given** the local AI is unreachable, **When** a movie is processed, **Then** it is decided
    on rules alone, or held if the rules are not conclusive, and the status page shows the AI as
    unavailable.
-4. **Given** automatic moving is off, **When** movies are processed, **Then** every decision is
-   recorded as a proposal and every movie goes to the review queue instead of being moved.
+4. **Given** preview mode, **When** movies are processed, **Then** every decision is recorded
+   as a proposal and no movie is moved (see User Story 4).
 
 ---
 
-### User Story 6 - Requests reach Triage immediately (Priority: P3)
+### User Story 9 - Requests reach Triage immediately (Priority: P3)
 
 The owner points the request portal's webhook at Triage. When a request is approved, Triage
 checks the intake folder right away instead of waiting for its next scheduled check.
@@ -197,6 +286,15 @@ seconds; send one without the shared secret and check it is rejected.
   are grouped into a single email per processing run rather than one per movie.
 - The same email decision link is opened twice, or after the movie was decided in the
   interface: the second use does nothing and says the movie was already decided.
+- A movie's request is still pending approval in the request portal when Triage sees it in
+  the intake folder: Triage sorts the movie; the request portal's recorded folder is updated
+  if the portal allows it, otherwise the decision notes that it could not be.
+- The request portal is unreachable when a movie is moved: the move still happens (the movie
+  entry is unchanged, so tracking is kept); updating the request's folder is retried.
+- A scan covers a large library (hundreds of movies): it runs in the background at a pace the
+  connected services tolerate, and the owner can leave and come back to its results.
+- A movie is proposed in a scan and arrives in the intake folder at the same time: it is
+  classified once; one proposal is shown.
 
 ## Requirements *(mandatory)*
 
@@ -209,8 +307,8 @@ seconds; send one without the shared secret and check it is rejected.
   interval MUST be configurable (default: 5 minutes).
 - **FR-002**: The system MUST accept an optional, secret-protected notification from the
   request portal that triggers an immediate check.
-- **FR-003**: The system MUST NOT examine, move, or modify any movie outside the intake
-  folders, and MUST NOT delete any movie or file.
+- **FR-003**: Outside a scan started by the owner, the system MUST NOT examine, move, or
+  modify any movie outside the intake folders. It MUST NOT delete any movie or file, ever.
 - **FR-004**: Processing MUST be idempotent: a movie MUST be processed once per arrival in an
   intake folder, even across restarts or repeated checks.
 - **FR-005**: A movie that leaves the intake folder by any other means before being sorted
@@ -262,9 +360,35 @@ seconds; send one without the shared secret and check it is rejected.
 - **FR-020**: From the review queue, the owner MUST be able to choose a category or leave the
   movie in the intake folder in one action.
 - **FR-021**: The owner MUST be able to move any movie Triage moved to another category or
-  back to the intake folder; a corrected movie MUST never be re-sorted automatically.
-- **FR-022**: An "automatic moving" switch MUST exist; when off, every movie is held as a
-  proposal (default: off until the owner turns it on after setup).
+  back to the intake folder; a corrected movie MUST never be re-sorted automatically, though a
+  scan may still propose it.
+- **FR-022**: The system MUST offer two modes: **preview** (every decision is a proposal;
+  nothing is moved without the owner) and **automatic** (confident movies are moved, doubtful
+  ones held). The default is preview until the owner switches.
+- **FR-022a**: In preview, the owner MUST be able to apply one proposal, apply all proposals
+  at or above the threshold, pick another category, or dismiss a proposal.
+- **FR-022b**: The owner MUST be able to simulate the decision for any single movie; a
+  simulation MUST NOT move or record a move.
+
+**Scan**
+
+- **FR-022c**: The owner MUST be able to scan a chosen root folder (an intake folder by
+  default, or any category's library). A scan MUST only produce proposals; moves happen only
+  when the owner applies them.
+- **FR-022d**: Scan results MUST show, per movie, its current library, the proposed category,
+  the confidence, the reasons, and whether it is already in place.
+- **FR-022e**: A scan MUST run in the background with visible progress, MUST be cancellable,
+  and MUST keep partial results.
+
+**Request portal**
+
+- **FR-022f**: Moving a movie MUST only change its library in the movie manager; the movie
+  entry MUST never be removed and re-added, so requests keep tracking it.
+- **FR-022g**: When the request portal is connected, the system MUST update the moved movie's
+  request so its recorded destination folder is the new library, where the portal allows it;
+  a failure to do so MUST be recorded on the decision and retried, and MUST NOT undo the move.
+- **FR-022h**: The status page MUST warn when a category's library is missing from the movie
+  manager or reported as not accessible by it.
 
 **Interface**
 
@@ -280,8 +404,9 @@ seconds; send one without the shared secret and check it is rejected.
 **Settings, security, health**
 
 - **FR-027**: Settings MUST cover: movie manager connection and intake folder(s), metadata
-  provider key, local AI address and model (optional), mail server and recipient, confidence
-  threshold, check interval, AI timeout, link validity, and the automatic moving switch.
+  provider key, request portal connection (optional), local AI address and model (optional),
+  mail server and recipient, confidence threshold, check interval, AI timeout, link validity,
+  and the preview / automatic mode.
   Each connection MUST have a test action.
 - **FR-028**: The interface MUST require the owner to sign in. Secrets MUST never be displayed
   or sent to the browser once saved.
@@ -306,6 +431,13 @@ seconds; send one without the shared secret and check it is rejected.
   timestamps.
 - **Review item**: a held movie awaiting the owner's choice, with its decision links and their
   state (unused, used, expired).
+- **Scan**: an owner-started classification of one root folder — folder, start and end time,
+  progress, state (running, done, cancelled), and one proposal per movie.
+- **Proposal**: what Triage would do with a movie (category, confidence, reasons) without
+  having done it; applied, changed, or dismissed by the owner. Preview-mode decisions and scan
+  results are proposals.
+- **Request link**: the request portal's request for a movie, if any, and whether its recorded
+  folder was updated after a move.
 - **Settings**: connections, intake folders, thresholds, intervals, switches; secrets stored
   server-side only.
 
@@ -327,6 +459,12 @@ seconds; send one without the shared secret and check it is rejected.
   under 10 minutes using the preset.
 - **SC-007**: Every screen is complete and usable on a 360-pixel-wide phone screen and on a
   desktop, in both languages.
+- **SC-008**: In preview mode and during scans, zero movies are moved without an explicit
+  owner action.
+- **SC-009**: 100 % of requests whose movie Triage moved keep tracking it and become available
+  once downloaded, with no duplicate download.
+- **SC-010**: A scan of a 500-movie library completes in under 30 minutes without making the
+  connected services unavailable.
 
 ## Assumptions
 
@@ -337,9 +475,14 @@ seconds; send one without the shared secret and check it is rejected.
   the request portal and never sign in to Triage.
 - Movies only; TV series, cloud AI providers, and other notification channels (Discord, push)
   are out of scope for this MVP.
-- Automatic moving starts off: on first start Triage proposes decisions for the movies
-  already in the intake folder, so the owner can check its judgement on the existing backlog
-  before turning automatic moving on.
+- Triage starts in preview mode, and the owner is invited to scan the intake folder first,
+  so they can check its judgement on the existing backlog before switching to automatic.
+- The request portal tracks a movie through the movie manager's entry, so changing only the
+  movie's folder keeps the request linked; the portal's API may only allow editing the
+  recorded folder of some requests (for example pending ones), which is why updating it is
+  best-effort (FR-022g).
+- The media server (Plex/Jellyfin) libraries already include every category's folder, so
+  moved movies become available there; Triage does not manage media server libraries.
 - The owner's movie manager root folders already exist; Triage does not create folders.
 - Decision history is kept indefinitely (it is small); the owner can purge entries older than
   a chosen date.

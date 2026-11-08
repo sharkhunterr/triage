@@ -37,3 +37,5 @@
 - No clarification marker was needed: open choices were settled with documented defaults
   (5-minute checks, 80 % threshold, 60 s AI timeout, 7-day links, automatic moving off at
   first start, one email per processing run). `/speckit-clarify` can revisit any of them.
+- Revision 2 (2026-11-08): preview mode (US4, FR-022/022a/022b), scan mode (US5,
+  FR-022c–e), request-portal safety (US6, FR-022f–h); re-validated, all items still pass.
