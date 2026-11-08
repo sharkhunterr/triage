@@ -24,7 +24,7 @@ import {
 } from '../../design-system'
 import { useT } from '../../i18n'
 import { ModeSwitch } from './ModeSwitch'
-import { SecretInput, TestButton, useSection } from './parts'
+import { SecretInput, TestButton, TmdbLanguage, useSection } from './parts'
 
 function Section({
   title,
@@ -74,7 +74,7 @@ export function SettingsPage() {
   const save = useSaveSettings()
   const view = settings.data
   const radarr = useSection(view, 'radarr', ['url', 'api_key', 'intake_root_folders'])
-  const tmdb = useSection(view, 'tmdb', ['api_key'])
+  const tmdb = useSection(view, 'tmdb', ['api_key', 'language'])
   const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s', 'ask'])
   const seerr = useSection(view, 'seerr', ['url', 'api_key'])
   const smtp = useSection(view, 'smtp', [
@@ -208,6 +208,10 @@ export function SettingsPage() {
               />
             )}
           </Field>
+          <TmdbLanguage
+            value={String(tmdb.values.language ?? 'en-US')}
+            onChange={(v) => tmdb.set('language', v)}
+          />
         </Section>
 
         <Section

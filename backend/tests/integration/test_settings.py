@@ -86,3 +86,11 @@ async def test_the_setup_wizard_runs_once_and_can_be_reopened(owner: AsyncClient
     assert done.json()["wizard_completed"] is True
     reopened = await owner.patch("/api/v1/settings", json={"wizard_completed": False})
     assert reopened.json()["wizard_completed"] is False
+
+
+async def test_the_tmdb_language_is_validated(owner: AsyncClient):
+    assert (await owner.get("/api/v1/settings")).json()["tmdb"]["language"] == "en-US"
+    ok = await owner.patch("/api/v1/settings", json={"tmdb": {"language": "fr-FR"}})
+    assert ok.json()["tmdb"]["language"] == "fr-FR"
+    bad = await owner.patch("/api/v1/settings", json={"tmdb": {"language": "french"}})
+    assert bad.status_code == 422

@@ -72,5 +72,5 @@ def gather_facts(movie: RadarrMovie, details: TmdbDetails | None) -> MovieFacts:
         for certification in details.certifications:
             add("certification", certification, "tmdb")
         add("original_language", details.original_language, "tmdb")
-        overview = overview or details.overview
+        overview = details.overview or overview  # TMDB's is in the configured language
     return MovieFacts(title=movie.title, year=movie.year, overview=overview, facts=facts)

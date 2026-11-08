@@ -27,7 +27,7 @@ def build_adapters(settings: AppSettings, client: httpx.AsyncClient) -> Adapters
     s = settings
     return Adapters(
         radarr=RadarrClient(s.radarr.url, s.radarr.api_key, client) if s.radarr_configured else None,
-        tmdb=TmdbClient(s.tmdb.api_key, client) if s.tmdb.api_key else None,
+        tmdb=TmdbClient(s.tmdb.api_key, client, language=s.tmdb.language) if s.tmdb.api_key else None,
         ollama=(
             OllamaClient(s.ollama.url, s.ollama.model, s.ollama.timeout_s, client) if s.ai_enabled else None
         ),

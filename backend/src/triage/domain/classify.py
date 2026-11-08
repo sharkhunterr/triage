@@ -37,13 +37,16 @@ class Classification:
         return self.top.root_folder_path if self.top else None
 
 
-async def tmdb_details(db: AsyncSession, adapters: Adapters, tmdb_id: int | None) -> TmdbDetails | None:
-    """TMDB facts, cached 7 days. Raises ServiceError when TMDB is configured but failing:
-    the job is retried rather than deciding on partial facts (Constitution VI)."""
+async def tmdb_details(
+    db: AsyncSession, adapters: Adapters, tmdb_id: int | None, language: str = "en-US"
+) -> TmdbDetails | None:
+    """TMDB facts, cached 7 days per language. Raises ServiceError when TMDB is configured but
+    failing: the job is retried rather than deciding on partial facts (Constitution VI)."""
     if adapters.tmdb is None or not tmdb_id:
         return None
     cached = await db.get(MetadataCache, tmdb_id)
-    if cached is not None and clock.now() - cached.fetched_at < CACHE_TTL:
+    fresh = cached is not None and clock.now() - cached.fetched_at < CACHE_TTL
+    if cached is not None and fresh and cached.payload.get("language", "en-US") == language:
         payload = cached.payload
         return TmdbDetails(
             genres=tuple(payload.get("genres") or ()),
@@ -55,6 +58,7 @@ async def tmdb_details(db: AsyncSession, adapters: Adapters, tmdb_id: int | None
         )
     details = await adapters.tmdb.details(tmdb_id)
     payload = {k: list(v) if isinstance(v, tuple) else v for k, v in details.__dict__.items()}
+    payload["language"] = language
     if cached is None:
         db.add(MetadataCache(tmdb_id=tmdb_id, payload=payload, fetched_at=clock.now()))
     else:
@@ -76,7 +80,7 @@ async def classify_movie(
     if not categories:
         return Classification([], {}, [{"code": "no_categories"}], 0.0, False, None, None, snapshot)
 
-    facts = gather_facts(movie, await tmdb_details(db, adapters, movie.tmdb_id))
+    facts = gather_facts(movie, await tmdb_details(db, adapters, movie.tmdb_id, settings.tmdb.language))
     sorting = settings.sorting
     result = score(facts, categories, threshold=sorting.threshold, margin=sorting.margin)
     reasons = list(result.reasons)

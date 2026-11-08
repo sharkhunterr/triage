@@ -32,6 +32,8 @@ class RadarrSettings(BaseModel):
 
 class TmdbSettings(BaseModel):
     api_key: str = ""
+    # language-COUNTRY: the synopsis language and the country whose age ratings are kept
+    language: str = Field("en-US", pattern=r"^[a-z]{2}-[A-Z]{2}$")
 
 
 class OllamaSettings(BaseModel):

@@ -7,7 +7,7 @@ import {
   type SettingsView,
   useTestService,
 } from '../../api/settings'
-import { Button, Input } from '../../design-system'
+import { Button, Field, Input, Select } from '../../design-system'
 import { useT } from '../../i18n'
 
 export type Values = Record<string, string | number | string[]>
@@ -83,6 +83,48 @@ export function SecretInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />
+  )
+}
+
+const TMDB_LANGUAGES = [
+  'fr-FR',
+  'fr-CA',
+  'fr-BE',
+  'en-US',
+  'en-GB',
+  'de-DE',
+  'es-ES',
+  'it-IT',
+  'pt-BR',
+  'nl-NL',
+]
+
+/** The TMDB language-country: the synopsis language and the country whose age ratings are kept. */
+export function TmdbLanguage({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useT()
+  const label = (code: string) => {
+    const [lang, country] = code.split('-')
+    try {
+      const names = (type: 'language' | 'region') =>
+        new Intl.DisplayNames([document.documentElement.lang || 'en'], { type })
+      return `${names('language').of(lang ?? '')} (${names('region').of(country ?? '')})`
+    } catch {
+      return code
+    }
+  }
+  const options = TMDB_LANGUAGES.includes(value) ? TMDB_LANGUAGES : [value, ...TMDB_LANGUAGES]
+  return (
+    <Field label={t('settings.tmdbLanguage')} hint={t('settings.tmdbLanguageHint')}>
+      {(id, desc) => (
+        <Select id={id} aria-describedby={desc} value={value} onChange={(e) => onChange(e.target.value)}>
+          {options.map((code) => (
+            <option key={code} value={code}>
+              {label(code)}
+            </option>
+          ))}
+        </Select>
+      )}
+    </Field>
   )
 }
 

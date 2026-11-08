@@ -12,6 +12,8 @@ async def test_setup_creates_the_owner_and_signs_in(client: AsyncClient):
     assert "httponly" in response.headers["set-cookie"].lower()
     assert (await client.get("/api/v1/setup/status")).json() == {"needs_setup": False}
     assert (await client.get("/api/v1/auth/me")).json() == {"username": "owner", "locale": "fr"}
+    # TMDB follows the owner's language from the start
+    assert (await client.get("/api/v1/settings")).json()["tmdb"]["language"] == "fr-FR"
 
 
 async def test_setup_is_refused_once_an_owner_exists(owner: AsyncClient):

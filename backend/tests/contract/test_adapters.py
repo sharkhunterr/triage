@@ -87,10 +87,25 @@ async def test_tmdb_details_with_keywords_and_certifications():
     assert details.genres == ("Animation", "Adventure", "Family", "Comedy")
     assert "computer animation" in details.keywords
     assert details.companies == ("Pixar",)
-    assert details.certifications == ("G", "U")
+    assert details.certifications == ("G",)  # the country of the TMDB language (en-US by default)
     (request,) = rec.requests
-    assert request.url.params["append_to_response"] == "keywords,release_dates"
+    assert request.url.params["append_to_response"] == "keywords,release_dates,translations"
     assert request.url.params["api_key"] == "v3key"
+
+
+async def test_tmdb_in_french_gives_the_french_rating_and_synopsis():
+    rec = Recorder({("GET", "/3/movie/862"): payload("tmdb_movie.json")})
+    details = await TmdbClient("v3key", rec.client(), RateLimiter(1000), language="fr-FR").details(862)
+    assert details.certifications == ("U",)
+    assert details.overview == "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair."
+    assert details.genres[0] == "Animation"  # genres stay in English, the language rules are written in
+
+
+async def test_tmdb_without_a_rating_for_the_country_falls_back_to_the_us_one():
+    rec = Recorder({("GET", "/3/movie/862"): payload("tmdb_movie.json")})
+    details = await TmdbClient("v3key", rec.client(), RateLimiter(1000), language="de-DE").details(862)
+    assert details.certifications == ("G",)
+    assert details.overview == "Led by Woody, Andy's toys live happily in his room..."
 
 
 async def test_tmdb_read_token_goes_in_the_header():

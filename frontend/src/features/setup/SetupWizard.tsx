@@ -20,7 +20,7 @@ import {
 } from '../../api/settings'
 import { Badge, Button, Card, cx, ErrorState, Field, Input, Select, Spinner } from '../../design-system'
 import { type Locale, useLocale, useT } from '../../i18n'
-import { SecretInput, TestButton, useSection } from '../settings/parts'
+import { SecretInput, TestButton, TmdbLanguage, useSection } from '../settings/parts'
 
 const STEPS = ['welcome', 'radarr', 'intake', 'categories', 'tmdb', 'ai', 'email', 'seerr', 'finish'] as const
 type Step = (typeof STEPS)[number]
@@ -425,7 +425,7 @@ function asInput(c: Category, root_folder_path: string | null) {
 
 function TmdbStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
   const t = useT()
-  const tmdb = useSection(view, 'tmdb', ['api_key'])
+  const tmdb = useSection(view, 'tmdb', ['api_key', 'language'])
   const patch = () => tmdb.patch(['api_key'])
   return (
     <Panel
@@ -444,6 +444,10 @@ function TmdbStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
           />
         )}
       </Field>
+      <TmdbLanguage
+        value={String(tmdb.values.language ?? 'en-US')}
+        onChange={(v) => tmdb.set('language', v)}
+      />
       <TestButton service="tmdb" patch={patch} />
     </Panel>
   )

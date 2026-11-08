@@ -74,7 +74,9 @@ async def setup(body: SetupBody, request: Request, response: Response, db: Db) -
     settings = await load_settings(db)
     if not settings.base_url:
         settings.base_url = str(request.base_url).rstrip("/")
-        await save_settings(db, settings)
+    if body.locale == "fr" and settings.tmdb.language == "en-US":
+        settings.tmdb.language = "fr-FR"
+    await save_settings(db, settings)
     token = await open_session(db, request)
     await db.commit()
     _set_cookie(request, response, token)

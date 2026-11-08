@@ -39,3 +39,15 @@ async def test_simulate_any_movie_even_outside_intake(owner: AsyncClient, env: E
 
 async def test_simulate_unknown_movie(owner: AsyncClient):
     assert (await owner.post("/api/v1/movies/404/simulate")).status_code == 404
+
+
+async def test_changing_the_tmdb_language_refreshes_the_cached_metadata(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    await env.settings(tmdb={"api_key": "k"})
+    add_toy_story(env)
+    await owner.post("/api/v1/movies/1/simulate")
+    await owner.post("/api/v1/movies/1/simulate")
+    assert env.fakes.tmdb is not None and env.fakes.tmdb.calls == [862]  # cached
+    await env.settings(tmdb={"language": "fr-FR"})
+    await owner.post("/api/v1/movies/1/simulate")
+    assert env.fakes.tmdb.calls == [862, 862]

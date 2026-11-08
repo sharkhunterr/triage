@@ -1,4 +1,7 @@
-"""TMDB API v3: one call per movie for genres, keywords, companies, certifications."""
+"""TMDB API v3: one call per movie for genres, keywords, companies, certifications.
+
+The movie is read in English, the language rules are written in (genres, keywords). The configured
+language only picks the synopsis translation and the country whose age ratings are kept."""
 
 import asyncio
 import time
@@ -13,15 +16,34 @@ SERVICE = "TMDB"
 BASE = "https://api.themoviedb.org/3"
 
 
-def parse_details(data: dict[str, Any]) -> TmdbDetails:
-    certifications = sorted(
+def _certifications(data: dict[str, Any], country: str) -> list[str]:
+    return sorted(
         {
             rd["certification"]
-            for country in (data.get("release_dates") or {}).get("results") or []
-            for rd in country.get("release_dates") or []
+            for entry in (data.get("release_dates") or {}).get("results") or []
+            if entry.get("iso_3166_1") == country
+            for rd in entry.get("release_dates") or []
             if rd.get("certification")
         }
     )
+
+
+def _overview(data: dict[str, Any], language: str, country: str) -> str | None:
+    translations = [
+        t
+        for t in (data.get("translations") or {}).get("translations") or []
+        if t.get("iso_639_1") == language and (t.get("data") or {}).get("overview")
+    ]
+    best = next((t for t in translations if t.get("iso_3166_1") == country), None) or next(
+        iter(translations), None
+    )
+    return str(best["data"]["overview"]) if best else None
+
+
+def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:
+    lang, _, country = language.partition("-")
+    # the country's ratings, else the US ones (TMDB's most complete)
+    certifications = _certifications(data, country) or _certifications(data, "US")
     return TmdbDetails(
         genres=tuple(g["name"] for g in data.get("genres") or [] if g.get("name")),
         keywords=tuple(
@@ -30,7 +52,7 @@ def parse_details(data: dict[str, Any]) -> TmdbDetails:
         companies=tuple(c["name"] for c in data.get("production_companies") or [] if c.get("name")),
         certifications=tuple(certifications),
         original_language=data.get("original_language") or None,
-        overview=data.get("overview") or None,
+        overview=_overview(data, lang, country) or data.get("overview") or None,
     )
 
 
@@ -56,8 +78,13 @@ SHARED_LIMITER = RateLimiter(4.0)
 
 class TmdbClient:
     def __init__(
-        self, api_key: str, client: httpx.AsyncClient | None = None, limiter: RateLimiter | None = None
+        self,
+        api_key: str,
+        client: httpx.AsyncClient | None = None,
+        limiter: RateLimiter | None = None,
+        language: str = "en-US",
     ) -> None:
+        self._language = language
         self._client = client or httpx.AsyncClient(timeout=20)
         # A v4 read access token (long JWT) goes in the header; a v3 key in the query string.
         if api_key.count(".") == 2:
@@ -80,6 +107,7 @@ class TmdbClient:
         return await timed_check(SERVICE, call)
 
     async def details(self, tmdb_id: int) -> TmdbDetails:
-        return parse_details(
-            await self._get(f"/movie/{tmdb_id}", {"append_to_response": "keywords,release_dates"})
+        data = await self._get(
+            f"/movie/{tmdb_id}", {"append_to_response": "keywords,release_dates,translations"}
         )
+        return parse_details(data, self._language)

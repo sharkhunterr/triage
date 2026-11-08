@@ -1,8 +1,109 @@
-{"id": 862, "title": "Toy Story", "original_language": "en",
- "overview": "Led by Woody, Andy's toys live happily in his room...",
- "genres": [{"id": 16, "name": "Animation"}, {"id": 12, "name": "Adventure"}, {"id": 10751, "name": "Family"}, {"id": 35, "name": "Comedy"}],
- "production_companies": [{"id": 3, "name": "Pixar", "origin_country": "US"}],
- "keywords": {"keywords": [{"id": 931, "name": "jealousy"}, {"id": 4290, "name": "toy"}, {"id": 179431, "name": "duringcreditsstinger"}, {"id": 9663, "name": "computer animation"}]},
- "release_dates": {"results": [
-   {"iso_3166_1": "US", "release_dates": [{"certification": "G", "type": 3}, {"certification": "", "type": 1}]},
-   {"iso_3166_1": "FR", "release_dates": [{"certification": "U", "type": 3}]}]}}
+{
+  "id": 862,
+  "title": "Toy Story",
+  "original_language": "en",
+  "overview": "Led by Woody, Andy's toys live happily in his room...",
+  "genres": [
+    {
+      "id": 16,
+      "name": "Animation"
+    },
+    {
+      "id": 12,
+      "name": "Adventure"
+    },
+    {
+      "id": 10751,
+      "name": "Family"
+    },
+    {
+      "id": 35,
+      "name": "Comedy"
+    }
+  ],
+  "production_companies": [
+    {
+      "id": 3,
+      "name": "Pixar",
+      "origin_country": "US"
+    }
+  ],
+  "keywords": {
+    "keywords": [
+      {
+        "id": 931,
+        "name": "jealousy"
+      },
+      {
+        "id": 4290,
+        "name": "toy"
+      },
+      {
+        "id": 179431,
+        "name": "duringcreditsstinger"
+      },
+      {
+        "id": 9663,
+        "name": "computer animation"
+      }
+    ]
+  },
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          {
+            "certification": "G",
+            "type": 3
+          },
+          {
+            "certification": "",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "FR",
+        "release_dates": [
+          {
+            "certification": "U",
+            "type": 3
+          }
+        ]
+      }
+    ]
+  },
+  "translations": {
+    "translations": [
+      {
+        "iso_3166_1": "US",
+        "iso_639_1": "en",
+        "data": {
+          "overview": "Led by Woody, Andy's toys live happily in his room..."
+        }
+      },
+      {
+        "iso_3166_1": "CA",
+        "iso_639_1": "fr",
+        "data": {
+          "overview": "Version québécoise."
+        }
+      },
+      {
+        "iso_3166_1": "FR",
+        "iso_639_1": "fr",
+        "data": {
+          "overview": "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair."
+        }
+      },
+      {
+        "iso_3166_1": "DE",
+        "iso_639_1": "de",
+        "data": {
+          "overview": ""
+        }
+      }
+    ]
+  }
+}

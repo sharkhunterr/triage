@@ -402,5 +402,7 @@
   "categories.effect.excludes": "Exclut cette catégorie",
   "categories.effect.excludesHint": "Quand elle correspond, le film ne peut jamais aller dans cette catégorie.",
   "sheet.legend": "Une valeur en couleur a fait jouer une règle de la catégorie de cette couleur ; en rouge, elle exclut une catégorie.",
-  "sheet.excludes": "exclut {category}"
+  "sheet.excludes": "exclut {category}",
+  "settings.tmdbLanguage": "Langue et pays",
+  "settings.tmdbLanguageHint": "Le synopsis s'affiche dans cette langue, et seules les classifications d'âge de ce pays sont gardées (celles des États-Unis s'il n'en a pas). Les genres et mots-clés restent en anglais, comme les règles."
 }
