@@ -109,6 +109,20 @@ async def test_tmdb_without_a_rating_for_the_country_falls_back_to_the_us_one():
     assert details.overview == "Led by Woody, Andy's toys live happily in his room..."
 
 
+async def test_tmdb_keeps_the_original_title_when_the_country_has_no_title_of_its_own():
+    """fr-FR exists with an empty title (French title = original): never take Quebec's instead."""
+    data = payload("tmdb_movie.json")
+    for t in data["translations"]["translations"]:
+        if t["iso_3166_1"] == "FR":
+            t["data"]["title"] = ""
+        if t["iso_3166_1"] == "CA":
+            t["data"]["title"] = "Histoire de jouets"
+    rec = Recorder({("GET", "/3/movie/862"): data})
+    details = await TmdbClient("v3key", rec.client(), RateLimiter(1000), language="fr-FR").details(862)
+    assert details.title is None  # Radarr's title stays
+    assert details.overview == "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair."
+
+
 async def test_tmdb_read_token_goes_in_the_header():
     rec = Recorder({("GET", "/3/configuration"): {}})
     check = await TmdbClient("aaa.bbb.ccc", rec.client(), RateLimiter(1000)).check()

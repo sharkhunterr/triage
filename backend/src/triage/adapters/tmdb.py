@@ -29,16 +29,20 @@ def _certifications(data: dict[str, Any], country: str) -> list[str]:
 
 
 def _translated(data: dict[str, Any], language: str, country: str, key: str) -> str | None:
-    """A translated field (overview, title): the country's variant first, then any of the language."""
+    """A translated field (overview, title): the country's own translation when there is one, even
+    with that field empty (TMDB leaves the title empty when it equals the original: "Toy Story" in
+    France must not become Quebec's "Histoire de jouets"); otherwise any of the language."""
     translations = [
         t
         for t in (data.get("translations") or {}).get("translations") or []
-        if t.get("iso_639_1") == language and (t.get("data") or {}).get(key)
+        if t.get("iso_639_1") == language
     ]
-    best = next((t for t in translations if t.get("iso_3166_1") == country), None) or next(
-        iter(translations), None
-    )
-    return str(best["data"][key]) if best else None
+    own = next((t for t in translations if t.get("iso_3166_1") == country), None)
+    if own is not None:
+        value = (own.get("data") or {}).get(key)
+        return str(value) if value else None
+    other = next((t for t in translations if (t.get("data") or {}).get(key)), None)
+    return str(other["data"][key]) if other else None
 
 
 def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:

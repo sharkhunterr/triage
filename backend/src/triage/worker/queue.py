@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from triage.core import clock
@@ -41,12 +41,17 @@ async def enqueue(db: AsyncSession, kind: str, ref: dict[str, Any], *, delay_s: 
     return item
 
 
+# Analyses can be long (an AI call each): what the owner is waiting for goes first.
+BACKGROUND = ("classify", "scan_start", "scan_movie", "refresh_titles")
+_priority = case((WorkItem.kind.in_(BACKGROUND), 1), else_=0)
+
+
 async def claim_next(db: AsyncSession) -> WorkItem | None:
     item = (
         await db.scalars(
             select(WorkItem)
             .where(WorkItem.state == PENDING, WorkItem.next_attempt_at <= clock.now())
-            .order_by(WorkItem.next_attempt_at, WorkItem.id)
+            .order_by(_priority, WorkItem.next_attempt_at, WorkItem.id)
             .limit(1)
         )
     ).first()

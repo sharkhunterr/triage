@@ -18,7 +18,7 @@ async def refresh_titles_job(ctx: JobContext, item: WorkItem) -> None:
         updated = 0
         for ref in refs:
             details = await tmdb_details(ctx.db, ctx.adapters, ref.tmdb_id, ctx.settings.tmdb.language)
-            if details is not None and details.title and details.title != ref.local_title:
+            if details is not None and details.title != ref.local_title:
                 ref.local_title = details.title
                 updated += 1
             await ctx.db.commit()  # one movie at a time: never hold the lock across TMDB calls

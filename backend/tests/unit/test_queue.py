@@ -77,3 +77,16 @@ async def test_unknown_kinds_fail_without_retry(env: Env):
         stored = await db.get(WorkItem, item.id)
         assert stored is not None and stored.state == "failed"
     assert queue.backoff(0) == timedelta(seconds=60)
+
+
+async def test_the_owners_actions_go_before_analyses(env: Env):
+    """A move the owner asked for never waits behind a long reanalysis."""
+    async with env.state.session_factory() as db:
+        for _ in range(3):
+            await queue.enqueue(db, "classify", {})
+        env.clock.advance(seconds=5)
+        move = await queue.enqueue(db, "move", {})
+        claimed = await queue.claim_next(db)
+        assert claimed is not None and claimed.id == move.id
+        nxt = await queue.claim_next(db)
+        assert nxt is not None and nxt.kind == "classify"

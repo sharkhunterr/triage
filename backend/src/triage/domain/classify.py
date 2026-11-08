@@ -20,6 +20,7 @@ from triage.domain.signals import gather_facts
 from triage.models import MetadataCache, MovieRef
 
 CACHE_TTL = timedelta(days=7)
+CACHE_VERSION = 2  # 2: translated titles, the country's own translation first
 
 
 @dataclass
@@ -47,12 +48,12 @@ async def tmdb_details(
         return None
     cached = await db.get(MetadataCache, tmdb_id)
     fresh = cached is not None and clock.now() - cached.fetched_at < CACHE_TTL
-    # an entry from before titles were kept ("title" missing) is read again
+    # an entry written by an older reading of TMDB (another CACHE_VERSION) is read again
     if (
         cached is not None
         and fresh
         and cached.payload.get("language", "en-US") == language
-        and "title" in cached.payload
+        and cached.payload.get("v") == CACHE_VERSION
     ):
         payload = cached.payload
         return TmdbDetails(
@@ -67,6 +68,7 @@ async def tmdb_details(
     details = await adapters.tmdb.details(tmdb_id)
     payload = {k: list(v) if isinstance(v, tuple) else v for k, v in details.__dict__.items()}
     payload["language"] = language
+    payload["v"] = CACHE_VERSION
     if cached is None:
         db.add(MetadataCache(tmdb_id=tmdb_id, payload=payload, fetched_at=clock.now()))
     else:
@@ -106,11 +108,12 @@ async def classify_movie(
     with step("metadata") as metadata:
         details = await tmdb_details(db, adapters, movie.tmdb_id, settings.tmdb.language)
         metadata.detail = "TMDB" if details is not None else "Radarr"
-    if details is not None and details.title:
+    if details is not None:
         ref = await db.get(MovieRef, movie.id)
         if ref is not None:
-            ref.local_title = details.title
-        note(title=details.title)
+            ref.local_title = details.title  # None: Radarr's title is the right one
+        if details.title:
+            note(title=details.title)
     facts = gather_facts(movie, details)
     sorting = settings.sorting
     names = {c.key: c.name for c in categories}
