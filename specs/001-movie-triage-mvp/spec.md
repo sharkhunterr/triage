@@ -181,10 +181,10 @@ that the request still tracks the same movie and becomes available once download
 1. **Given** a requested movie in the intake folder, **When** Triage moves it, **Then** the
    movie keeps the same entry in the movie manager (never removed and re-added), so the
    request portal keeps tracking it.
-2. **Given** the request portal is connected, **When** a requested movie is moved, **Then** the
-   request's recorded destination folder is updated to the new library where the portal
-   allows it, so that re-processing the request does not send the movie back to the intake
-   folder.
+2. **Given** the request portal is connected, **When** a requested movie is moved, **Then**
+   Triage checks that the request still tracks the movie, shows the requester and the
+   request status on the decision, and never edits an approved request (the portal does not
+   allow it, and editing would re-send the request to the movie manager).
 3. **Given** a movie is moved before it is downloaded, **When** the download completes,
    **Then** the file lands in the new library and the request becomes available.
 4. **Given** the categories' libraries, **When** the owner opens the status page, **Then** it
@@ -286,11 +286,10 @@ seconds; send one without the shared secret and check it is rejected.
   are grouped into a single email per processing run rather than one per movie.
 - The same email decision link is opened twice, or after the movie was decided in the
   interface: the second use does nothing and says the movie was already decided.
-- A movie's request is still pending approval in the request portal when Triage sees it in
-  the intake folder: Triage sorts the movie; the request portal's recorded folder is updated
-  if the portal allows it, otherwise the decision notes that it could not be.
+- A movie reaches the intake folder only once its request is approved, so its request is
+  never edited; requests still pending approval are not in the movie manager and are ignored.
 - The request portal is unreachable when a movie is moved: the move still happens (the movie
-  entry is unchanged, so tracking is kept); updating the request's folder is retried.
+  entry is unchanged, so tracking is kept); the verification is retried.
 - A scan covers a large library (hundreds of movies): it runs in the background at a pace the
   connected services tolerate, and the owner can leave and come back to its results.
 - A movie is proposed in a scan and arrives in the intake folder at the same time: it is
@@ -384,9 +383,10 @@ seconds; send one without the shared secret and check it is rejected.
 
 - **FR-022f**: Moving a movie MUST only change its library in the movie manager; the movie
   entry MUST never be removed and re-added, so requests keep tracking it.
-- **FR-022g**: When the request portal is connected, the system MUST update the moved movie's
-  request so its recorded destination folder is the new library, where the portal allows it;
-  a failure to do so MUST be recorded on the decision and retried, and MUST NOT undo the move.
+- **FR-022g**: When the request portal is connected, the system MUST verify after each move
+  that the movie's request still tracks it and record the result on the decision; it MUST NOT
+  edit approved requests. A failed verification MUST be shown on the decision and retried,
+  and MUST NOT undo the move.
 - **FR-022h**: The status page MUST warn when a category's library is missing from the movie
   manager or reported as not accessible by it.
 
@@ -477,10 +477,11 @@ seconds; send one without the shared secret and check it is rejected.
   are out of scope for this MVP.
 - Triage starts in preview mode, and the owner is invited to scan the intake folder first,
   so they can check its judgement on the existing backlog before switching to automatic.
-- The request portal tracks a movie through the movie manager's entry, so changing only the
-  movie's folder keeps the request linked; the portal's API may only allow editing the
-  recorded folder of some requests (for example pending ones), which is why updating it is
-  best-effort (FR-022g).
+- The request portal tracks a movie through the movie manager's entry and its TMDB id, so
+  changing only the movie's folder keeps the request linked. The portal refuses to edit
+  requests that are no longer pending (verified in its source code, see research R6), which
+  is why Triage verifies requests instead of editing them (FR-022g). Pre-sorting pending
+  requests before approval is a possible follow-up feature.
 - The media server (Plex/Jellyfin) libraries already include every category's folder, so
   moved movies become available there; Triage does not manage media server libraries.
 - The owner's movie manager root folders already exist; Triage does not create folders.
