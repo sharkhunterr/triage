@@ -65,6 +65,30 @@ async def definitions(db: AsyncSession) -> list[CategoryDef]:
 CONFIG_REASONS = {"no_categories", "category_without_folder"}
 
 
+async def reanalyze_waiting(db: AsyncSession, *, dry_run: bool = False) -> int:
+    """Classify again, with today's rules and settings, every movie of the intake folder that is
+    waiting for the owner (held or proposed). The old decision is superseded, never deleted."""
+    from triage.domain import decisions as d
+    from triage.models import Decision
+    from triage.worker import queue
+
+    waiting = list(
+        await db.scalars(
+            select(Decision).where(
+                Decision.status.in_([d.HELD, d.PROPOSED]),
+                Decision.source == "intake",
+                Decision.actor == "triage",
+                Decision.arrival_id.is_not(None),
+            )
+        )
+    )
+    if not dry_run:
+        for decision in waiting:
+            await d.transition(db, decision, d.SUPERSEDED)
+            await queue.enqueue(db, "classify", {"arrival_id": decision.arrival_id})
+    return len(waiting)
+
+
 async def reclassify_config_holds(db: AsyncSession) -> int:
     """Movies held only because of the configuration (no category yet, a category without a
     library) are classified again after categories change. Held for doubt: left alone."""

@@ -5,14 +5,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Form, Query
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 
 from triage.api.decisions import DecisionDetail, DecisionSummary, detail, summaries
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
 from triage.core.errors import Conflict, Gone, NotFound
 from triage.core.tokens import usable_link, use
-from triage.domain import actions
+from triage.domain import actions, categories
 from triage.domain import decisions as d
 from triage.domain.arrivals import upsert_movie
 from triage.domain.classify import classify_movie
@@ -268,3 +268,55 @@ async def revert_many(body: RevertBody, db: Db, state: State) -> Reverted:
         await db.commit()
         state.worker.wake()
     return Reverted(count=len(moves), items=listed)
+
+
+class ReanalyzeBody(BaseModel):
+    dry_run: bool = False
+
+
+class Count(BaseModel):
+    count: int
+
+
+@router.post("/decisions/reanalyze", response_model=Count)
+async def reanalyze(body: ReanalyzeBody, db: Db, state: State) -> Count:
+    """Every movie waiting in the intake folder, classified again with today's rules."""
+    count = await categories.reanalyze_waiting(db, dry_run=body.dry_run)
+    if not body.dry_run:
+        await db.commit()
+        if count:
+            state.worker.wake()
+    return Count(count=count)
+
+
+class BulkItem(ChoiceBody):
+    id: int
+
+
+class BulkBody(BaseModel):
+    items: list[BulkItem] = Field(max_length=500)
+
+
+class BulkResult(BaseModel):
+    applied: int
+    failed: list[int]
+
+
+@router.post("/decisions/bulk", response_model=BulkResult)
+async def decide_many(body: BulkBody, db: Db, state: State) -> BulkResult:
+    """Several choices at once (the review dialog). One that cannot be applied is reported."""
+    applied, failed = 0, []
+    for item in body.items:
+        decision = await db.get(Decision, item.id)
+        try:
+            if decision is None:
+                raise NotFound("Unknown decision")
+            await actions.choose(db, decision, item.choice)
+        except (Conflict, NotFound):
+            failed.append(item.id)
+            continue
+        applied += 1
+    await db.commit()
+    if applied:
+        state.worker.wake()
+    return BulkResult(applied=applied, failed=failed)

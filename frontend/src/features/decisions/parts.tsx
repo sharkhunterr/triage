@@ -102,12 +102,12 @@ export function DecisionCard({ decision }: { decision: DecisionSummary }) {
   const t = useT()
   const category = decision.target_category ?? decision.top_category
   return (
-    <Link to={`/decisions/${decision.id}`} className="block rounded-card focus-visible:outline-2">
+    <Link to={`/decisions/${decision.id}`} className="block min-w-0 rounded-card focus-visible:outline-2">
       <Card className="flex gap-3 transition-colors hover:bg-surface-2">
         <Poster url={decision.movie.poster_url} title={decision.movie.title} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate font-medium">
+            <p className="min-w-0 max-w-full truncate font-medium">
               {decision.movie.title}
               {decision.movie.year ? <span className="text-muted"> ({decision.movie.year})</span> : null}
             </p>

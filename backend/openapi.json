@@ -96,6 +96,79 @@
         "title": "AuditOut",
         "type": "object"
       },
+      "BulkBody": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BulkItem"
+            },
+            "maxItems": 500,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "BulkBody",
+        "type": "object"
+      },
+      "BulkItem": {
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "BulkItem",
+        "type": "object"
+      },
+      "BulkResult": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "integer"
+          },
+          "failed": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Failed",
+            "type": "array"
+          }
+        },
+        "required": [
+          "applied",
+          "failed"
+        ],
+        "title": "BulkResult",
+        "type": "object"
+      },
       "CategoryIn": {
         "properties": {
           "description": {
@@ -288,6 +361,19 @@
           }
         },
         "title": "ChoiceBody",
+        "type": "object"
+      },
+      "Count": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "title": "Count",
         "type": "object"
       },
       "Counts": {
@@ -1030,6 +1116,17 @@
           "categories"
         ],
         "title": "PresetOut",
+        "type": "object"
+      },
+      "ReanalyzeBody": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          }
+        },
+        "title": "ReanalyzeBody",
         "type": "object"
       },
       "ReorderBody": {
@@ -2039,6 +2136,90 @@
           }
         },
         "summary": "Apply Confident",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/decisions/bulk": {
+      "post": {
+        "description": "Several choices at once (the review dialog). One that cannot be applied is reported.",
+        "operationId": "decide_many_api_v1_decisions_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Many",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/decisions/reanalyze": {
+      "post": {
+        "description": "Every movie waiting in the intake folder, classified again with today's rules.",
+        "operationId": "reanalyze_api_v1_decisions_reanalyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReanalyzeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Count"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reanalyze",
         "tags": [
           "review"
         ]

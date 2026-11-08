@@ -26,3 +26,10 @@ export function CategoryDot({
     />
   )
 }
+
+/** Props for a button that moves a movie to a category: tinted, or filled for the suggested one. */
+export const categoryButton = (id: number, filled = false) => ({
+  variant: 'ghost' as const,
+  className: `border ${filled ? 'cat-fill hover:opacity-90' : 'cat-tint hover:opacity-80'}`,
+  style: tint(id),
+})

@@ -404,5 +404,22 @@
   "sheet.legend": "Une valeur en couleur a fait jouer une règle de la catégorie de cette couleur ; en rouge, elle exclut une catégorie.",
   "sheet.excludes": "exclut {category}",
   "settings.tmdbLanguage": "Langue et pays",
-  "settings.tmdbLanguageHint": "Le synopsis s'affiche dans cette langue, et seules les classifications d'âge de ce pays sont gardées (celles des États-Unis s'il n'en a pas). Les genres et mots-clés restent en anglais, comme les règles."
+  "settings.tmdbLanguageHint": "Le synopsis s'affiche dans cette langue, et seules les classifications d'âge de ce pays sont gardées (celles des États-Unis s'il n'en a pas). Les genres et mots-clés restent en anglais, comme les règles.",
+  "nav.home": "Accueil",
+  "reviewAll.open": "Tout trancher…",
+  "reviewAll.title": "{count, plural, one {Trancher # film} other {Trancher # films}}",
+  "reviewAll.text": "Choisissez pour chaque film, puis appliquez tout d'un coup. Les propositions sont acceptées d'office ; les films incertains sont sur « plus tard ».",
+  "reviewAll.acceptProposals": "Accepter les propositions",
+  "reviewAll.bestGuess": "Meilleur choix partout",
+  "reviewAll.allLater": "Tout à plus tard",
+  "reviewAll.later": "Plus tard",
+  "reviewAll.summary": "{moves, plural, one {# déplacement} other {# déplacements}}, {others} laissé(s) ou ignoré(s)",
+  "reviewAll.apply": "{count, plural, one {Appliquer # choix} other {Appliquer # choix}}",
+  "reviewAll.done": "{count, plural, one {# choix appliqué} other {# choix appliqués}}",
+  "reanalyze.open": "Tout réanalyser",
+  "reanalyze.title": "Tout réanalyser",
+  "reanalyze.text": "Chaque film en attente dans le dossier d'entrée est classé à nouveau avec les règles, réglages et l'IA actuels. Les propositions en cours sont remplacées ; rien n'est perdu. En mode automatique, les films dont Triage est désormais sûr sont déplacés.",
+  "reanalyze.count": "{count, plural, =0 {Aucun film en attente.} one {# film sera réanalysé.} other {# films seront réanalysés.}}",
+  "reanalyze.confirm": "{count, plural, one {Analyser # film} other {Analyser # films}}",
+  "reanalyze.started": "{count, plural, one {# film est en cours de réanalyse} other {# films sont en cours de réanalyse}}"
 }

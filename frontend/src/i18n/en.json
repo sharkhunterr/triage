@@ -404,5 +404,22 @@
   "sheet.legend": "A colored value triggered a rule of the category in that color; a red one rules a category out.",
   "sheet.excludes": "excludes {category}",
   "settings.tmdbLanguage": "Language and country",
-  "settings.tmdbLanguageHint": "The synopsis is shown in this language, and only this country's age ratings are kept (the US ones when it has none). Genres and keywords stay in English, like the rules."
+  "settings.tmdbLanguageHint": "The synopsis is shown in this language, and only this country's age ratings are kept (the US ones when it has none). Genres and keywords stay in English, like the rules.",
+  "nav.home": "Home",
+  "reviewAll.open": "Decide all…",
+  "reviewAll.title": "{count, plural, one {Decide # movie} other {Decide # movies}}",
+  "reviewAll.text": "Choose for each movie, then apply everything at once. Proposals start accepted; doubtful movies start on “later”.",
+  "reviewAll.acceptProposals": "Accept the proposals",
+  "reviewAll.bestGuess": "Best guess everywhere",
+  "reviewAll.allLater": "Everything later",
+  "reviewAll.later": "Later",
+  "reviewAll.summary": "{moves, plural, one {# move} other {# moves}}, {others} left or dismissed",
+  "reviewAll.apply": "{count, plural, one {Apply # choice} other {Apply # choices}}",
+  "reviewAll.done": "{count, plural, one {# choice applied} other {# choices applied}}",
+  "reanalyze.open": "Analyze all again",
+  "reanalyze.title": "Analyze all again",
+  "reanalyze.text": "Every movie waiting in the intake folder is classified again with today's rules, settings and AI. The current proposals are replaced; nothing is lost. In automatic mode, the movies Triage is now sure of are moved.",
+  "reanalyze.count": "{count, plural, =0 {No movie is waiting.} one {# movie will be analyzed again.} other {# movies will be analyzed again.}}",
+  "reanalyze.confirm": "{count, plural, one {Analyze # movie} other {Analyze # movies}}",
+  "reanalyze.started": "{count, plural, one {# movie is being analyzed again} other {# movies are being analyzed again}}"
 }

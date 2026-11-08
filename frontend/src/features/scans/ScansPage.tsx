@@ -60,7 +60,7 @@ function ScanResults({ scan }: { scan: Scan }) {
             <h3 className="mb-2 font-semibold">
               {t(key)} <span className="text-muted">({items.length})</span>
             </h3>
-            <ul className="grid gap-3 md:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {items.map((d) => (
                 <li key={d.id}>
                   <DecisionCard decision={d} />

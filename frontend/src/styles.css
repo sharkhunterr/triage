@@ -74,6 +74,12 @@
   border-color: color-mix(in srgb, var(--c) 45%, transparent);
 }
 
+.cat-fill {
+  color: var(--surface);
+  background: var(--c);
+  border-color: var(--c);
+}
+
 html,
 body,
 #root {

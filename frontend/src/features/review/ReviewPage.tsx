@@ -17,8 +17,10 @@ import {
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
+import { categoryButton } from '../categories/colors'
 import { useDecisionAction } from '../decisions/DecisionActions'
 import { ConfidenceMeter, Poster, ReasonText, StatusBadge } from '../decisions/parts'
+import { Reanalyze, ReviewAll } from './ReviewAll'
 
 const useReview = () =>
   useQuery({
@@ -66,7 +68,7 @@ function ReviewCard({ decision }: { decision: DecisionSummary }) {
           <Button
             key={category.id}
             size="sm"
-            variant={proposed?.id === category.id ? 'primary' : 'secondary'}
+            {...categoryButton(category.id, proposed?.id === category.id)}
             icon={<FolderInput className="size-4" aria-hidden />}
             loading={action.isPending}
             onClick={() =>
@@ -153,7 +155,13 @@ export function ReviewPage() {
       <PageHeader
         title={t('review.title')}
         description={t('review.subtitle')}
-        actions={<ApplyConfident count={proposals.filter((p) => p.confidence > 0).length} />}
+        actions={
+          <>
+            <Reanalyze />
+            <ReviewAll items={[...proposals, ...held]} />
+            <ApplyConfident count={proposals.filter((p) => p.confidence > 0).length} />
+          </>
+        }
       />
       <Tabs.Root defaultValue={held.length || !proposals.length ? 'held' : 'proposals'}>
         <Tabs.List aria-label={t('review.title')} className="mb-4 flex gap-1 rounded-xl bg-surface-2 p-1">
@@ -168,7 +176,7 @@ export function ReviewPage() {
           {held.length === 0 ? (
             <EmptyState title={t('review.emptyHeld')} description={t('review.emptyHeldText')} />
           ) : (
-            <ul className="grid gap-3 md:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {held.map((d) => (
                 <li key={d.id}>
                   <ReviewCard decision={d} />
@@ -181,7 +189,7 @@ export function ReviewPage() {
           {proposals.length === 0 ? (
             <EmptyState title={t('review.emptyProposals')} description={t('review.emptyProposalsText')} />
           ) : (
-            <ul className="grid gap-3 md:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {proposals.map((d) => (
                 <li key={d.id}>
                   <ReviewCard decision={d} />

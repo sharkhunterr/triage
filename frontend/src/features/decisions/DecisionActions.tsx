@@ -5,6 +5,7 @@ import { api } from '../../api/client'
 import type { DecisionSummary } from '../../api/decisions'
 import { Button, Card, useToast } from '../../design-system'
 import { useT } from '../../i18n'
+import { categoryButton } from '../categories/colors'
 
 type Target = { category_id: number } | { target: 'intake' }
 
@@ -72,7 +73,7 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
             .map((c) => (
               <Button
                 key={c.id}
-                variant={awaiting && c.id === current ? 'primary' : 'secondary'}
+                {...categoryButton(c.id, awaiting && c.id === current)}
                 icon={<FolderInput className="size-4" aria-hidden />}
                 loading={action.isPending}
                 onClick={() =>

@@ -20,7 +20,7 @@ import { useTheme } from './theme'
 type Counts = { review: number }
 
 const NAV = [
-  { to: '/', key: 'nav.dashboard', icon: LayoutDashboard, mobile: true },
+  { to: '/', key: 'nav.dashboard', short: 'nav.home', icon: LayoutDashboard, mobile: true },
   { to: '/review', key: 'nav.review', icon: Inbox, mobile: true, badge: true },
   { to: '/history', key: 'nav.history', icon: History, mobile: true },
   { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: false },
@@ -57,13 +57,15 @@ export function Layout() {
       className={({ isActive }) =>
         cx(
           'relative flex items-center gap-3 rounded-lg text-sm font-medium transition-colors',
-          compact ? 'flex-1 flex-col gap-1 py-2 text-[11px]' : 'px-3 py-2.5',
+          compact ? 'min-w-0 flex-1 flex-col gap-0.5 py-1.5 text-[11px] leading-tight' : 'px-3 py-2.5',
           isActive ? 'bg-accent/12 text-accent' : 'text-muted hover:bg-surface-2 hover:text-text',
         )
       }
     >
       <item.icon className={compact ? 'size-5' : 'size-4'} aria-hidden />
-      <span>{t(item.key)}</span>
+      <span className={compact ? 'max-w-full truncate' : undefined}>
+        {t(compact && 'short' in item ? item.short : item.key)}
+      </span>
       {'badge' in item && reviewCount ? (
         <span
           className={cx(
@@ -122,7 +124,7 @@ export function Layout() {
         </div>
       </aside>
 
-      <main id="main" className="mx-auto w-full max-w-5xl px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8">
+      <main id="main" className="mx-auto w-full min-w-0 max-w-5xl px-4 pt-4 pb-20 lg:px-8 lg:pt-8 lg:pb-8">
         <div className="mb-4 flex items-center gap-2 lg:hidden">
           <img src="/favicon.svg" alt="" className="size-6" />
           <span className="font-semibold">Triage</span>

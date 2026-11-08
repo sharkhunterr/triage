@@ -77,6 +77,22 @@ test('a scan of a library proposes moving the misplaced movie, and moves nothing
   await expectAccessible(page)
 })
 
+test('decide all and analyze all again open with every waiting movie', async ({ page }) => {
+  await signIn(page)
+  await go(page, 'Review')
+  await page.getByRole('button', { name: 'Decide all…' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByLabel('Who Framed Roger Rabbit')).toHaveValue('later')
+  await dialog.getByRole('button', { name: 'Best guess everywhere' }).click()
+  await expect(dialog.getByLabel('Who Framed Roger Rabbit')).not.toHaveValue('later')
+  await expectAccessible(page)
+  await dialog.getByRole('button', { name: 'Cancel' }).click()
+
+  await page.getByRole('button', { name: 'Analyze all again' }).click()
+  await expect(page.getByRole('dialog').getByText(/will be analyzed again/)).toBeVisible()
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
+})
+
 test('the review queue: apply the confident proposals, decide a held movie', async ({ page }) => {
   await signIn(page)
   await go(page, 'Review')

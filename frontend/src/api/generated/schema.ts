@@ -179,6 +179,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/decisions/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decide Many
+         * @description Several choices at once (the review dialog). One that cannot be applied is reported.
+         */
+        post: operations["decide_many_api_v1_decisions_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/decisions/reanalyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reanalyze
+         * @description Every movie waiting in the intake folder, classified again with today's rules.
+         */
+        post: operations["reanalyze_api_v1_decisions_reanalyze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/decisions/revert": {
         parameters: {
             query?: never;
@@ -673,6 +713,27 @@ export interface components {
             /** To Path */
             to_path: string | null;
         };
+        /** BulkBody */
+        BulkBody: {
+            /** Items */
+            items: components["schemas"]["BulkItem"][];
+        };
+        /** BulkItem */
+        BulkItem: {
+            /** Category Id */
+            category_id?: number | null;
+            /** Id */
+            id: number;
+            /** Target */
+            target?: string | null;
+        };
+        /** BulkResult */
+        BulkResult: {
+            /** Applied */
+            applied: number;
+            /** Failed */
+            failed: number[];
+        };
         /** CategoryIn */
         CategoryIn: {
             /**
@@ -739,6 +800,11 @@ export interface components {
             category_id?: number | null;
             /** Target */
             target?: string | null;
+        };
+        /** Count */
+        Count: {
+            /** Count */
+            count: number;
         };
         /** Counts */
         Counts: {
@@ -967,6 +1033,14 @@ export interface components {
             key: string;
             /** Name */
             name: string;
+        };
+        /** ReanalyzeBody */
+        ReanalyzeBody: {
+            /**
+             * Dry Run
+             * @default false
+             */
+            dry_run: boolean;
         };
         /** ReorderBody */
         ReorderBody: {
@@ -1500,6 +1574,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Applied"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_many_api_v1_decisions_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reanalyze_api_v1_decisions_reanalyze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReanalyzeBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Count"];
                 };
             };
             /** @description Validation Error */
