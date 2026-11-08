@@ -46,6 +46,9 @@ function SetupChecklist({ radarr, categories }: { radarr: boolean; categories: n
           </Link>
         </li>
       </ol>
+      <Link className="mt-3 inline-block text-sm font-medium text-accent underline" to="/setup">
+        {t('wizard.reopen')}
+      </Link>
     </Card>
   )
 }

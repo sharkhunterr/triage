@@ -3,24 +3,31 @@ import { test as base, expect, type Page } from '@playwright/test'
 
 export const USER = { username: 'owner', password: 'correct horse battery' }
 
-/** Signs in, creating the owner account on the very first run. English interface. */
-export async function signIn(page: Page) {
+/** Opens Triage signed in (creating the owner account on the very first run). English interface.
+ * Lands on the setup wizard while it has never been finished; `skipWizard` leaves it for the dashboard. */
+export async function signIn(page: Page, { skipWizard = true } = {}) {
   await page.addInitScript(() => localStorage.setItem('triage.locale', 'en'))
   await page.goto('/')
   const setup = page.getByRole('heading', { name: 'Welcome to Triage' })
   const login = page.getByRole('heading', { name: 'Sign in' })
-  await expect(setup.or(login)).toBeVisible()
+  const dashboard = page.getByRole('heading', { name: 'Dashboard' })
+  const wizard = page.getByRole('heading', { name: 'Set up Triage' })
+  await expect(setup.or(login).or(dashboard)).toBeVisible()
   if (await setup.isVisible()) {
     await page.getByLabel('Username').fill(USER.username)
     await page.getByLabel('Password', { exact: true }).fill(USER.password)
     await page.getByLabel('Confirm the password').fill(USER.password)
     await page.getByRole('button', { name: 'Create my account' }).click()
-  } else {
+  } else if (await login.isVisible()) {
     await page.getByLabel('Username').fill(USER.username)
     await page.getByLabel('Password').fill(USER.password)
     await page.getByRole('button', { name: 'Sign in' }).click()
   }
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await expect(dashboard.or(wizard)).toBeVisible()
+  if (skipWizard && (await wizard.isVisible())) {
+    await page.getByRole('button', { name: 'Skip the setup' }).click()
+    await expect(dashboard).toBeVisible()
+  }
 }
 
 /** No serious or critical accessibility violation on the current page. */

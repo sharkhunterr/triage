@@ -22,7 +22,17 @@ async function session(viewport, scale = 1) {
     await page.getByLabel('Password').fill('correct horse battery')
     await page.getByRole('button', { name: 'Sign in' }).click()
   }
-  await page.getByRole('heading', { name: 'Dashboard' }).waitFor()
+  await page.getByRole('heading', { name: /Dashboard|Set up Triage/ }).waitFor()
+  if (await page.getByRole('heading', { name: 'Set up Triage' }).isVisible()) {
+    if (viewport.width > 1000) {
+      await page.getByRole('button', { name: "Let's go" }).click()
+      await page.getByRole('button', { name: 'Test' }).click()
+      await page.getByText('Radarr (demo)').waitFor()
+      await page.screenshot({ path: `${out}/wizard.png` })
+    }
+    await page.getByRole('button', { name: 'Skip the setup' }).click()
+    await page.getByRole('heading', { name: 'Dashboard' }).waitFor()
+  }
   return { context, page }
 }
 

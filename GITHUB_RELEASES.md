@@ -8,6 +8,8 @@ a local AI (Ollama) when the rules are not conclusive, and moves it — or keeps
 
 ### ✨ Features
 
+- **Setup wizard** — Radarr, intake folder, libraries, then optional TMDB, Ollama, email and
+  Overseerr/Jellyseerr, each with a *Test* button; run it again any time from Settings.
 - **Your own categories** — name, Radarr library, description for the AI, weighted rules on genres,
   keywords, production companies, age ratings and original language; one fallback category. A
   *Movies / Animation* preset to start.

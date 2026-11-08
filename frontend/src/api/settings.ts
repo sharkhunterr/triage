@@ -4,6 +4,7 @@ import { api } from './client'
 type Secret = { set: boolean }
 
 export type SettingsView = {
+  wizard_completed: boolean
   base_url: string
   webhook_url: string
   radarr: { url: string; api_key: Secret; intake_root_folders: string[] }

@@ -1,13 +1,43 @@
 import { expect, expectAccessible, go, signIn, test } from './fixtures'
 
-// The whole first-day journey, in order (one shared demo database): categories from the preset,
+// The whole first-day journey, in order (one shared demo database): the setup wizard, categories,
 // a preview scan of the intake folder, applying proposals, deciding a held movie, history,
 // settings, status. Runs at 360 px and 1280 px.
 
 test.describe.configure({ mode: 'serial' })
 
-test('setup or sign in, then the dashboard is accessible', async ({ page }) => {
-  await signIn(page)
+test('the setup wizard: test Radarr, pick the intake folder and the libraries, finish', async ({ page }) => {
+  await signIn(page, { skipWizard: false })
+  await expect(page.getByRole('heading', { name: 'Set up Triage' })).toBeVisible()
+  await expectAccessible(page)
+  await page.getByRole('button', { name: "Let's go" }).click()
+
+  await expect(page.getByRole('heading', { name: 'Radarr' })).toBeVisible()
+  await page.getByRole('button', { name: 'Test' }).click()
+  await expect(page.getByText('Radarr (demo)')).toBeVisible()
+  await expectAccessible(page)
+  await page.getByRole('button', { name: 'Save and continue' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Intake folder' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: '/movies/Nouveaux' })).toBeChecked()
+  await page.getByRole('button', { name: 'Save and continue' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Categories' })).toBeVisible()
+  await page.getByRole('button', { name: 'Use this preset' }).click()
+  await page.getByLabel('Library for Animation').selectOption('/movies/Dessins animés')
+  await page.getByLabel('Library for Movies').selectOption('/movies/Films')
+  await expectAccessible(page)
+  await page.getByRole('button', { name: 'Save and continue' }).click()
+
+  for (const optional of ['TMDB', 'Local AI', 'Email', 'Overseerr / Jellyseerr']) {
+    await expect(page.getByRole('heading', { name: optional })).toBeVisible()
+    await page.getByRole('button', { name: 'Skip', exact: true }).click()
+  }
+
+  await expect(page.getByRole('heading', { name: 'Ready' })).toBeVisible()
+  await expectAccessible(page)
+  await page.getByLabel(/Scan \/movies\/Nouveaux now/).uncheck()
+  await page.getByRole('button', { name: 'Finish' }).click()
   await expect(page.getByRole('heading', { name: 'Latest decisions' })).toBeVisible()
   await expectAccessible(page)
 })

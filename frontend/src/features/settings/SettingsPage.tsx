@@ -1,16 +1,14 @@
-import { CheckCircle2, Copy, KeyRound, PlugZap, XCircle } from 'lucide-react'
+import { Copy, KeyRound, Wand2 } from 'lucide-react'
 import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { useRootFolders } from '../../api/categories'
 import {
-  type Check,
   type Service,
   type SettingsPatch,
-  type SettingsView,
   useOllamaModels,
   useRegenerateWebhookSecret,
   useSaveSettings,
   useSettings,
-  useTestService,
 } from '../../api/settings'
 import {
   Badge,
@@ -26,55 +24,7 @@ import {
 } from '../../design-system'
 import { useT } from '../../i18n'
 import { ModeSwitch } from './ModeSwitch'
-
-type Values = Record<string, string | number | string[]>
-
-function useSection(view: SettingsView | undefined, section: keyof SettingsView, fields: string[]) {
-  const [values, setValues] = useState<Values>({})
-  const fieldList = fields.join(',') // a stable key: the caller passes a new array each render
-  useEffect(() => {
-    if (!view) return
-    const source = view[section] as unknown as Record<string, unknown>
-    const next: Values = {}
-    for (const field of fieldList.split(',')) {
-      const value = source[field]
-      // Secrets come back as {set}: their input starts empty and means "keep".
-      next[field] =
-        value && typeof value === 'object' && 'set' in (value as object) ? '' : (value as Values[string])
-    }
-    setValues(next)
-  }, [view, section, fieldList])
-  const set = (field: string, value: Values[string]) => setValues((v) => ({ ...v, [field]: value }))
-  /** Only non-empty secrets are sent: an empty secret field means "keep the stored one". */
-  const patch = (secrets: string[] = []): SettingsPatch => {
-    const body: Record<string, unknown> = {}
-    for (const [field, value] of Object.entries(values)) {
-      if (secrets.includes(field) && value === '') continue
-      body[field] = value
-    }
-    return { [section]: body }
-  }
-  return { values, set, patch }
-}
-
-function CheckResult({ check }: { check?: Check }) {
-  const t = useT()
-  if (!check) return null
-  return (
-    <p
-      role="status"
-      className={`flex items-center gap-1 text-sm ${check.ok ? 'text-success' : 'text-danger'}`}
-    >
-      {check.ok ? (
-        <CheckCircle2 className="size-4" aria-hidden />
-      ) : (
-        <XCircle className="size-4" aria-hidden />
-      )}
-      {check.detail === 'not_configured' ? t('settings.notConfigured') : check.detail}
-      {check.ok && <span className="text-muted"> · {check.latency_ms} ms</span>}
-    </p>
-  )
-}
+import { SecretInput, TestButton, useSection } from './parts'
 
 function Section({
   title,
@@ -94,7 +44,6 @@ function Section({
   saving: boolean
 }) {
   const t = useT()
-  const test = useTestService()
   const submit = (event: FormEvent) => {
     event.preventDefault()
     onSave()
@@ -111,46 +60,10 @@ function Section({
           <Button type="submit" variant="primary" loading={saving}>
             {t('common.save')}
           </Button>
-          {service && testPatch && (
-            <Button
-              icon={<PlugZap className="size-4" aria-hidden />}
-              loading={test.isPending}
-              onClick={() => test.mutate({ service, patch: testPatch() })}
-            >
-              {t('settings.test')}
-            </Button>
-          )}
-          <CheckResult check={test.data} />
+          {service && testPatch && <TestButton service={service} patch={testPatch} />}
         </div>
       </form>
     </Card>
-  )
-}
-
-function SecretInput({
-  id,
-  set,
-  value,
-  onChange,
-  describedBy,
-}: {
-  id: string
-  set: boolean
-  value: string
-  onChange: (v: string) => void
-  describedBy?: string
-}) {
-  const t = useT()
-  return (
-    <Input
-      id={id}
-      type="password"
-      autoComplete="off"
-      aria-describedby={describedBy}
-      placeholder={set ? t('settings.secretSet') : t('settings.secretUnset')}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
   )
 }
 
@@ -214,6 +127,20 @@ export function SettingsPage() {
       <PageHeader title={t('settings.title')} description={t('settings.subtitle')} />
       <div className="flex flex-col gap-4">
         <ModeSwitch mode={view.sorting.mode} />
+
+        <Card className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">{t('wizard.reopen')}</h2>
+            <p className="text-sm text-muted">{t('wizard.reopenHint')}</p>
+          </div>
+          <Link
+            to="/setup"
+            className="inline-flex h-11 items-center gap-2 rounded-lg border border-border px-4 text-sm font-medium hover:bg-surface-2"
+          >
+            <Wand2 className="size-4" aria-hidden />
+            {t('wizard.title')}
+          </Link>
+        </Card>
 
         <Section
           title={t('settings.radarr')}

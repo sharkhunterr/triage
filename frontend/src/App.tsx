@@ -9,11 +9,13 @@ import { HistoryPage } from './features/decisions/HistoryPage'
 import { ReviewPage } from './features/review/ReviewPage'
 import { ScansPage } from './features/scans/ScansPage'
 import { SettingsPage } from './features/settings/SettingsPage'
+import { SetupWizard } from './features/setup/SetupWizard'
 import { StatusPage } from './features/status/StatusPage'
 import { I18nProvider } from './i18n'
 import { AuthGate } from './shell/AuthGate'
 import { Layout } from './shell/Layout'
 import { ThemeProvider } from './shell/theme'
+import { WizardGate } from './shell/WizardGate'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,16 +36,19 @@ export function App() {
             <BrowserRouter>
               <AuthGate>
                 <Routes>
-                  <Route element={<Layout />}>
-                    <Route index element={<DashboardPage />} />
-                    <Route path="review" element={<ReviewPage />} />
-                    <Route path="history" element={<HistoryPage />} />
-                    <Route path="decisions/:id" element={<DecisionPage />} />
-                    <Route path="scans" element={<ScansPage />} />
-                    <Route path="categories" element={<CategoriesPage />} />
-                    <Route path="settings" element={<SettingsPage />} />
-                    <Route path="status" element={<StatusPage />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="setup" element={<SetupWizard />} />
+                  <Route element={<WizardGate />}>
+                    <Route element={<Layout />}>
+                      <Route index element={<DashboardPage />} />
+                      <Route path="review" element={<ReviewPage />} />
+                      <Route path="history" element={<HistoryPage />} />
+                      <Route path="decisions/:id" element={<DecisionPage />} />
+                      <Route path="scans" element={<ScansPage />} />
+                      <Route path="categories" element={<CategoriesPage />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                      <Route path="status" element={<StatusPage />} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Route>
                   </Route>
                 </Routes>
               </AuthGate>

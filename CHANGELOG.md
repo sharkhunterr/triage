@@ -5,4 +5,5 @@
 First release: intake polling and Seerr webhook, configurable categories and rules with a
 Movies / Animation preset, rules-then-AI scoring (Ollama), preview and automatic modes, folder scans,
 review queue with one-click email links, corrections and history, request verification, status page,
-demo mode, single Docker image with PUID/PGID.
+setup wizard with a test for every service (re-runnable from Settings), demo mode, single Docker
+image with PUID/PGID.

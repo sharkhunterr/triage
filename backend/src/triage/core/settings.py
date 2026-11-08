@@ -76,6 +76,8 @@ class SortingSettings(BaseModel):
 
 
 class AppSettings(BaseModel):
+    # False until the owner finishes (or skips) the setup wizard; set back to False to reopen it.
+    wizard_completed: bool = False
     base_url: str = ""
     radarr: RadarrSettings = Field(default_factory=RadarrSettings)
     tmdb: TmdbSettings = Field(default_factory=TmdbSettings)

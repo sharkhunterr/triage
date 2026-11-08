@@ -69,15 +69,20 @@ services:
     restart: unless-stopped
 ```
 
-Open `http://<host>:9393`, create your account, then:
+Open `http://<host>:9393` and create your account. A **setup wizard** then walks you through it,
+with a *Test* button for every service:
 
-1. **Settings › Radarr** — address and API key, then tick the **intake folder(s)**.
-2. **Categories** — apply the *Movies / Animation* preset and pick a library for each category
-   (or create your own).
-3. **Scans** — scan the intake folder and look at the proposals. Apply the ones you agree with.
-4. **Settings › Mode** — switch to **automatic** once you trust it.
+1. **Radarr** — address and API key.
+2. **Intake folder** — the root folder where requested movies land.
+3. **Categories** — apply the *Movies / Animation* preset and pick a library for each category.
+4. Optional: **TMDB**, the local AI (**Ollama**), **email**, **Overseerr / Jellyseerr** — each can be
+   skipped and added later.
+5. **Mode** — start in **preview** (Triage proposes, you apply), and scan the intake folder right away.
 
-Optional:
+Run it again at any time from *Settings › Run the setup wizard*; everything stays editable in Settings
+and Categories.
+
+What the optional services bring:
 
 - **TMDB** API key — adds the full list of production companies and age ratings.
 - **Ollama** address and model (e.g. `qwen3:8b`, `mistral:7b`) — the local AI for ambiguous movies.

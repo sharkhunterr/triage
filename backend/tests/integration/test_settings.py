@@ -78,3 +78,11 @@ async def test_webhook_secret_is_shown_once(owner: AsyncClient):
     assert secret not in settings.text
     assert settings.json()["seerr"]["webhook_secret"] == {"set": True}
     assert json.loads(settings.text)["webhook_url"].endswith("/api/v1/webhooks/seerr")
+
+
+async def test_the_setup_wizard_runs_once_and_can_be_reopened(owner: AsyncClient):
+    assert (await owner.get("/api/v1/settings")).json()["wizard_completed"] is False
+    done = await owner.patch("/api/v1/settings", json={"wizard_completed": True})
+    assert done.json()["wizard_completed"] is True
+    reopened = await owner.patch("/api/v1/settings", json={"wizard_completed": False})
+    assert reopened.json()["wizard_completed"] is False
