@@ -25,10 +25,12 @@ async def test_undo_a_move_puts_the_movie_back_where_it_was(owner: AsyncClient, 
     assert response.json()["target_root_folder"] == INTAKE
     await env.state.worker.tick()
     assert env.fakes.radarr is not None and env.fakes.radarr.library[1].root_folder_path == INTAKE
-    # back in the intake folder, it is never sorted again on its own
+    # back in the intake folder it waits for the owner again: proposed, never moved on its own
+    # (even in automatic mode)
     for _ in range(3):
         await env.state.worker.tick(poll=True)
-    assert [d.status for d in await decisions(env)] == ["corrected", "moved"]
+    assert [d.status for d in await decisions(env)] == ["corrected", "moved", "proposed"]
+    assert env.fakes.radarr.library[1].root_folder_path == INTAKE
 
 
 async def test_undoing_a_scan_move_returns_to_the_library_not_the_intake(owner: AsyncClient, env: Env):

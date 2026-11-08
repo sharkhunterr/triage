@@ -16,6 +16,7 @@ from triage.models import Category, Decision, MovieRef
 from triage.worker import queue
 
 INTAKE = "intake"
+UNDO = "undo"  # a correction that undoes a move (see revert)
 
 
 async def choose(db: AsyncSession, decision: Decision, choice: int | str) -> None:
@@ -104,7 +105,9 @@ async def revert(db: AsyncSession, decision: Decision) -> Decision:
     if origin is not None and not any(c.get("id") == origin.id for c in snapshot):
         snapshot.append(to_def(origin).to_dict())
     category_id = origin.id if origin is not None else None
-    return await _move_again(db, decision, decision.from_root_folder, category_id, snapshot)
+    return await _move_again(
+        db, decision, decision.from_root_folder, category_id, snapshot, reasons=[{"code": UNDO}]
+    )
 
 
 async def revertable(db: AsyncSession, since: datetime | None = None) -> list[Decision]:
@@ -120,7 +123,13 @@ async def revertable(db: AsyncSession, since: datetime | None = None) -> list[De
 
 
 async def _move_again(
-    db: AsyncSession, decision: Decision, target: str, category_id: int | None, snapshot: list[Any]
+    db: AsyncSession,
+    decision: Decision,
+    target: str,
+    category_id: int | None,
+    snapshot: list[Any],
+    *,
+    reasons: list[dict[str, Any]] | None = None,
 ) -> Decision:
     ref = await db.get(MovieRef, decision.radarr_id)
     if ref is not None:
@@ -132,7 +141,7 @@ async def _move_again(
         signals=decision.signals,
         ai=decision.ai,
         scores=decision.scores,
-        reasons=[],
+        reasons=reasons or [],
         top_category_id=decision.top_category_id,
         confidence=decision.confidence,
         categories_snapshot=snapshot,

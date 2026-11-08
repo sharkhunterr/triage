@@ -6,6 +6,7 @@ from triage.core.logging import decision_id_var, radarr_id_var
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import arrivals, audit
 from triage.domain import decisions as d
+from triage.domain.actions import UNDO
 from triage.models import Arrival, Decision, MovieRef, WorkItem
 from triage.worker import queue
 from triage.worker.runner import JobContext, JobError
@@ -61,7 +62,11 @@ async def move_job(ctx: JobContext, item: WorkItem) -> None:
         back = Arrival(radarr_id=movie.id, intake_path=target, first_seen_at=clock.now())
         ctx.db.add(back)
         await ctx.db.flush()
-        decision.arrival_id = back.id
+        if any(r.get("code") == UNDO for r in decision.reasons or []):
+            # An undone move waits for the owner again: analysed anew, only ever proposed.
+            await queue.enqueue(ctx.db, "classify", {"arrival_id": back.id})
+        else:
+            decision.arrival_id = back.id
     await audit.record(
         ctx.db,
         actor=decision.actor,

@@ -69,7 +69,7 @@ async def reanalyze_waiting(db: AsyncSession, *, dry_run: bool = False) -> int:
     """Classify again, with today's rules and settings, every movie of the intake folder that is
     waiting for the owner (held or proposed). The old decision is superseded, never deleted."""
     from triage.domain import decisions as d
-    from triage.models import Decision
+    from triage.models import Arrival, Decision
     from triage.worker import queue
 
     waiting = list(
@@ -82,11 +82,28 @@ async def reanalyze_waiting(db: AsyncSession, *, dry_run: bool = False) -> int:
             )
         )
     )
+    # Movies a correction put back in the intake folder: their stay counted as decided, but asking
+    # to analyse everything again includes them (they will only ever be proposed).
+    put_back = list(
+        await db.scalars(
+            select(Decision)
+            .join(Arrival, Arrival.id == Decision.arrival_id)
+            .where(
+                Decision.source == "correction",
+                Decision.status == d.MOVED,
+                Arrival.closed_at.is_(None),
+            )
+        )
+    )
     if not dry_run:
         for decision in waiting:
             await d.transition(db, decision, d.SUPERSEDED)
             await queue.enqueue(db, "classify", {"arrival_id": decision.arrival_id})
-    return len(waiting)
+        for decision in put_back:
+            arrival_id = decision.arrival_id
+            decision.arrival_id = None  # the correction stays in the history; the stay is open again
+            await queue.enqueue(db, "classify", {"arrival_id": arrival_id})
+    return len(waiting) + len(put_back)
 
 
 async def reclassify_config_holds(db: AsyncSession) -> int:

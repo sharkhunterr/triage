@@ -1,7 +1,15 @@
 from httpx import AsyncClient
 
 from tests.conftest import Env
-from tests.helpers import ANIMATION_FOLDER, add_ambiguous, add_heat, add_toy_story, decisions, seed_categories
+from tests.helpers import (
+    ANIMATION_FOLDER,
+    add_ambiguous,
+    add_heat,
+    add_toy_story,
+    automatic,
+    decisions,
+    seed_categories,
+)
 from triage.models import Category, Rule
 
 
@@ -67,3 +75,20 @@ async def test_a_bulk_item_that_cannot_be_applied_is_reported_not_fatal(owner: A
         json={"items": [{"id": toy.id, "category_id": 999}, {"id": heat.id, "target": "intake"}]},
     )
     assert response.json() == {"applied": 1, "failed": [toy.id]}
+
+
+async def test_reanalyze_also_takes_the_movies_put_back_in_the_intake_folder(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    add_toy_story(env)
+    await env.state.worker.tick(poll=True)
+    (moved,) = await decisions(env)
+    # an earlier "back to the intake folder" correction: that stay counted as decided
+    await owner.post(f"/api/v1/decisions/{moved.id}/correct", json={"target": "intake"})
+    await env.state.worker.tick(poll=True)
+    assert [d.status for d in await decisions(env)] == ["corrected", "moved"]
+
+    assert (await owner.post("/api/v1/decisions/reanalyze", json={"dry_run": True})).json() == {"count": 1}
+    await owner.post("/api/v1/decisions/reanalyze", json={})
+    await env.state.worker.tick()
+    assert [d.status for d in await decisions(env)] == ["corrected", "moved", "proposed"]
