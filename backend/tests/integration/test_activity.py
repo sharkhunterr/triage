@@ -37,3 +37,24 @@ async def test_the_ai_step_and_the_move_are_shown(owner: AsyncClient, env: Env):
     move = next(e for e in recent if e["kind"] == "move")
     assert move["title"] == "Perfect Blue" and move["outcome"] == "moved"
     assert [s["name"] for s in move["steps"]] == ["radarr_move", "verify"]
+
+
+async def test_the_database_stays_writable_while_the_ai_thinks(env: Env):
+    """A slow AI call must not hold SQLite's write lock: the web interface keeps working."""
+    from sqlalchemy import text
+
+    await seed_categories(env)
+    add_ambiguous(env)
+    env.fakes.ollama = FakeOllama(AiVerdict("animation", 0.9, "animated"))
+    wrote: list[bool] = []
+
+    async def another_writer() -> None:
+        async with env.state.session_factory() as db:
+            await db.execute(text("PRAGMA busy_timeout=200"))
+            await db.execute(text("UPDATE setting SET key = key"))
+            await db.commit()
+            wrote.append(True)
+
+    env.fakes.ollama.during = another_writer
+    await env.state.worker.tick(poll=True)
+    assert wrote == [True]

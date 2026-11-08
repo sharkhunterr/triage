@@ -18,6 +18,7 @@ from triage.models import AuthSession, Owner
 SESSION_COOKIE = "triage_session"
 CSRF_HEADER = "X-Triage-CSRF"
 SESSION_LIFETIME = timedelta(days=30)
+SESSION_TOUCH = timedelta(minutes=1)
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 _hasher = PasswordHasher()
@@ -73,8 +74,10 @@ async def session_is_valid(db: AsyncSession, token: str | None) -> bool:
     now = clock.now()
     if row is None or row.expires_at <= now:
         return False
-    row.last_seen_at = now
-    row.expires_at = now + SESSION_LIFETIME
+    if now - row.last_seen_at >= SESSION_TOUCH:
+        # sliding expiry, written at most once a minute: reading pages does not hammer the database
+        row.last_seen_at = now
+        row.expires_at = now + SESSION_LIFETIME
     return True
 
 

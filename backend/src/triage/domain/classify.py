@@ -93,6 +93,9 @@ async def classify_movie(
     if not categories:
         return Classification([], {}, [{"code": "no_categories"}], 0.0, False, None, None, snapshot)
 
+    # Never hold SQLite's write lock while waiting on the network (TMDB, the AI): what was written
+    # so far (the movie, cached metadata) is safe to keep, and the interface stays writable.
+    await db.commit()
     with step("metadata") as metadata:
         details = await tmdb_details(db, adapters, movie.tmdb_id, settings.tmdb.language)
         metadata.detail = "TMDB" if details is not None else "Radarr"
@@ -116,6 +119,7 @@ async def classify_movie(
     ):
         asked = "unsure" if not result.conclusive else "always"
         system, user = build_prompt(facts, categories)
+        await db.commit()
         verdict: AiVerdict | None = None
         with step("ai") as asking:
             try:
