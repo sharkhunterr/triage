@@ -463,5 +463,8 @@
   "reanalyze.scope.newHint": "Les films jamais analysés, ou remis dans le dossier d'entrée (déplacements annulés) depuis leur dernière analyse.",
   "decision.analyze": "Analyser",
   "decision.analyzing": "Analyse…",
-  "decision.analyzed": "Analysé avec les règles actuelles"
+  "decision.analyzed": "Analysé avec les règles actuelles",
+  "work.analyze": "Analyser un film (par vous)",
+  "work.refresh_titles": "Mettre à jour les titres",
+  "activity.step.titles": "Titres"
 }

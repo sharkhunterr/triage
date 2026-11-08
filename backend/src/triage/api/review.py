@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from triage.api.decisions import DecisionDetail, DecisionSummary, detail, summaries
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
+from triage.core.activity import note, step
 from triage.core.errors import Conflict, Gone, NotFound
 from triage.core.tokens import usable_link, use
 from triage.domain import actions, categories
@@ -21,7 +22,7 @@ from triage.models import Owner as OwnerRow
 from triage.templates.messages import text
 from triage.templates.render import app_link, confirm_form, page
 from triage.worker import queue
-from triage.worker.classify import classify_arrival, new_decision
+from triage.worker.classify import classify_arrival, new_decision, record_decision
 from triage.worker.runner import JobContext
 
 router = APIRouter(tags=["review"], dependencies=[Owner])
@@ -214,26 +215,27 @@ async def analyze(
     """Analyse this movie now, with today's rules, settings and AI. In an intake folder it gets a
     new decision (the one waiting is superseded, never deleted); elsewhere the result is only
     shown, like a simulation."""
-    arrival = await db.scalar(
-        select(Arrival).where(Arrival.radarr_id == radarr_id, Arrival.closed_at.is_(None))
-    )
-    if arrival is not None:
-        for current in await db.scalars(
-            select(Decision).where(Decision.arrival_id == arrival.id, Decision.status != d.SUPERSEDED)
-        ):
-            if current.status in (d.HELD, d.PROPOSED):
-                await d.transition(db, current, d.SUPERSEDED)
-            elif current.source == "correction":
-                current.arrival_id = None  # put back in the intake folder: its stay is open again
-            else:
-                raise Conflict("This movie is being moved or was just decided", code="busy")
-        decision = await classify_arrival(JobContext(db, settings, adapters), arrival.id)
-        if decision is not None:
-            await db.commit()
-            state.worker.wake()
-            return await detail(db, decision)
-        await db.rollback()
-    return await simulate(radarr_id, db, settings, adapters)
+    with state.worker.activity.track("analyze"):
+        arrival = await db.scalar(
+            select(Arrival).where(Arrival.radarr_id == radarr_id, Arrival.closed_at.is_(None))
+        )
+        if arrival is not None:
+            for current in await db.scalars(
+                select(Decision).where(Decision.arrival_id == arrival.id, Decision.status != d.SUPERSEDED)
+            ):
+                if current.status in (d.HELD, d.PROPOSED):
+                    await d.transition(db, current, d.SUPERSEDED)
+                elif current.source == "correction":
+                    current.arrival_id = None  # put back in the intake folder: its stay is open again
+                else:
+                    raise Conflict("This movie is being moved or was just decided", code="busy")
+            decision = await classify_arrival(JobContext(db, settings, adapters), arrival.id)
+            if decision is not None:
+                await db.commit()
+                state.worker.wake()
+                return await detail(db, decision)
+            await db.rollback()
+        return await simulate(radarr_id, db, settings, adapters)
 
 
 @router.post("/movies/{radarr_id}/simulate", response_model=DecisionDetail)
@@ -242,14 +244,19 @@ async def simulate(radarr_id: int, db: Db, settings: Settings, adapters: Adapter
     never emails, never appears in history or review."""
     if adapters.radarr is None:
         raise NotFound("Radarr is not connected", code="radarr_not_configured")
-    movie = await adapters.radarr.movie(radarr_id)
+    with step("radarr") as reading:
+        movie = await adapters.radarr.movie(radarr_id)
+        reading.detail = movie.title if movie else None
     if movie is None:
         raise NotFound("Radarr has no such movie")
+    note(title=movie.title, radarr_id=movie.id)
     await upsert_movie(db, movie)
     result = await classify_movie(db, settings, adapters, movie)
     decision = new_decision(movie.id, "simulation", result, movie.root_folder_path)
     decision.status = d.SIMULATED
     db.add(decision)
+    await db.flush()
+    record_decision(decision, result)
     await db.commit()
     return await detail(db, decision)
 

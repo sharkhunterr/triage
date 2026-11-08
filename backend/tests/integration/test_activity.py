@@ -58,3 +58,15 @@ async def test_the_database_stays_writable_while_the_ai_thinks(env: Env):
     env.fakes.ollama.during = another_writer
     await env.state.worker.tick(poll=True)
     assert wrote == [True]
+
+
+async def test_an_analysis_from_the_movie_page_shows_in_the_activity(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    add_ambiguous(env)
+    await env.state.worker.tick(poll=True)
+    await owner.post("/api/v1/movies/3/analyze")
+    recent = (await owner.get("/api/v1/activity")).json()["recent"]
+    manual = recent[0]
+    assert manual["kind"] == "analyze" and manual["title"] == "Perfect Blue"
+    assert [s["name"] for s in manual["steps"]] == ["radarr", "metadata", "rules", "ai", "decision"]
+    assert manual["outcome"] == "held" and manual["decision_id"]

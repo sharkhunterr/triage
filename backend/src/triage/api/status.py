@@ -159,7 +159,7 @@ async def activity(db: Db, state: State) -> ActivityOut:
     pending = (await queue.counts(db)).get(queue.PENDING, 0)
     run = tracker.run
     return ActivityOut(
-        running=_entry(tracker.current) if tracker.current else None,
+        running=_entry(tracker.running) if tracker.running else None,
         run=RunOut(**run.__dict__, pending=pending) if run else None,
         recent=[_entry(e) for e in tracker.recent],
     )

@@ -57,6 +57,31 @@ class Activity:
         self.recent: deque[Entry] = deque(maxlen=keep)
         self.current: Entry | None = None
         self.run: Run | None = None
+        self.manual: list[Entry] = []  # asked from the interface, outside the worker
+
+    @contextmanager
+    def track(self, kind: str) -> Iterator[Entry]:
+        """Records work done outside the worker (an analysis from the movie page)."""
+        entry = Entry(id=0, kind=kind, started_at=clock.now())
+        self.manual.append(entry)
+        token = current_entry.set(entry)
+        try:
+            yield entry
+        except BaseException as exc:
+            entry.finished_at, entry.error = clock.now(), str(exc) or exc.__class__.__name__
+            raise
+        finally:
+            current_entry.reset(token)
+            self.manual.remove(entry)
+            entry.finished_at = entry.finished_at or clock.now()
+            for s in entry.steps:
+                if s.state == RUNNING:
+                    s.state = FAILED if entry.error else DONE
+            self.recent.appendleft(entry)
+
+    @property
+    def running(self) -> Entry | None:
+        return self.current or next(iter(self.manual), None)
 
     def start(self, item_id: int, kind: str) -> Entry:
         if self.run is None or self.run.finished_at is not None:

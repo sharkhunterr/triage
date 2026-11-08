@@ -463,5 +463,8 @@
   "reanalyze.scope.newHint": "Movies never analyzed, or put back in the intake folder (undone moves) since their last analysis.",
   "decision.analyze": "Analyze",
   "decision.analyzing": "Analyzing…",
-  "decision.analyzed": "Analyzed with today's rules"
+  "decision.analyzed": "Analyzed with today's rules",
+  "work.analyze": "Analyze a movie (by you)",
+  "work.refresh_titles": "Update the titles",
+  "activity.step.titles": "Titles"
 }
