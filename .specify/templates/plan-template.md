@@ -31,7 +31,31 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Each gate cites its principle in `.specify/memory/constitution.md`. Mark ✅, or ⚠ with an
+entry in Complexity Tracking.
+
+- [ ] **I. Safe automation** — no move below the confidence threshold; doubt holds the movie
+      and notifies; nothing deleted; every move reversible from the UI; manual decision wins.
+- [ ] **II. Configurable categories** — no category, folder, or taxonomy hard-coded; presets
+      only; past decisions keep the category definition they were made with.
+- [ ] **III. Explainable decisions** — signals, weights, AI verdict/reasoning, confidence, and
+      outcome stored and shown; facts vs. AI inference distinguishable.
+- [ ] **IV. Rules first, AI second** — deterministic rules evaluated first; AI failure or
+      timeout falls back to rules, else hold; no cloud AI unless configured.
+- [ ] **V. Source of truth** — Radarr/TMDB authoritative; idempotent, restart-safe processing;
+      movies outside the intake folder untouched.
+- [ ] **VI. Resilience** — dependency outages cause no wrong move; retries with backoff;
+      failures surfaced; dependency health visible.
+- [ ] **VII. Security** — authenticated UI; secrets never reach the browser; signed,
+      single-use, expiring email links; server-side authorization of moves.
+- [ ] **VIII. Test-first** — acceptance criteria testable; adapters + fakes for every external
+      service; outages, idempotency, and authorization covered; ruff/mypy/Biome clean.
+- [ ] **IX. UX & accessibility** — complete on mobile and desktop; EN/FR; keyboard, touch,
+      reduced motion, contrast; no dead-end states.
+- [ ] **X. Observability** — JSON logs correlated per movie; searchable decision history;
+      status page.
+- [ ] **XI. Simplicity** — single image, SQLite, no new infrastructure; every new dependency
+      justified by a requirement.
 
 ## Project Structure
 
