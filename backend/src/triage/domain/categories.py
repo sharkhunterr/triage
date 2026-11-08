@@ -50,6 +50,7 @@ def to_def(category: Category) -> CategoryDef:
                 value=r.value,
                 weight=r.weight,
                 decisive=r.decisive,
+                excludes=r.excludes,
             )
             for r in category.rules
         ),

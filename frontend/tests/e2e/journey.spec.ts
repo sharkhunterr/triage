@@ -86,7 +86,7 @@ test('the review queue: apply the confident proposals, decide a held movie', asy
   await expect(page.getByText(/being moved/)).toBeVisible()
 
   await page.getByRole('tab', { name: /To decide/ }).click()
-  const held = page.locator('section').filter({ hasText: 'Perfect Blue' }).first()
+  const held = page.locator('section').filter({ hasText: 'Who Framed Roger Rabbit' }).first()
   await expect(held).toBeVisible()
   await held.getByRole('button', { name: 'Animation' }).click()
   await expect(page.getByText('Done')).toBeVisible()

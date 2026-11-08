@@ -814,6 +814,8 @@ export interface components {
             /** Margin */
             margin: number | null;
             movie: components["schemas"]["MovieOut"];
+            /** Overview */
+            overview?: string | null;
             /** Reasons */
             reasons: {
                 [key: string]: unknown;
@@ -1012,6 +1014,11 @@ export interface components {
              */
             decisive: boolean;
             /**
+             * Excludes
+             * @default false
+             */
+            excludes: boolean;
+            /**
              * Field
              * @enum {string}
              */
@@ -1037,6 +1044,11 @@ export interface components {
              * @default false
              */
             decisive: boolean;
+            /**
+             * Excludes
+             * @default false
+             */
+            excludes: boolean;
             /**
              * Field
              * @enum {string}

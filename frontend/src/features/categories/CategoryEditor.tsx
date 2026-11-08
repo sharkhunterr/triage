@@ -13,7 +13,12 @@ const OPERATORS: NonNullable<RuleInput['operator']>[] = ['is', 'contains', 'is_n
 type Row = RuleInput & { key: number }
 let nextKey = 1
 const row = (rule: RuleInput): Row => ({ ...rule, key: nextKey++ })
-const emptyRule = (): Row => row({ field: 'genre', operator: 'is', value: '', weight: 30, decisive: false })
+const emptyRule = (): Row =>
+  row({ field: 'genre', operator: 'is', value: '', weight: 30, decisive: false, excludes: false })
+
+type Effect = 'weight' | 'decisive' | 'excludes'
+const effectOf = (rule: RuleInput): Effect =>
+  rule.excludes ? 'excludes' : rule.decisive ? 'decisive' : 'weight'
 
 function initial(category?: Category): CategoryInput {
   if (!category) return { name: '', description: '', root_folder_path: null, is_fallback: false, rules: [] }
@@ -22,12 +27,13 @@ function initial(category?: Category): CategoryInput {
     description: category.description,
     root_folder_path: category.root_folder_path,
     is_fallback: category.is_fallback,
-    rules: category.rules.map(({ field, operator, value, weight, decisive }) => ({
+    rules: category.rules.map(({ field, operator, value, weight, decisive, excludes }) => ({
       field,
       operator,
       value,
       weight,
       decisive,
+      excludes,
     })),
   }
 }
@@ -163,32 +169,45 @@ export function CategoryEditor({
               </Select>
               <Input
                 aria-label={t('categories.ruleValue')}
-                className="col-span-2 sm:col-span-4"
+                className="col-span-2 sm:col-span-7"
                 placeholder={t(`field.${rule.field}.placeholder`)}
                 value={rule.value}
                 onChange={(e) => setRule(rule.key, { value: e.target.value })}
               />
-              <Input
-                aria-label={t('categories.ruleWeight')}
-                type="number"
-                min={1}
-                max={100}
-                className="sm:col-span-1"
-                value={rule.weight}
-                onChange={(e) => setRule(rule.key, { weight: Number(e.target.value) })}
-              />
-              <label className="flex items-center gap-2 text-xs sm:col-span-1">
-                <input
-                  type="checkbox"
-                  checked={rule.decisive ?? false}
-                  onChange={(e) => setRule(rule.key, { decisive: e.target.checked })}
+              <Select
+                aria-label={t('categories.ruleEffect')}
+                className="col-span-2 sm:col-span-6"
+                value={effectOf(rule)}
+                onChange={(e) => {
+                  const effect = e.target.value as Effect
+                  setRule(rule.key, { decisive: effect === 'decisive', excludes: effect === 'excludes' })
+                }}
+              >
+                {(['weight', 'decisive', 'excludes'] as const).map((effect) => (
+                  <option key={effect} value={effect}>
+                    {t(`categories.effect.${effect}`)}
+                  </option>
+                ))}
+              </Select>
+              {rule.excludes ? (
+                <span className="self-center text-xs text-muted sm:col-span-4">
+                  {t('categories.effect.excludesHint')}
+                </span>
+              ) : (
+                <Input
+                  aria-label={t('categories.ruleWeight')}
+                  type="number"
+                  min={1}
+                  max={100}
+                  className="sm:col-span-4"
+                  value={rule.weight}
+                  onChange={(e) => setRule(rule.key, { weight: Number(e.target.value) })}
                 />
-                {t('categories.decisive')}
-              </label>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
-                className="justify-self-end sm:col-span-1"
+                className="justify-self-end sm:col-span-2"
                 aria-label={t('categories.removeRule')}
                 onClick={() => setRules(rules.filter((r) => r.key !== rule.key))}
               >

@@ -38,7 +38,7 @@ async def test_an_ai_outage_falls_back_to_the_rules_and_holds(env: Env):
     await env.state.worker.tick(poll=True)
     (decision,) = await decisions(env)
     assert decision.status == "held"
-    assert decision.ai == {"error": "timed out"}
+    assert decision.ai == {"error": "timed out", "asked": "unsure"}
     assert {"code": "ai_unavailable", "error": "timed out"} in decision.reasons
     assert env.fakes.radarr is not None and env.fakes.radarr.moves == []
 
@@ -97,3 +97,52 @@ async def test_without_ai_an_ambiguous_movie_is_held(env: Env):
     (decision,) = await decisions(env)
     assert decision.status == "held"
     assert decision.reasons[0]["code"] == "low_confidence"
+
+
+async def test_always_asks_the_ai_for_a_second_opinion_even_when_the_rules_agree(env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    await env.settings(ollama={"ask": "always"})
+    add_toy_story(env)
+    env.fakes.ollama = FakeOllama(AiVerdict("animation", 0.9, "A Pixar film"))
+    await env.state.worker.tick(poll=True)
+    (decision,) = await decisions(env)
+    assert decision.status == "moved"
+    assert decision.ai is not None and decision.ai["asked"] == "always"
+    assert len(env.fakes.ollama.prompts) == 1
+
+
+async def test_a_disagreeing_second_opinion_holds_the_movie(env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    await env.settings(ollama={"ask": "always"}, sorting={"ai_weight": 100})
+    add_toy_story(env)
+    env.fakes.ollama = FakeOllama(AiVerdict("films", 1.0, "Looks live action"))
+    await env.state.worker.tick(poll=True)
+    (decision,) = await decisions(env)
+    assert decision.status == "held"
+
+
+async def test_an_ai_outage_does_not_block_a_move_the_rules_are_sure_of(env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    await env.settings(ollama={"ask": "always"})
+    add_toy_story(env)
+    env.fakes.ollama = FakeOllama()
+    env.fakes.ollama.error = ServiceError("Ollama", "timed out")
+    await env.state.worker.tick(poll=True)
+    (decision,) = await decisions(env)
+    assert decision.status == "moved"
+    assert decision.ai is not None and decision.ai["error"] == "timed out"
+
+
+async def test_never_asks_the_ai(env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    await env.settings(ollama={"ask": "never"})
+    add_ambiguous(env)
+    env.fakes.ollama = FakeOllama(AiVerdict("animation", 0.9, "animated"))
+    await env.state.worker.tick(poll=True)
+    (decision,) = await decisions(env)
+    assert decision.status == "held" and decision.ai is None
+    assert env.fakes.ollama.prompts == []

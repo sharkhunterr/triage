@@ -11,6 +11,7 @@ class PresetRule:
     value: str
     weight: int
     decisive: bool = False
+    excludes: bool = False
 
 
 @dataclass(frozen=True)
@@ -70,6 +71,9 @@ MOVIES_ANIMATION = Preset(
                 PresetRule("keyword", "contains", "cartoon", 30),
                 PresetRule("keyword", "is", "computer animation", 30),
                 *(PresetRule("company", "contains", studio, 40) for studio in ANIMATION_STUDIOS),
+                # horror and thrillers are never cartoons for the family, even when animated
+                PresetRule("genre", "is", "Horror", 1, excludes=True),
+                PresetRule("genre", "is", "Thriller", 1, excludes=True),
             ),
         ),
         PresetCategory(

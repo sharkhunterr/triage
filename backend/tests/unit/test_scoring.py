@@ -138,3 +138,52 @@ def test_the_ai_never_overrides_a_decisive_rule():
 
 def test_category_snapshot_round_trip():
     assert CategoryDef.from_dict(ANIMATION.to_dict()) == ANIMATION
+
+
+def excluding(rid: int, field: str, value: str) -> RuleDef:
+    return RuleDef(id=rid, field=field, operator="is", value=value, weight=0, decisive=False, excludes=True)
+
+
+ANIMATION_NO_HORROR = CategoryDef(
+    id=1,
+    key="animation",
+    name="Dessins Animés",
+    description="Animated films for the family",
+    root_folder_path="/media/animation",
+    is_fallback=False,
+    version=1,
+    rules=(
+        rule(1, "genre", "Animation", 60, decisive=True),
+        excluding(6, "genre", "Horror"),
+        excluding(7, "genre", "Thriller"),
+    ),
+)
+
+
+def test_an_exclusion_rule_rules_its_category_out_even_over_a_decisive_rule():
+    result = score(
+        facts(genres=["Animation", "Thriller"]), [ANIMATION_NO_HORROR, FILMS], threshold=0.8, margin=20
+    )
+    assert result.top == "films" and result.conclusive
+    assert result.scores["animation"] == 0
+    exclusion = next(s for s in result.signals if s["kind"] == "exclusion")
+    assert (exclusion["category_key"], exclusion["value"]) == ("animation", "Thriller")
+    ignored = next(s for s in result.signals if s["kind"] == "fact")
+    assert ignored["ignored"] is True
+
+
+def test_an_exclusion_also_overrides_the_ai():
+    result = score(
+        facts(genres=["Animation", "Horror"]),
+        [ANIMATION_NO_HORROR, FILMS],
+        threshold=0.8,
+        margin=20,
+        ai=AiVerdict("animation", 1.0, "animated"),
+        ai_weight=100,
+    )
+    assert result.top == "films" and result.scores["animation"] == 0
+
+
+def test_without_the_excluded_genre_the_category_still_wins():
+    result = score(facts(genres=["Animation"]), [ANIMATION_NO_HORROR, FILMS], threshold=0.8, margin=20)
+    assert result.top == "animation" and result.decisive == "animation"

@@ -38,6 +38,8 @@ class OllamaSettings(BaseModel):
     url: str = ""
     model: str = ""
     timeout_s: int = Field(60, ge=5, le=600)
+    # when_unsure: only when the rules are not conclusive; always: a second opinion on every movie
+    ask: Literal["when_unsure", "always", "never"] = "when_unsure"
 
     @field_validator("url")
     @classmethod

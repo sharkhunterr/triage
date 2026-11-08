@@ -38,5 +38,6 @@ class Rule(Base):
     value: Mapped[str] = mapped_column(String(200))
     weight: Mapped[int] = mapped_column(Integer, default=30)
     decisive: Mapped[bool] = mapped_column(Boolean, default=False)
+    excludes: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
     category: Mapped[Category] = relationship(back_populates="rules")

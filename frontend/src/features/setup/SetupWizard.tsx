@@ -412,12 +412,13 @@ function asInput(c: Category, root_folder_path: string | null) {
     description: c.description,
     is_fallback: c.is_fallback,
     root_folder_path,
-    rules: c.rules.map(({ field, operator, value, weight, decisive }) => ({
+    rules: c.rules.map(({ field, operator, value, weight, decisive, excludes }) => ({
       field,
       operator,
       value,
       weight,
       decisive,
+      excludes,
     })),
   }
 }
@@ -450,7 +451,7 @@ function TmdbStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
 
 function AiStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
   const t = useT()
-  const ollama = useSection(view, 'ollama', ['url', 'model'])
+  const ollama = useSection(view, 'ollama', ['url', 'model', 'ask'])
   const queryClient = useQueryClient()
   const save = useSaveSettings()
   const models = useOllamaModels(Boolean(view.ollama.url))
@@ -503,6 +504,25 @@ function AiStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
             />
           )
         }
+      </Field>
+      <Field
+        label={t('settings.aiAsk')}
+        hint={t(`settings.aiAsk.${String(ollama.values.ask ?? 'when_unsure')}Hint`)}
+      >
+        {(id, desc) => (
+          <Select
+            id={id}
+            aria-describedby={desc}
+            value={String(ollama.values.ask ?? 'when_unsure')}
+            onChange={(e) => ollama.set('ask', e.target.value)}
+          >
+            {['when_unsure', 'always', 'never'].map((mode) => (
+              <option key={mode} value={mode}>
+                {t(`settings.aiAsk.${mode}`)}
+              </option>
+            ))}
+          </Select>
+        )}
       </Field>
       <TestButton service="ollama" patch={() => ollama.patch()} onResult={(c) => c.ok && reached()} />
     </Panel>

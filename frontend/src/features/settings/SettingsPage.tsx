@@ -75,7 +75,7 @@ export function SettingsPage() {
   const view = settings.data
   const radarr = useSection(view, 'radarr', ['url', 'api_key', 'intake_root_folders'])
   const tmdb = useSection(view, 'tmdb', ['api_key'])
-  const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s'])
+  const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s', 'ask'])
   const seerr = useSection(view, 'seerr', ['url', 'api_key'])
   const smtp = useSection(view, 'smtp', [
     'host',
@@ -254,6 +254,25 @@ export function SettingsPage() {
                 />
               )
             }
+          </Field>
+          <Field
+            label={t('settings.aiAsk')}
+            hint={t(`settings.aiAsk.${String(ollama.values.ask ?? 'when_unsure')}Hint`)}
+          >
+            {(id, desc) => (
+              <Select
+                id={id}
+                aria-describedby={desc}
+                value={String(ollama.values.ask ?? 'when_unsure')}
+                onChange={(e) => ollama.set('ask', e.target.value)}
+              >
+                {['when_unsure', 'always', 'never'].map((mode) => (
+                  <option key={mode} value={mode}>
+                    {t(`settings.aiAsk.${mode}`)}
+                  </option>
+                ))}
+              </Select>
+            )}
           </Field>
           <Field label={t('settings.aiTimeout')}>
             {(id) => (

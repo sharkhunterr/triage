@@ -12,7 +12,7 @@ from triage.core import clock
 from triage.core.errors import NotFound
 from triage.domain import decisions as d
 from triage.domain.categories import active
-from triage.models import AuditEvent, Decision, MovieRef
+from triage.models import AuditEvent, Decision, MetadataCache, MovieRef
 
 router = APIRouter(tags=["decisions"], dependencies=[Owner])
 
@@ -67,6 +67,7 @@ class DecisionDetail(DecisionSummary):
     ai: dict[str, Any] | None
     scores: dict[str, float]
     facts: dict[str, list[str]]
+    overview: str | None = None
     threshold: float | None
     margin: int | None
     categories: list[dict[str, Any]]
@@ -158,6 +159,15 @@ async def summaries(db: Db, decisions: list[Decision]) -> list[DecisionSummary]:
     return [summary(decision, refs.get(decision.radarr_id)) for decision in decisions]
 
 
+async def _cached_overview(db: Db, ref: MovieRef | None) -> str | None:
+    """Decisions made before the overview was kept: the TMDB cache may still have it."""
+    if ref is None or not ref.tmdb_id:
+        return None
+    cached = await db.get(MetadataCache, ref.tmdb_id)
+    overview = cached.payload.get("overview") if cached is not None else None
+    return str(overview) if overview else None
+
+
 async def detail(db: Db, decision: Decision) -> DecisionDetail:
     ref = await db.get(MovieRef, decision.radarr_id)
     scores = decision.scores or {}
@@ -170,6 +180,7 @@ async def detail(db: Db, decision: Decision) -> DecisionDetail:
         ai=decision.ai,
         scores=scores.get("categories", {}),
         facts=scores.get("facts", {}),
+        overview=scores.get("overview") or await _cached_overview(db, ref),
         threshold=scores.get("threshold"),
         margin=scores.get("margin"),
         categories=[

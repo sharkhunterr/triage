@@ -64,6 +64,10 @@ async def tmdb_details(db: AsyncSession, adapters: Adapters, tmdb_id: int | None
     return details
 
 
+def _should_ask(mode: str, conclusive: bool) -> bool:
+    return mode == "always" or (mode == "when_unsure" and not conclusive)
+
+
 async def classify_movie(
     db: AsyncSession, settings: AppSettings, adapters: Adapters, movie: RadarrMovie
 ) -> Classification:
@@ -82,18 +86,22 @@ async def classify_movie(
         reasons = [{"code": "no_metadata"}]
         result.conclusive = False
     elif (
-        not result.conclusive
-        and adapters.ollama is not None
+        adapters.ollama is not None
+        and _should_ask(settings.ollama.ask, result.conclusive)
         and not any(r["code"] == "decisive_conflict" for r in reasons)
     ):
+        asked = "unsure" if not result.conclusive else "always"
         system, user = build_prompt(facts, categories)
         try:
             verdict = await adapters.ollama.classify(system, user, [c.key for c in categories])
         except ServiceError as exc:
-            ai = {"error": exc.message}
-            reasons.append({"code": "ai_unavailable", "error": exc.message})
+            # A second opinion that fails never blocks what the rules are sure of (Constitution IV).
+            ai = {"error": exc.message, "asked": asked}
+            if not result.conclusive:
+                reasons.append({"code": "ai_unavailable", "error": exc.message})
         else:
             ai = {
+                "asked": asked,
                 "model": settings.ollama.model,
                 "category": verdict.category,
                 "confidence": verdict.confidence,
@@ -109,7 +117,7 @@ async def classify_movie(
                 ai_weight=sorting.ai_weight,
             )
             reasons = list(result.reasons)
-            if verdict.category == UNSURE:
+            if verdict.category == UNSURE and not result.conclusive:
                 reasons.append({"code": "ai_unsure"})
 
     top = next((c for c in categories if c.key == result.top), None)
@@ -124,5 +132,6 @@ async def classify_movie(
         "threshold": sorting.threshold,
         "margin": sorting.margin,
         "decisive": result.decisive,
+        "overview": facts.overview,
     }
     return Classification(result.signals, scores, reasons, result.confidence, conclusive, top, ai, snapshot)

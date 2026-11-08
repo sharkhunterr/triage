@@ -499,6 +499,17 @@
           "movie": {
             "$ref": "#/components/schemas/MovieOut"
           },
+          "overview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overview"
+          },
           "reasons": {
             "items": {
               "additionalProperties": true,
@@ -1136,6 +1147,11 @@
             "title": "Decisive",
             "type": "boolean"
           },
+          "excludes": {
+            "default": false,
+            "title": "Excludes",
+            "type": "boolean"
+          },
           "field": {
             "enum": [
               "genre",
@@ -1183,6 +1199,11 @@
           "decisive": {
             "default": false,
             "title": "Decisive",
+            "type": "boolean"
+          },
+          "excludes": {
+            "default": false,
+            "title": "Excludes",
             "type": "boolean"
           },
           "field": {

@@ -24,6 +24,8 @@ class RuleDef:
     value: str
     weight: int
     decisive: bool
+    # When it matches, its category is ruled out: no score, no decisive win, no AI vote.
+    excludes: bool = False
 
 
 @dataclass(frozen=True)
@@ -107,12 +109,37 @@ def score(
     signals: list[dict[str, Any]] = []
     decisive_hits: list[str] = []
 
+    excluded: set[str] = set()
     for category in categories:
         for rule in category.rules:
+            if not rule.excludes:
+                continue
             value = _matches(rule, facts)
             if value is None:
                 continue
-            scores[category.key] += rule.weight
+            excluded.add(category.key)
+            signals.append(
+                {
+                    "kind": "exclusion",
+                    "field": rule.field,
+                    "operator": rule.operator,
+                    "value": value,
+                    "rule_id": rule.id,
+                    "category_key": category.key,
+                    "weight": 0,
+                }
+            )
+
+    for category in categories:
+        for rule in category.rules:
+            if rule.excludes:
+                continue
+            value = _matches(rule, facts)
+            if value is None:
+                continue
+            ignored = category.key in excluded
+            if not ignored:
+                scores[category.key] += rule.weight
             signals.append(
                 {
                     "kind": "fact",
@@ -123,9 +150,10 @@ def score(
                     "category_key": category.key,
                     "weight": rule.weight,
                     "decisive": rule.decisive,
+                    "ignored": ignored,
                 }
             )
-            if rule.decisive and category.key not in decisive_hits:
+            if rule.decisive and not ignored and category.key not in decisive_hits:
                 decisive_hits.append(category.key)
 
     fallback = next((c for c in categories if c.is_fallback), None)
@@ -137,9 +165,17 @@ def score(
 
     if ai is not None and ai.category != UNSURE and ai.category in scores and not decisive_hits:
         contribution = round(ai_weight * ai.confidence, 1)
-        scores[ai.category] += contribution
+        ignored = ai.category in excluded
+        if not ignored:
+            scores[ai.category] += contribution
         signals.append(
-            {"kind": "inference", "category_key": ai.category, "weight": contribution, "value": ai.reasoning}
+            {
+                "kind": "inference",
+                "category_key": ai.category,
+                "weight": contribution,
+                "value": ai.reasoning,
+                "ignored": ignored,
+            }
         )
 
     ranked = sorted(categories, key=lambda c: (-scores[c.key], c.key))

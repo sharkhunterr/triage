@@ -47,14 +47,25 @@ export function Poster({
   )
 }
 
-export function ConfidenceMeter({ value, threshold }: { value: number; threshold?: number | null }) {
+export function ConfidenceMeter({
+  value,
+  threshold,
+  wide,
+}: {
+  value: number
+  threshold?: number | null
+  wide?: boolean
+}) {
   const t = useT()
   const percent = Math.round(value * 100)
   const enough = threshold == null || value >= threshold
   return (
     <div className="flex items-center gap-2">
       <meter className="sr-only" min={0} max={100} value={percent} aria-label={t('decision.confidence')} />
-      <div aria-hidden className="relative h-2 w-24 overflow-hidden rounded-full bg-surface-2">
+      <div
+        aria-hidden
+        className={`relative h-2 overflow-hidden rounded-full bg-surface-2 ${wide ? 'flex-1' : 'w-24'}`}
+      >
         <div
           className={`h-full rounded-full ${enough ? 'bg-success' : 'bg-warning'}`}
           style={{ width: `${percent}%` }}

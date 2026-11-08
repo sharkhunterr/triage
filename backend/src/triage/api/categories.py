@@ -3,7 +3,7 @@
 from typing import Literal
 
 from fastapi import APIRouter
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from sqlalchemy import func, select
 
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
@@ -27,6 +27,14 @@ class RuleIn(BaseModel):
     value: str = Field(min_length=1, max_length=200)
     weight: int = Field(30, ge=1, le=100)
     decisive: bool = False
+    # rules the category out when it matches (its weight is then unused)
+    excludes: bool = False
+
+    @model_validator(mode="after")
+    def _one_effect(self) -> "RuleIn":
+        if self.excludes and self.decisive:
+            raise ValueError("A rule cannot be both decisive and excluding")
+        return self
 
 
 class RuleOut(RuleIn):
@@ -265,7 +273,14 @@ async def apply_preset(key: str, db: Db, state: State) -> list[Category]:
             position=position,
             version=1,
             rules=[
-                Rule(field=r.field, operator=r.operator, value=r.value, weight=r.weight, decisive=r.decisive)
+                Rule(
+                    field=r.field,
+                    operator=r.operator,
+                    value=r.value,
+                    weight=r.weight,
+                    decisive=r.decisive,
+                    excludes=r.excludes,
+                )
                 for r in spec.rules
             ],
         )
