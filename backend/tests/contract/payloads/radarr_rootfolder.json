@@ -1,0 +1,3 @@
+[{"path": "/data/media/films", "accessible": true, "freeSpace": 812345678901, "unmappedFolders": [], "id": 1},
+ {"path": "/data/media/dessin-anime", "accessible": true, "freeSpace": 812345678901, "unmappedFolders": [], "id": 2},
+ {"path": "/data/media/nouveaux", "accessible": false, "freeSpace": null, "unmappedFolders": [], "id": 3}]

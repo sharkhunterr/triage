@@ -1,1 +1,82 @@
 @import "tailwindcss";
+
+/* Design tokens: every color comes from these variables, so light and dark stay coherent
+   (Constitution IX). Components use the Tailwind names declared in @theme. */
+:root {
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-2: #eef0f6;
+  --border: #dde1ea;
+  --text: #121624;
+  --muted: #5a6275;
+  --accent: #5b4bdb;
+  --accent-contrast: #ffffff;
+  --success: #12805c;
+  --warning: #a35a00;
+  --danger: #c4314b;
+  --info: #2563eb;
+  --focus: #7c6ff0;
+  --radius: 0.75rem;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0d1017;
+  --surface: #151a24;
+  --surface-2: #1d2330;
+  --border: #2a3242;
+  --text: #e8ebf3;
+  --muted: #9aa3b5;
+  --accent: #8b7ff5;
+  --accent-contrast: #0d1017;
+  --success: #3ccf95;
+  --warning: #f0a94b;
+  --danger: #ff6b81;
+  --info: #6aa3ff;
+  --focus: #a99ffa;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --radius-card: var(--radius);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

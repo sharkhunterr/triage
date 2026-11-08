@@ -1,0 +1,8 @@
+{"id": 12, "title": "Toy Story", "originalTitle": "Toy Story", "year": 1995, "tmdbId": 862, "imdbId": "tt0114709",
+ "rootFolderPath": "/data/media/nouveaux", "path": "/data/media/nouveaux/Toy Story (1995)", "folderName": "/data/media/nouveaux/Toy Story (1995)",
+ "genres": ["Animation", "Adventure", "Family", "Comedy"], "keywords": ["toy", "friendship", "computer animation"],
+ "studio": "Pixar", "certification": "G", "originalLanguage": {"id": 1, "name": "English"},
+ "overview": "Led by Woody, Andy's toys live happily in his room until Andy's birthday brings Buzz Lightyear onto the scene.",
+ "remotePoster": "https://image.tmdb.org/t/p/original/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg",
+ "images": [{"coverType": "poster", "remoteUrl": "https://image.tmdb.org/t/p/original/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg"}],
+ "hasFile": true, "monitored": true, "qualityProfileId": 1, "tags": []}

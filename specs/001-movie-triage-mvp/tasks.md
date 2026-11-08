@@ -35,46 +35,46 @@ skeleton, frontend shell. No user story can start before this phase is complete.
 
 ### Core backend
 
-- [ ] T007 Implement JSON structured logging with context vars (`radarr_id`, `decision_id`, `work_item_id`) in backend/src/triage/core/logging.py
-- [ ] T008 Implement the async SQLite engine (WAL, foreign keys on), session factory and FastAPI dependency in backend/src/triage/core/db.py
-- [ ] T009 Create SQLAlchemy models for owner, session, setting, category, rule, movie_ref, metadata_cache, arrival, decision, review_link, scan, work_item, audit_event per data-model.md in backend/src/triage/models/ (one file per concept)
-- [ ] T010 Configure Alembic (backend/alembic.ini, backend/migrations/env.py) and generate the initial migration backend/migrations/versions/0001_initial.py
-- [ ] T011 Implement the typed settings model (Pydantic) with secret fields write-only and `{set: bool}` serialization, loaded from the `setting` table, in backend/src/triage/core/settings.py
-- [ ] T012 [P] Implement the error envelope and exception handlers in backend/src/triage/core/errors.py
-- [ ] T013 Implement owner password hashing (argon2id), server-side sessions (hashed ids, sliding 30 days), CSRF header check, login rate limiter, and the `require_owner` dependency in backend/src/triage/core/security.py
-- [ ] T014 Implement the app factory (lifespan starting/stopping the worker, routers, static files from `static/` with SPA fallback, `/healthz`) and the CLI `serve` / `migrate` in backend/src/triage/app/main.py and backend/src/triage/app/cli.py
-- [ ] T015 [P] Write unit tests for security (hashing, session expiry, CSRF rejection, rate limit) in backend/tests/unit/test_security.py
-- [ ] T016 Implement setup and auth endpoints (`/setup/status`, `/setup`, `/auth/login`, `/auth/logout`, `/auth/me`) per contracts/http-api.md in backend/src/triage/api/auth.py
-- [ ] T017 [P] Write integration tests for setup/login/logout, setup refused once an owner exists, and 401 on protected routes in backend/tests/integration/test_auth.py
+- [X] T007 Implement JSON structured logging with context vars (`radarr_id`, `decision_id`, `work_item_id`) in backend/src/triage/core/logging.py
+- [X] T008 Implement the async SQLite engine (WAL, foreign keys on), session factory and FastAPI dependency in backend/src/triage/core/db.py
+- [X] T009 Create SQLAlchemy models for owner, session, setting, category, rule, movie_ref, metadata_cache, arrival, decision, review_link, scan, work_item, audit_event per data-model.md in backend/src/triage/models/ (one file per concept)
+- [X] T010 Configure Alembic (backend/alembic.ini, backend/migrations/env.py) and generate the initial migration backend/migrations/versions/0001_initial.py
+- [X] T011 Implement the typed settings model (Pydantic) with secret fields write-only and `{set: bool}` serialization, loaded from the `setting` table, in backend/src/triage/core/settings.py
+- [X] T012 [P] Implement the error envelope and exception handlers in backend/src/triage/core/errors.py
+- [X] T013 Implement owner password hashing (argon2id), server-side sessions (hashed ids, sliding 30 days), CSRF header check, login rate limiter, and the `require_owner` dependency in backend/src/triage/core/security.py
+- [X] T014 Implement the app factory (lifespan starting/stopping the worker, routers, static files from `static/` with SPA fallback, `/healthz`) and the CLI `serve` / `migrate` in backend/src/triage/app/main.py and backend/src/triage/app/cli.py
+- [X] T015 [P] Write unit tests for security (hashing, session expiry, CSRF rejection, rate limit) in backend/tests/unit/test_security.py
+- [X] T016 Implement setup and auth endpoints (`/setup/status`, `/setup`, `/auth/login`, `/auth/logout`, `/auth/me`) per contracts/http-api.md in backend/src/triage/api/auth.py
+- [X] T017 [P] Write integration tests for setup/login/logout, setup refused once an owner exists, and 401 on protected routes in backend/tests/integration/test_auth.py
 
 ### Adapters and fakes (contracts/external-services.md)
 
-- [ ] T018 Create the shared test fixtures (temp SQLite, app client logged in as owner, fake adapters injected) in backend/tests/conftest.py
-- [ ] T019 [P] Implement the Radarr adapter (system status, root folders, movies, movie by id, editor move with deleteFiles/addImportExclusion forced false) in backend/src/triage/adapters/radarr.py and its in-memory fake in backend/tests/fakes/radarr.py
-- [ ] T020 [P] Implement the TMDB adapter (configuration test, movie details with keywords and release_dates, ≤ 4 req/s limiter, 7-day cache in metadata_cache) in backend/src/triage/adapters/tmdb.py and its fake in backend/tests/fakes/tmdb.py
-- [ ] T021 [P] Implement the Ollama adapter (`/api/tags`, `/api/chat` with JSON-schema `format`, temperature 0, timeout, answer validation) in backend/src/triage/adapters/ollama.py and its fake (scripted answers, timeouts, invalid JSON) in backend/tests/fakes/ollama.py
-- [ ] T022 [P] Implement the Seerr adapter (status, paginated request lookup by tmdbId; no write calls) in backend/src/triage/adapters/seerr.py and its fake in backend/tests/fakes/seerr.py
-- [ ] T023 [P] Implement the SMTP adapter (aiosmtplib, STARTTLS/SSL, multipart HTML + text) in backend/src/triage/adapters/smtp.py and its fake (captured messages, failure mode) in backend/tests/fakes/smtp.py
-- [ ] T024 [P] Write contract tests for each adapter against recorded payloads (Radarr 6.2 movie and rootfolder, TMDB movie with append_to_response, Ollama chat, Seerr request page) in backend/tests/contract/ (fixtures in backend/tests/contract/payloads/)
+- [X] T018 Create the shared test fixtures (temp SQLite, app client logged in as owner, fake adapters injected) in backend/tests/conftest.py
+- [X] T019 [P] Implement the Radarr adapter (system status, root folders, movies, movie by id, editor move with deleteFiles/addImportExclusion forced false) in backend/src/triage/adapters/radarr.py and its in-memory fake in backend/tests/fakes/radarr.py
+- [X] T020 [P] Implement the TMDB adapter (configuration test, movie details with keywords and release_dates, ≤ 4 req/s limiter, 7-day cache in metadata_cache) in backend/src/triage/adapters/tmdb.py and its fake in backend/tests/fakes/tmdb.py
+- [X] T021 [P] Implement the Ollama adapter (`/api/tags`, `/api/chat` with JSON-schema `format`, temperature 0, timeout, answer validation) in backend/src/triage/adapters/ollama.py and its fake (scripted answers, timeouts, invalid JSON) in backend/tests/fakes/ollama.py
+- [X] T022 [P] Implement the Seerr adapter (status, paginated request lookup by tmdbId; no write calls) in backend/src/triage/adapters/seerr.py and its fake in backend/tests/fakes/seerr.py
+- [X] T023 [P] Implement the SMTP adapter (aiosmtplib, STARTTLS/SSL, multipart HTML + text) in backend/src/triage/adapters/smtp.py and its fake (captured messages, failure mode) in backend/tests/fakes/smtp.py
+- [X] T024 [P] Write contract tests for each adapter against recorded payloads (Radarr 6.2 movie and rootfolder, TMDB movie with append_to_response, Ollama chat, Seerr request page) in backend/tests/contract/ (fixtures in backend/tests/contract/payloads/)
 
 ### Domain core
 
-- [ ] T025 Implement signal extraction (normalize Radarr fields + TMDB enrichment into facts: genres, keywords, companies, certifications, original language) in backend/src/triage/domain/signals.py
-- [ ] T026 Implement the scoring engine (rule matching with is/contains/is_not, case- and accent-insensitive; weights; decisive rules; fallback base score; confidence = top/(top+second+k); AI signal weight; move test with threshold and margin) per research R5 in backend/src/triage/domain/scoring.py
-- [ ] T027 [P] Write unit tests for the scoring engine (decisive wins, two decisive → hold, fallback, close scores → hold, single weak signal stays below 0.8, AI contribution, AI ignored when decisive) in backend/tests/unit/test_scoring.py
-- [ ] T028 Implement the decision state machine (transitions and guards from data-model.md, link revocation on leaving held/proposed, superseded on arrival close) in backend/src/triage/domain/decisions.py
-- [ ] T029 [P] Write unit tests for every allowed and forbidden transition in backend/tests/unit/test_decision_states.py
-- [ ] T030 Implement the persistent work queue (enqueue, claim one, exponential backoff 1 min → 1 h, max 8 attempts, failed state) and the worker loop started by the lifespan in backend/src/triage/worker/queue.py and backend/src/triage/worker/runner.py
-- [ ] T031 [P] Write unit tests for the work queue (backoff schedule, max attempts, restart resumes pending items) in backend/tests/unit/test_queue.py
-- [ ] T032 Implement the audit log writer (append-only) in backend/src/triage/domain/audit.py
+- [X] T025 Implement signal extraction (normalize Radarr fields + TMDB enrichment into facts: genres, keywords, companies, certifications, original language) in backend/src/triage/domain/signals.py
+- [X] T026 Implement the scoring engine (rule matching with is/contains/is_not, case- and accent-insensitive; weights; decisive rules; fallback base score; confidence = top/(top+second+k); AI signal weight; move test with threshold and margin) per research R5 in backend/src/triage/domain/scoring.py
+- [X] T027 [P] Write unit tests for the scoring engine (decisive wins, two decisive → hold, fallback, close scores → hold, single weak signal stays below 0.8, AI contribution, AI ignored when decisive) in backend/tests/unit/test_scoring.py
+- [X] T028 Implement the decision state machine (transitions and guards from data-model.md, link revocation on leaving held/proposed, superseded on arrival close) in backend/src/triage/domain/decisions.py
+- [X] T029 [P] Write unit tests for every allowed and forbidden transition in backend/tests/unit/test_decision_states.py
+- [X] T030 Implement the persistent work queue (enqueue, claim one, exponential backoff 1 min → 1 h, max 8 attempts, failed state) and the worker loop started by the lifespan in backend/src/triage/worker/queue.py and backend/src/triage/worker/runner.py
+- [X] T031 [P] Write unit tests for the work queue (backoff schedule, max attempts, restart resumes pending items) in backend/tests/unit/test_queue.py
+- [X] T032 Implement the audit log writer (append-only) in backend/src/triage/domain/audit.py
 
 ### Frontend shell
 
-- [ ] T033 Generate the OpenAPI schema from the backend (`triage openapi -o backend/openapi.json`) and the typed client with openapi-typescript into frontend/src/api/generated/; add the fetch wrapper (cookie, CSRF header, error envelope) in frontend/src/api/client.ts
-- [ ] T034 [P] Create design tokens (CSS variables, light/dark, focus rings, reduced motion) and base components (Button, Card, Badge, Dialog, Select, Switch, Input, EmptyState, ErrorState, Skeleton) on Radix in frontend/src/design-system/
-- [ ] T035 [P] Set up react-intl with frontend/src/i18n/en.json and frontend/src/i18n/fr.json, locale from the owner profile or browser, and a language switch in frontend/src/i18n/index.tsx
-- [ ] T036 Implement the app shell (sidebar on desktop, bottom tab bar on mobile, theme toggle, auth guard redirecting to setup/login) and routes in frontend/src/shell/
-- [ ] T037 Implement the setup and login screens in frontend/src/features/auth/
+- [X] T033 Generate the OpenAPI schema from the backend (`triage openapi -o backend/openapi.json`) and the typed client with openapi-typescript into frontend/src/api/generated/; add the fetch wrapper (cookie, CSRF header, error envelope) in frontend/src/api/client.ts
+- [X] T034 [P] Create design tokens (CSS variables, light/dark, focus rings, reduced motion) and base components (Button, Card, Badge, Dialog, Select, Switch, Input, EmptyState, ErrorState, Skeleton) on Radix in frontend/src/design-system/
+- [X] T035 [P] Set up react-intl with frontend/src/i18n/en.json and frontend/src/i18n/fr.json, locale from the owner profile or browser, and a language switch in frontend/src/i18n/index.tsx
+- [X] T036 Implement the app shell (sidebar on desktop, bottom tab bar on mobile, theme toggle, auth guard redirecting to setup/login) and routes in frontend/src/shell/
+- [X] T037 Implement the setup and login screens in frontend/src/features/auth/
 - [ ] T038 [P] Write Playwright tests for setup → login → logout at 360 px and 1280 px with axe checks in frontend/tests/e2e/auth.spec.ts
 
 **Checkpoint**: an owner can sign in to an empty shell; adapters, scoring, and queue are tested.

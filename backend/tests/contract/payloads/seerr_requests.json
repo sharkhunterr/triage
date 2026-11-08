@@ -1,0 +1,7 @@
+{"pageInfo": {"pages": 1, "pageSize": 100, "results": 2, "page": 1},
+ "results": [
+  {"id": 41, "status": 2, "createdAt": "2026-11-08T10:00:00.000Z", "type": "movie",
+   "media": {"id": 7, "tmdbId": 862, "status": 3, "externalServiceId": 12},
+   "requestedBy": {"id": 3, "displayName": "Alice", "email": "alice@example.org"}, "rootFolder": "/data/media/nouveaux"},
+  {"id": 40, "status": 1, "createdAt": "2026-11-07T10:00:00.000Z", "type": "movie",
+   "media": {"id": 6, "tmdbId": 949, "status": 2}, "requestedBy": {"id": 4, "username": "bob"}}]}
