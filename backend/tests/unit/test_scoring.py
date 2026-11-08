@@ -213,3 +213,8 @@ def test_the_preset_sends_adult_animation_to_the_films():
     assert score(adult, preset, threshold=0.8, margin=20).top == "films"
     family = facts(genres=["Animation", "Family"], companies=["Pixar"])
     assert score(family, preset, threshold=0.8, margin=20).top == "animation"
+    remake = facts(
+        genres=["Adventure", "Animation"], keywords=["live action and animation", "live action remake"]
+    )
+    result = score(remake, preset, threshold=0.8, margin=20)
+    assert (result.top, result.decisive) == ("films", "films")

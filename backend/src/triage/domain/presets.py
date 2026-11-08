@@ -91,7 +91,11 @@ MOVIES_ANIMATION = Preset(
                 "fr": "Films en prises de vue réelles de tous genres, pour adultes et familles.",
             },
             is_fallback=True,
-            rules=(PresetRule("keyword", "contains", "live action", 40),),
+            rules=(
+                PresetRule("keyword", "contains", "live action", 40),
+                # The Lion King (2019), Aladdin (2019)…: TMDB still lists "Animation" as a genre
+                PresetRule("keyword", "is", "live action remake", 100, decisive=True),
+            ),
         ),
     ),
 )
