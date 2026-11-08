@@ -65,9 +65,18 @@ async def definitions(db: AsyncSession) -> list[CategoryDef]:
 CONFIG_REASONS = {"no_categories", "category_without_folder"}
 
 
-async def reanalyze_waiting(db: AsyncSession, *, dry_run: bool = False) -> int:
-    """Classify again, with today's rules and settings, every movie of the intake folder that is
-    waiting for the owner (held or proposed). The old decision is superseded, never deleted."""
+SCOPES = ("all", "waiting", "new")
+
+
+async def reanalyze(db: AsyncSession, scope: str = "all", *, dry_run: bool = False) -> dict[str, int]:
+    """Classify movies of the intake folder again, with today's rules and settings.
+
+    - ``waiting``: held or proposed; the old decision is superseded, never deleted.
+    - ``new``: never analysed (an arrival without a decision), or put back in the intake folder by
+      a correction (that stay counted as decided; they will only ever be proposed).
+    - ``all``: both.
+    Returns how many movies each scope covers, and ``count`` for the chosen one.
+    """
     from triage.domain import decisions as d
     from triage.models import Arrival, Decision
     from triage.worker import queue
@@ -82,8 +91,6 @@ async def reanalyze_waiting(db: AsyncSession, *, dry_run: bool = False) -> int:
             )
         )
     )
-    # Movies a correction put back in the intake folder: their stay counted as decided, but asking
-    # to analyse everything again includes them (they will only ever be proposed).
     put_back = list(
         await db.scalars(
             select(Decision)
@@ -95,15 +102,34 @@ async def reanalyze_waiting(db: AsyncSession, *, dry_run: bool = False) -> int:
             )
         )
     )
-    if not dry_run:
+    decided = select(Decision.arrival_id).where(Decision.arrival_id.is_not(None))
+    never = [
+        a
+        for a in await db.scalars(
+            select(Arrival).where(Arrival.closed_at.is_(None), Arrival.id.not_in(decided))
+        )
+        if not await queue.has_open(db, "classify", arrival_id=a.id)
+    ]
+    counts = {
+        "waiting": len(waiting),
+        "new": len(put_back) + len(never),
+        "all": len(waiting) + len(put_back) + len(never),
+    }
+    counts["count"] = counts[scope]
+    if dry_run:
+        return counts
+    if scope in ("all", "waiting"):
         for decision in waiting:
             await d.transition(db, decision, d.SUPERSEDED)
             await queue.enqueue(db, "classify", {"arrival_id": decision.arrival_id})
+    if scope in ("all", "new"):
         for decision in put_back:
             arrival_id = decision.arrival_id
             decision.arrival_id = None  # the correction stays in the history; the stay is open again
             await queue.enqueue(db, "classify", {"arrival_id": arrival_id})
-    return len(waiting) + len(put_back)
+        for arrival in never:
+            await queue.enqueue(db, "classify", {"arrival_id": arrival.id})
+    return counts
 
 
 async def reclassify_config_holds(db: AsyncSession) -> int:

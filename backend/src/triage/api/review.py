@@ -1,7 +1,7 @@
 """The review queue, the owner's choice on a decision, and the one-click email links."""
 
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Form, Query
 from fastapi.responses import HTMLResponse
@@ -272,23 +272,28 @@ async def revert_many(body: RevertBody, db: Db, state: State) -> Reverted:
 
 
 class ReanalyzeBody(BaseModel):
+    scope: Literal["all", "waiting", "new"] = "all"
     dry_run: bool = False
 
 
-class Count(BaseModel):
+class Reanalyzed(BaseModel):
     count: int
+    all: int
+    waiting: int
+    new: int
 
 
-@router.post("/decisions/reanalyze", response_model=Count)
-async def reanalyze(body: ReanalyzeBody, db: Db, state: State) -> Count:
-    """Every movie waiting in the intake folder, classified again with today's rules."""
-    count = await categories.reanalyze_waiting(db, dry_run=body.dry_run)
+@router.post("/decisions/reanalyze", response_model=Reanalyzed)
+async def reanalyze(body: ReanalyzeBody, db: Db, state: State) -> Reanalyzed:
+    """Movies of the intake folder classified again with today's rules: all of them, those
+    waiting for a decision, or the new ones (never analysed, or put back)."""
+    counts = await categories.reanalyze(db, body.scope, dry_run=body.dry_run)
     if not body.dry_run:
         await queue.enqueue(db, "refresh_titles", {})
         await db.commit()
-        if count:
+        if counts["count"]:
             state.worker.wake()
-    return Count(count=count)
+    return Reanalyzed(**counts)
 
 
 class BulkItem(ChoiceBody):

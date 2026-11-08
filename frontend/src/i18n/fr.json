@@ -416,10 +416,9 @@
   "reviewAll.summary": "{moves, plural, one {# déplacement} other {# déplacements}}, {others} laissé(s) ou ignoré(s)",
   "reviewAll.apply": "{count, plural, one {Appliquer # choix} other {Appliquer # choix}}",
   "reviewAll.done": "{count, plural, one {# choix appliqué} other {# choix appliqués}}",
-  "reanalyze.open": "Tout réanalyser",
-  "reanalyze.title": "Tout réanalyser",
-  "reanalyze.text": "Chaque film en attente dans le dossier d'entrée est classé à nouveau avec les règles, réglages et l'IA actuels. Les propositions en cours sont remplacées ; rien n'est perdu. En mode automatique, les films dont Triage est désormais sûr sont déplacés.",
-  "reanalyze.count": "{count, plural, =0 {Aucun film en attente.} one {# film sera réanalysé.} other {# films seront réanalysés.}}",
+  "reanalyze.open": "Analyser…",
+  "reanalyze.title": "Analyser le dossier d'entrée",
+  "reanalyze.text": "Les films sont classés avec les règles, réglages et l'IA actuels. Les anciennes propositions sont remplacées, rien n'est perdu. En mode automatique, les films dont Triage est sûr sont déplacés (jamais ceux que vous avez corrigés ou remis en place).",
   "reanalyze.confirm": "{count, plural, one {Analyser # film} other {Analyser # films}}",
   "reanalyze.started": "{count, plural, one {# film est en cours de réanalyse} other {# films sont en cours de réanalyse}}",
   "nav.activity": "Activité",
@@ -456,5 +455,11 @@
   "choice.excluded": "exclu",
   "choice.ai": "le choix de l'IA",
   "status.undone": "Remis en place",
-  "verdict.undone": "Déplacement annulé — retour dans"
+  "verdict.undone": "Déplacement annulé — retour dans",
+  "reanalyze.scope.all": "Tout",
+  "reanalyze.scope.allHint": "Tous les films du dossier d'entrée : en attente, remis en place, jamais analysés.",
+  "reanalyze.scope.waiting": "En attente de décision",
+  "reanalyze.scope.waitingHint": "Les propositions et les films à trancher, à nouveau avec les règles actuelles.",
+  "reanalyze.scope.new": "Nouveaux seulement",
+  "reanalyze.scope.newHint": "Les films jamais analysés, ou remis dans le dossier d'entrée (déplacements annulés) depuis leur dernière analyse."
 }

@@ -401,19 +401,6 @@
         "title": "ChoiceBody",
         "type": "object"
       },
-      "Count": {
-        "properties": {
-          "count": {
-            "title": "Count",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "count"
-        ],
-        "title": "Count",
-        "type": "object"
-      },
       "Counts": {
         "properties": {
           "failed": {
@@ -1309,9 +1296,47 @@
             "default": false,
             "title": "Dry Run",
             "type": "boolean"
+          },
+          "scope": {
+            "default": "all",
+            "enum": [
+              "all",
+              "waiting",
+              "new"
+            ],
+            "title": "Scope",
+            "type": "string"
           }
         },
         "title": "ReanalyzeBody",
+        "type": "object"
+      },
+      "Reanalyzed": {
+        "properties": {
+          "all": {
+            "title": "All",
+            "type": "integer"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "new": {
+            "title": "New",
+            "type": "integer"
+          },
+          "waiting": {
+            "title": "Waiting",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "all",
+          "waiting",
+          "new"
+        ],
+        "title": "Reanalyzed",
         "type": "object"
       },
       "ReorderBody": {
@@ -2476,7 +2501,7 @@
     },
     "/api/v1/decisions/reanalyze": {
       "post": {
-        "description": "Every movie waiting in the intake folder, classified again with today's rules.",
+        "description": "Movies of the intake folder classified again with today's rules: all of them, those\nwaiting for a decision, or the new ones (never analysed, or put back).",
         "operationId": "reanalyze_api_v1_decisions_reanalyze_post",
         "requestBody": {
           "content": {
@@ -2493,7 +2518,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Count"
+                  "$ref": "#/components/schemas/Reanalyzed"
                 }
               }
             },

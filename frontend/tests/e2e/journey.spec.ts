@@ -77,7 +77,7 @@ test('a scan of a library proposes moving the misplaced movie, and moves nothing
   await expectAccessible(page)
 })
 
-test('decide all and analyze all again open with every waiting movie', async ({ page }) => {
+test('decide all, and analyze with a choice of scope', async ({ page }) => {
   await signIn(page)
   await go(page, 'Review')
   await page.getByRole('button', { name: 'Decide all…' }).click()
@@ -89,8 +89,13 @@ test('decide all and analyze all again open with every waiting movie', async ({ 
   await expectAccessible(page)
   await dialog.getByRole('button', { name: 'Cancel' }).click()
 
-  await page.getByRole('button', { name: 'Analyze all again' }).click()
-  await expect(page.getByRole('dialog').getByText(/will be analyzed again/)).toBeVisible()
+  await page.getByRole('button', { name: 'Analyze…' }).click()
+  await page
+    .getByRole('dialog')
+    .getByLabel(/New only/)
+    .check()
+  await expect(page.getByRole('dialog').getByRole('button', { name: /^Analyze \d+ movies?$/ })).toBeVisible()
+  await expectAccessible(page)
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click()
 })
 

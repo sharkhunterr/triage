@@ -30,11 +30,11 @@ async def test_reanalyze_classifies_every_waiting_movie_again_with_todays_rules(
         await db.commit()
 
     dry = await owner.post("/api/v1/decisions/reanalyze", json={"dry_run": True})
-    assert dry.json() == {"count": 1}
+    assert dry.json() == {"count": 1, "all": 1, "waiting": 1, "new": 0}
     assert [d.status for d in await decisions(env)] == ["held"]
 
     done = await owner.post("/api/v1/decisions/reanalyze", json={})
-    assert done.json() == {"count": 1}
+    assert done.json()["count"] == 1
     await env.state.worker.tick()
     assert [d.status for d in await decisions(env)] == ["superseded", "proposed"]
 
@@ -88,7 +88,25 @@ async def test_reanalyze_also_takes_the_movies_put_back_in_the_intake_folder(own
     await env.state.worker.tick(poll=True)
     assert [d.status for d in await decisions(env)] == ["corrected", "moved"]
 
-    assert (await owner.post("/api/v1/decisions/reanalyze", json={"dry_run": True})).json() == {"count": 1}
+    assert (await owner.post("/api/v1/decisions/reanalyze", json={"dry_run": True})).json()["count"] == 1
     await owner.post("/api/v1/decisions/reanalyze", json={})
     await env.state.worker.tick()
     assert [d.status for d in await decisions(env)] == ["corrected", "moved", "proposed"]
+
+
+async def test_analyze_only_the_new_ones(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    add_toy_story(env)
+    await env.state.worker.tick(poll=True)
+    (moved,) = await decisions(env)
+    await owner.post(f"/api/v1/decisions/{moved.id}/correct", json={"target": "intake"})  # put back
+    add_ambiguous(env)  # held: waiting for a decision
+    await env.state.worker.tick(poll=True)
+
+    counts = (await owner.post("/api/v1/decisions/reanalyze", json={"scope": "new", "dry_run": True})).json()
+    assert counts == {"count": 1, "all": 2, "waiting": 1, "new": 1}
+    await owner.post("/api/v1/decisions/reanalyze", json={"scope": "new"})
+    await env.state.worker.tick()
+    statuses = sorted(d.status for d in await decisions(env))
+    assert statuses == ["corrected", "held", "moved", "proposed"]  # the held one was left alone

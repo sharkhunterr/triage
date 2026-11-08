@@ -230,7 +230,8 @@ export interface paths {
         put?: never;
         /**
          * Reanalyze
-         * @description Every movie waiting in the intake folder, classified again with today's rules.
+         * @description Movies of the intake folder classified again with today's rules: all of them, those
+         *     waiting for a decision, or the new ones (never analysed, or put back).
          */
         post: operations["reanalyze_api_v1_decisions_reanalyze_post"];
         delete?: never;
@@ -828,11 +829,6 @@ export interface components {
             /** Target */
             target?: string | null;
         };
-        /** Count */
-        Count: {
-            /** Count */
-            count: number;
-        };
         /** Counts */
         Counts: {
             /** Failed */
@@ -1108,6 +1104,23 @@ export interface components {
              * @default false
              */
             dry_run: boolean;
+            /**
+             * Scope
+             * @default all
+             * @enum {string}
+             */
+            scope: "all" | "waiting" | "new";
+        };
+        /** Reanalyzed */
+        Reanalyzed: {
+            /** All */
+            all: number;
+            /** Count */
+            count: number;
+            /** New */
+            new: number;
+            /** Waiting */
+            waiting: number;
         };
         /** ReorderBody */
         ReorderBody: {
@@ -1753,7 +1766,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Count"];
+                    "application/json": components["schemas"]["Reanalyzed"];
                 };
             };
             /** @description Validation Error */

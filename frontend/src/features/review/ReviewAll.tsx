@@ -192,22 +192,25 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
   )
 }
 
-/** Classifies every waiting movie again with today's rules, after saying how many. */
+type Scope = 'all' | 'waiting' | 'new'
+type Reanalyzed = { count: number; all: number; waiting: number; new: number }
+
+/** Analyses movies of the intake folder (all, waiting, or new ones) after saying how many. */
 export function Reanalyze() {
   const t = useT()
-  const navigate = useNavigate()
   const toast = useToast()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
+  const [scope, setScope] = useState<Scope>('all')
   const preview = useQuery({
     queryKey: ['reanalyze-preview'],
-    queryFn: () =>
-      api<{ count: number }>('/decisions/reanalyze', { method: 'POST', body: { dry_run: true } }),
+    queryFn: () => api<Reanalyzed>('/decisions/reanalyze', { method: 'POST', body: { dry_run: true } }),
     enabled: open,
     staleTime: 0,
   })
   const run = useMutation({
-    mutationFn: () => api<{ count: number }>('/decisions/reanalyze', { method: 'POST', body: {} }),
+    mutationFn: () => api<Reanalyzed>('/decisions/reanalyze', { method: 'POST', body: { scope } }),
     onSuccess: (result) => {
       toast(t('reanalyze.started', { count: result.count }), 'success')
       setOpen(false)
@@ -216,7 +219,8 @@ export function Reanalyze() {
     },
     onError: (error) => toast(error.message, 'danger'),
   })
-  const count = preview.data?.count ?? 0
+  const counts = preview.data
+  const count = counts?.[scope] ?? 0
   return (
     <>
       <Button icon={<RefreshCw className="size-4" aria-hidden />} onClick={() => setOpen(true)}>
@@ -230,10 +234,36 @@ export function Reanalyze() {
         closeLabel={t('common.close')}
       >
         <div className="flex flex-col gap-4">
-          {preview.isPending ? (
+          {preview.isPending || !counts ? (
             <Spinner label={t('common.loading')} />
           ) : (
-            <p className="text-sm font-medium">{t('reanalyze.count', { count })}</p>
+            <fieldset className="flex flex-col gap-2">
+              <legend className="sr-only">{t('reanalyze.title')}</legend>
+              {(['all', 'waiting', 'new'] as const).map((value) => (
+                <label
+                  key={value}
+                  className={cx(
+                    'flex cursor-pointer items-start gap-3 rounded-xl border p-3 has-[:focus-visible]:outline-2',
+                    scope === value ? 'border-accent bg-accent/10' : 'border-border hover:bg-surface-2',
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="reanalyze-scope"
+                    className="mt-1"
+                    checked={scope === value}
+                    onChange={() => setScope(value)}
+                  />
+                  <span className="flex flex-1 flex-col">
+                    <span className="flex items-baseline justify-between gap-2 font-medium">
+                      {t(`reanalyze.scope.${value}`)}
+                      <span className="text-sm tabular-nums text-muted">{counts[value]}</span>
+                    </span>
+                    <span className="text-xs text-muted">{t(`reanalyze.scope.${value}Hint`)}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
           )}
           <div className="flex justify-end gap-2">
             <Button onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
