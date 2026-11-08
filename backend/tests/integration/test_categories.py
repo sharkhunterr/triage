@@ -114,3 +114,31 @@ async def test_radarr_down_does_not_block_editing_descriptions(owner: AsyncClien
         f"/api/v1/categories/{created['id']}", json={**ANIMATION, "description": "Cartoons"}
     )
     assert response.status_code == 200
+
+
+async def test_movies_held_for_missing_configuration_are_reclassified(owner: AsyncClient, env: Env):
+    """Movies seen before any category existed are classified again once categories change."""
+    from tests.helpers import add_toy_story, decisions
+
+    add_toy_story(env)
+    await env.state.worker.tick(poll=True)
+    (held,) = await decisions(env)
+    assert (held.status, held.reasons) == ("held", [{"code": "no_categories"}])
+
+    await owner.post("/api/v1/categories", json=ANIMATION)
+    await env.state.worker.tick()
+    old, new = await decisions(env)
+    assert old.status == "superseded"
+    assert (new.status, new.arrival_id) == ("proposed", held.arrival_id)
+
+
+async def test_movies_held_for_doubt_are_not_reclassified(owner: AsyncClient, env: Env):
+    from tests.helpers import add_ambiguous, decisions, seed_categories
+
+    await seed_categories(env)
+    add_ambiguous(env)
+    await env.state.worker.tick(poll=True)
+    categories = (await owner.get("/api/v1/categories")).json()
+    await owner.put(f"/api/v1/categories/{categories[0]['id']}", json={**ANIMATION, "name": "Anim"})
+    await env.state.worker.tick()
+    assert [d.status for d in await decisions(env)] == ["held"]

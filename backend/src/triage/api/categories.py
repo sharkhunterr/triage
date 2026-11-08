@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import func, select
 
-from triage.api.deps import AdaptersDep, Db, Owner, Settings
+from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
 from triage.core import clock
 from triage.core.errors import Conflict, NotFound, TriageError
 from triage.core.settings import AppSettings, normalize_folder, same_folder
@@ -131,7 +131,9 @@ async def list_categories(db: Db) -> list[Category]:
 
 
 @router.post("/categories", response_model=CategoryOut, status_code=201)
-async def create_category(body: CategoryIn, db: Db, settings: Settings, adapters: AdaptersDep) -> Category:
+async def create_category(
+    body: CategoryIn, db: Db, settings: Settings, adapters: AdaptersDep, state: State
+) -> Category:
     await _check_name(db, body.name)
     await _validate_folder(body.root_folder_path, settings, adapters)
     position = (
@@ -151,6 +153,8 @@ async def create_category(body: CategoryIn, db: Db, settings: Settings, adapters
     await db.flush()
     if body.is_fallback:
         await _clear_other_fallbacks(db, category.id)
+    if await domain.reclassify_config_holds(db):
+        state.worker.wake()
     await db.commit()
     await db.refresh(category)
     return category
@@ -165,7 +169,7 @@ async def _get(db: Db, category_id: int) -> Category:
 
 @router.put("/categories/{category_id}", response_model=CategoryOut)
 async def update_category(
-    category_id: int, body: CategoryIn, db: Db, settings: Settings, adapters: AdaptersDep
+    category_id: int, body: CategoryIn, db: Db, settings: Settings, adapters: AdaptersDep, state: State
 ) -> Category:
     category = await _get(db, category_id)
     await _check_name(db, body.name, exclude_id=category.id)
@@ -179,18 +183,22 @@ async def update_category(
     category.version += 1
     if body.is_fallback:
         await _clear_other_fallbacks(db, category.id)
+    if await domain.reclassify_config_holds(db):
+        state.worker.wake()
     await db.commit()
     await db.refresh(category)
     return category
 
 
 @router.delete("/categories/{category_id}", status_code=204)
-async def delete_category(category_id: int, db: Db) -> None:
+async def delete_category(category_id: int, db: Db, state: State) -> None:
     category = await _get(db, category_id)
     if len(await domain.active(db)) <= 1:
         raise Conflict("Keep at least one category", code="last_category")
     category.deleted_at = clock.now()  # past decisions keep referring to it (FR-010)
     category.is_fallback = False
+    if await domain.reclassify_config_holds(db):
+        state.worker.wake()
     await db.commit()
 
 
@@ -231,7 +239,7 @@ async def list_presets(db: Db) -> list[PresetOut]:
 
 
 @router.post("/presets/{key}/apply", response_model=list[CategoryOut], status_code=201)
-async def apply_preset(key: str, db: Db) -> list[Category]:
+async def apply_preset(key: str, db: Db, state: State) -> list[Category]:
     preset = PRESETS.get(key)
     if preset is None:
         raise NotFound("Unknown preset")
@@ -266,6 +274,8 @@ async def apply_preset(key: str, db: Db) -> list[Category]:
         if spec.is_fallback:
             await _clear_other_fallbacks(db, category.id)
         created.append(category)
+    if await domain.reclassify_config_holds(db):
+        state.worker.wake()
     await db.commit()
     for category in created:
         await db.refresh(category)

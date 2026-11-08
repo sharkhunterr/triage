@@ -59,3 +59,31 @@ def to_def(category: Category) -> CategoryDef:
 async def definitions(db: AsyncSession) -> list[CategoryDef]:
     """The categories in force, as the scoring engine and decision snapshots see them."""
     return [to_def(c) for c in await active(db)]
+
+
+CONFIG_REASONS = {"no_categories", "category_without_folder"}
+
+
+async def reclassify_config_holds(db: AsyncSession) -> int:
+    """Movies held only because of the configuration (no category yet, a category without a
+    library) are classified again after categories change. Held for doubt: left alone."""
+    from triage.domain import decisions as d
+    from triage.models import Decision
+    from triage.worker import queue
+
+    held = await db.scalars(
+        select(Decision).where(
+            Decision.status.in_([d.HELD, d.PROPOSED]),
+            Decision.source == "intake",
+            Decision.actor == "triage",
+            Decision.arrival_id.is_not(None),
+        )
+    )
+    count = 0
+    for decision in held:
+        if not any(r.get("code") in CONFIG_REASONS for r in decision.reasons or []):
+            continue
+        await d.transition(db, decision, d.SUPERSEDED)
+        await queue.enqueue(db, "classify", {"arrival_id": decision.arrival_id})
+        count += 1
+    return count

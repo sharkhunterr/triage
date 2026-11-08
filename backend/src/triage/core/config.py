@@ -15,6 +15,7 @@ class RuntimeConfig:
     host: str = field(default_factory=lambda: os.environ.get("TRIAGE_HOST", "0.0.0.0"))  # noqa: S104
     port: int = field(default_factory=lambda: int(os.environ.get("TRIAGE_PORT", "9393")))
     log_level: str = field(default_factory=lambda: os.environ.get("TRIAGE_LOG_LEVEL", "INFO"))
+    demo: bool = field(default_factory=lambda: os.environ.get("TRIAGE_DEMO", "") in ("1", "true", "yes"))
     static_dir: Path | None = field(
         default_factory=lambda: Path(p) if (p := os.environ.get("TRIAGE_STATIC_DIR")) else None
     )

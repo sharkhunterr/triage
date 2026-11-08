@@ -75,7 +75,7 @@ skeleton, frontend shell. No user story can start before this phase is complete.
 - [X] T035 [P] Set up react-intl with frontend/src/i18n/en.json and frontend/src/i18n/fr.json, locale from the owner profile or browser, and a language switch in frontend/src/i18n/index.tsx
 - [X] T036 Implement the app shell (sidebar on desktop, bottom tab bar on mobile, theme toggle, auth guard redirecting to setup/login) and routes in frontend/src/shell/
 - [X] T037 Implement the setup and login screens in frontend/src/features/auth/
-- [ ] T038 [P] Write Playwright tests for setup → login → logout at 360 px and 1280 px with axe checks in frontend/tests/e2e/auth.spec.ts
+- [X] T038 [P] Write Playwright tests for setup → login → logout at 360 px and 1280 px with axe checks in frontend/tests/e2e/auth.spec.ts
 
 **Checkpoint**: an owner can sign in to an empty shell; adapters, scoring, and queue are tested.
 
@@ -100,7 +100,7 @@ movie with the simulation endpoint (or a unit-level call) and get that category.
 - [X] T042 [US3] Implement the categories and presets endpoints per contracts/http-api.md in backend/src/triage/api/categories.py
 - [X] T043 [P] [US3] Implement the categories list and editor (name, library picker from `/radarr/root-folders`, description, fallback switch, rule rows with field/operator/value/weight/decisive, reorder, delete confirm) in frontend/src/features/categories/
 - [X] T044 [P] [US3] Implement the first-run preset card (apply preset, then pick libraries) in frontend/src/features/categories/PresetCard.tsx
-- [ ] T045 [US3] Add category strings in frontend/src/i18n/en.json and frontend/src/i18n/fr.json and a Playwright test for creating a category on mobile in frontend/tests/e2e/categories.spec.ts
+- [X] T045 [US3] Add category strings in frontend/src/i18n/en.json and frontend/src/i18n/fr.json and a Playwright test for creating a category on mobile in frontend/tests/e2e/categories.spec.ts
 
 **Checkpoint**: categories are editable and the preset works.
 
@@ -129,7 +129,7 @@ intake folder and automatic mode on, one poll moves each to its library exactly 
 - [X] T053 [US1] Implement `/dashboard`, `/decisions` (filters, cursor pagination) and `/decisions/{id}` in backend/src/triage/api/decisions.py
 - [X] T054 [P] [US1] Implement the dashboard (counts, mode badge, latest decisions with poster, category, confidence, outcome; empty state explaining what will appear) in frontend/src/features/dashboard/
 - [X] T055 [P] [US1] Implement the decision detail view (signals table labelled "metadata", AI block labelled "AI interpretation" with reasoning, per-category scores bar, snapshot version, audit trail) in frontend/src/features/decisions/DecisionDetail.tsx
-- [ ] T056 [US1] Add dashboard/decision strings (EN/FR) and a Playwright test of dashboard + decision detail with axe at both widths in frontend/tests/e2e/dashboard.spec.ts
+- [X] T056 [US1] Add dashboard/decision strings (EN/FR) and a Playwright test of dashboard + decision detail with axe at both widths in frontend/tests/e2e/dashboard.spec.ts
 
 **Checkpoint**: Triage sorts confident movies on its own and explains each decision.
 
@@ -154,7 +154,7 @@ decided".
 - [X] T060 [US2] Implement the email batcher job and templates (HTML + text, poster, reasons, one link per category + leave in intake, EN/FR by owner locale) in backend/src/triage/worker/email.py and backend/src/triage/templates/
 - [X] T061 [US2] Implement `/review`, `/decisions/{id}/apply` and the public `/r/{token}` GET (confirmation page) and POST in backend/src/triage/api/review.py
 - [X] T062 [P] [US2] Implement the review queue (cards with poster, reasons, one button per category, leave in intake; optimistic update; empty state "nothing to review") in frontend/src/features/review/
-- [ ] T063 [US2] Add review strings (EN/FR) and a Playwright test deciding a held movie in one tap on mobile in frontend/tests/e2e/review.spec.ts
+- [X] T063 [US2] Add review strings (EN/FR) and a Playwright test deciding a held movie in one tap on mobile in frontend/tests/e2e/review.spec.ts
 
 **Checkpoint**: doubt never moves a movie, and the owner settles it in one tap.
 
@@ -177,7 +177,7 @@ one moves only that one; simulate never moves.
 - [X] T066 [US4] Implement `/decisions/{id}/dismiss`, `/decisions/apply-confident` and `/movies/{radarr_id}/simulate` in backend/src/triage/api/decisions.py
 - [X] T067 [P] [US4] Add proposals to the review screen (tab "Proposals", apply / change category / dismiss, "Apply all confident" with count confirmation) in frontend/src/features/review/Proposals.tsx
 - [X] T068 [P] [US4] Add the mode switch with explanation (Preview ↔ Automatic, confirmation when enabling automatic) in frontend/src/features/settings/ModeSwitch.tsx and a "Simulate" action on movie rows in frontend/src/features/decisions/SimulateButton.tsx
-- [ ] T069 [US4] Add preview strings (EN/FR) and a Playwright test applying a proposal in frontend/tests/e2e/preview.spec.ts
+- [X] T069 [US4] Add preview strings (EN/FR) and a Playwright test applying a proposal in frontend/tests/e2e/preview.spec.ts
 
 **Checkpoint**: the owner can check Triage's judgement before letting it act.
 
@@ -199,7 +199,7 @@ it, moves nothing alone, and moves it when applied.
 - [X] T071 [US5] Implement the scan runner (enumerate movies of the folder from Radarr, enqueue scan_movie items, classify as proposals, progress counters, cancellation) in backend/src/triage/worker/scan.py
 - [X] T072 [US5] Implement `/scans`, `/scans/{id}`, `/scans/{id}/results`, `/scans/{id}/cancel` in backend/src/triage/api/scans.py
 - [X] T073 [P] [US5] Implement the scans screen (folder picker, start, live progress, results grouped "to move" / "in place" / "doubtful", apply one, apply all confident, cancel) in frontend/src/features/scans/
-- [ ] T074 [US5] Add scan strings (EN/FR) and a Playwright test running a scan and applying results in frontend/tests/e2e/scans.spec.ts
+- [X] T074 [US5] Add scan strings (EN/FR) and a Playwright test running a scan and applying results in frontend/tests/e2e/scans.spec.ts
 
 **Checkpoint**: the existing backlog and past mistakes can be cleaned up safely.
 
@@ -242,7 +242,7 @@ history shows both, later polls never auto-sort it.
 
 - [X] T080 [US7] Implement `/decisions/{id}/correct` and the corrected-movie guard in the classify job in backend/src/triage/api/decisions.py and backend/src/triage/worker/classify.py
 - [X] T081 [P] [US7] Implement the history screen (search, filters by outcome/category/source/date, infinite list, correct action with category picker) in frontend/src/features/decisions/History.tsx
-- [ ] T082 [US7] Add history strings (EN/FR) and a Playwright test correcting a move in frontend/tests/e2e/history.spec.ts
+- [X] T082 [US7] Add history strings (EN/FR) and a Playwright test correcting a move in frontend/tests/e2e/history.spec.ts
 
 ---
 
@@ -264,7 +264,7 @@ unreachable service on the status page; secrets never come back in responses.
 - [X] T086 [US8] Implement health probes (cached 60 s) and `/status`, `/poll`, `/work-items/{id}/retry` in backend/src/triage/api/status.py and backend/src/triage/domain/health.py
 - [X] T087 [P] [US8] Implement the settings screens (sections Radarr + intake folders, TMDB, AI, Seerr + webhook URL/secret to copy, Email, Sorting thresholds; Test buttons with results; secret fields showing "set") in frontend/src/features/settings/
 - [X] T088 [P] [US8] Implement the status page (service cards, queue, failed items with retry, folder warnings) in frontend/src/features/status/
-- [ ] T089 [US8] Add settings/status strings (EN/FR) and Playwright tests for settings on mobile and the status page in frontend/tests/e2e/settings.spec.ts
+- [X] T089 [US8] Add settings/status strings (EN/FR) and Playwright tests for settings on mobile and the status page in frontend/tests/e2e/settings.spec.ts
 
 ---
 
@@ -285,7 +285,7 @@ secret gets 401 and no poll.
 - [ ] T092 [P] Write deploy/Dockerfile (node:22-alpine frontend build → python:3.12-slim, uv sync --frozen --no-dev, static files, `/config` volume, port 9393, healthcheck on /healthz) and deploy/entrypoint.sh (PUID/PGID/UMASK like Pressarr v0.2.0, runs migrations then serve)
 - [ ] T093 [P] Write deploy/docker-compose.yml and deploy/DOCKERHUB.md (English)
 - [ ] T094 [P] Write .gitlab-ci.yml (validate: ruff, mypy, Biome, typecheck, openapi drift; test: pytest, vitest; build: image; publish: Docker Hub on tags; release notes from GITHUB_RELEASES.md) following Portalab's pipeline
-- [ ] T095 [P] Add accessibility pass: keyboard navigation of review and editor, reduced motion, contrast in both themes; axe on every e2e spec in frontend/tests/e2e/
+- [X] T095 [P] Add accessibility pass: keyboard navigation of review and editor, reduced motion, contrast in both themes; axe on every e2e spec in frontend/tests/e2e/
 - [ ] T096 [P] Write README.md (English: features, screenshots placeholder, quick start, Radarr/Seerr/Ollama setup, how scoring works, safety guarantees) and GITHUB_RELEASES.md with a `# v0.1.0` block
 - [ ] T097 Run quickstart.md end to end against the test Radarr (classifarr-test-radarr) and fix what fails
 - [ ] T098 Verify all quality gates (ruff, mypy strict, Biome, pytest, vitest, Playwright + axe) and the Docker image build, then clean the test image and build cache

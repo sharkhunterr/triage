@@ -87,10 +87,19 @@ def create_app(
 ) -> FastAPI:
     config = config or RuntimeConfig()
 
+    if config.demo and adapter_factory is None:
+        from triage.demo import Demo
+
+        adapter_factory = Demo().factory
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         configure_logging(config.log_level)
-        await startup(app, config, adapter_factory, start_worker=start_worker)
+        state = await startup(app, config, adapter_factory, start_worker=start_worker)
+        if config.demo:
+            from triage.demo import seed_settings
+
+            await seed_settings(state.session_factory)
         try:
             yield
         finally:
