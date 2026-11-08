@@ -142,3 +142,19 @@ async def test_movies_held_for_doubt_are_not_reclassified(owner: AsyncClient, en
     await owner.put(f"/api/v1/categories/{categories[0]['id']}", json={**ANIMATION, "name": "Anim"})
     await env.state.worker.tick()
     assert [d.status for d in await decisions(env)] == ["held"]
+
+
+async def test_superseded_decisions_stay_out_of_the_dashboard_and_default_history(
+    owner: AsyncClient, env: Env
+):
+    from tests.helpers import add_toy_story
+
+    add_toy_story(env)
+    await env.state.worker.tick(poll=True)  # held: no category
+    await owner.post("/api/v1/categories", json=ANIMATION)
+    await env.state.worker.tick()  # superseded + a new proposal
+    latest = (await owner.get("/api/v1/dashboard")).json()["latest"]
+    assert [d["status"] for d in latest] == ["proposed"]
+    assert [d["status"] for d in (await owner.get("/api/v1/decisions")).json()["items"]] == ["proposed"]
+    asked = (await owner.get("/api/v1/decisions", params={"status": "superseded"})).json()["items"]
+    assert [d["status"] for d in asked] == ["superseded"]

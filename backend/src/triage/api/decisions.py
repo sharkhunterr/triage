@@ -210,7 +210,14 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
             Decision.status == d.MOVED, Decision.decided_at >= clock.now() - timedelta(days=7)
         )
     )
-    latest = list(await db.scalars(select(Decision).where(VISIBLE).order_by(Decision.id.desc()).limit(10)))
+    latest = list(
+        await db.scalars(
+            select(Decision)
+            .where(VISIBLE, Decision.status != d.SUPERSEDED)
+            .order_by(Decision.id.desc())
+            .limit(10)
+        )
+    )
     return Dashboard(
         mode=settings.sorting.mode,
         counts=Counts(
@@ -244,6 +251,10 @@ async def list_decisions(
     query = select(Decision).where(VISIBLE)
     if status:
         query = query.where(Decision.status.in_(status))
+    else:
+        # Superseded decisions (the movie left the intake folder, or was classified again) are
+        # history noise: shown only when asked for.
+        query = query.where(Decision.status != d.SUPERSEDED)
     if source:
         query = query.where(Decision.source == source)
     if category is not None:

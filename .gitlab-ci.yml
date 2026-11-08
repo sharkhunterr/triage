@@ -1,0 +1,243 @@
+# GitLab CI/CD — Triage
+# Same release pipeline as the sibling projects (portalab, pressarr…), scaled to a single-service app:
+# validate → test → build → deploy → release.
+#
+# The pipeline runs on release tags only (`vX.Y.Z`). Day-to-day checks are local:
+#   backend:  uv run ruff check . && uv run mypy && uv run pytest
+#   frontend: npm run lint && npm run typecheck && npm test && npm run e2e
+#
+# CI/CD variables (Settings → CI/CD → Variables, masked + protected):
+#   DOCKER_HUB_USER   Docker Hub account (the image is ${DOCKER_HUB_USER}/triage)
+#   DOCKER_HUB_TOKEN  Docker Hub access token (Read & Write)
+#   GITHUB_TOKEN      GitHub token with `repo` scope (mirror + releases)
+#   GITHUB_REPO       GitHub repository, e.g. sharkhunterr/triage
+# DEPLOY=true (git push -o ci.variable=DEPLOY=true) publishes to Docker Hub and mirrors to GitHub.
+
+variables:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.cache/uv"
+  npm_config_cache: "$CI_PROJECT_DIR/.cache/npm"
+  DOCKER_IMAGE: $CI_PROJECT_NAME
+  DOCKERFILE: deploy/Dockerfile
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_HUB_ENABLED: "true"
+  GITHUB_DEPLOY_ENABLED: "true"
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+
+stages:
+  - validate
+  - test
+  - build
+  - deploy
+  - release
+
+# =============================================================================
+# Templates
+# =============================================================================
+.python:
+  image: python:${PYTHON_VERSION}-slim
+  before_script:
+    - pip install --quiet "uv>=0.9,<1"
+    - cd backend
+    - uv sync --frozen
+  cache:
+    key:
+      files: [backend/uv.lock]
+    paths: [.cache/uv]
+
+.node:
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - cd frontend
+    - npm ci --no-audit --no-fund
+  cache:
+    key:
+      files: [frontend/package-lock.json]
+    paths: [.cache/npm]
+
+.docker:
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+      alias: docker
+      command: ["--tls=false"]
+  before_script:
+    - until docker info >/dev/null 2>&1; do sleep 1; done
+
+.release_notes:
+  script:
+    - &release_notes |
+        VERSION="${CI_COMMIT_TAG#v}"
+        NOTES=""
+        if [ -f GITHUB_RELEASES.md ]; then
+          NOTES=$(awk '/^# v[0-9]/{c++; if(c>1) exit; next} c==1{print}' GITHUB_RELEASES.md | sed 's/^---$//' | sed '/^$/N;/^\n$/D')
+        fi
+        [ -z "$NOTES" ] && NOTES="Release ${CI_COMMIT_TAG}"
+        printf '%s\n' "$NOTES" > /tmp/release_notes.md
+
+# =============================================================================
+# validate
+# =============================================================================
+validate:ruff:
+  extends: .python
+  stage: validate
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+
+validate:mypy:
+  extends: .python
+  stage: validate
+  script:
+    - uv run mypy
+
+validate:frontend:
+  extends: .node
+  stage: validate
+  script:
+    - npm run lint
+    - npm run typecheck
+
+validate:api-drift:
+  stage: validate
+  image: python:${PYTHON_VERSION}-slim
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends nodejs npm >/dev/null
+    - pip install --quiet "uv>=0.9,<1"
+  script:
+    # the committed OpenAPI schema and generated client match the backend
+    - (cd backend && uv sync --frozen && TRIAGE_DATA_DIR=/tmp/oa uv run triage openapi -o /tmp/openapi.json)
+    - diff -q /tmp/openapi.json backend/openapi.json
+    - (cd frontend && npm ci --no-audit --no-fund && npm run check:api-drift)
+
+# =============================================================================
+# test
+# =============================================================================
+test:backend:
+  extends: .python
+  stage: test
+  script:
+    - uv run pytest -q
+
+test:frontend:
+  extends: .node
+  stage: test
+  script:
+    - npm test
+
+test:e2e:
+  stage: test
+  image: mcr.microsoft.com/playwright:v1.65.0-noble
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends python3.12 python3-pip >/dev/null
+    - pip install --quiet --break-system-packages "uv>=0.9,<1"
+    - (cd backend && uv sync --frozen)
+    - cd frontend && npm ci --no-audit --no-fund
+  script:
+    # the first-day journey at 360 px and 1280 px, with axe accessibility checks
+    - npm run e2e
+  artifacts:
+    when: on_failure
+    paths: [frontend/test-results/]
+    expire_in: 1 week
+
+# =============================================================================
+# build — the image builds and starts
+# =============================================================================
+build:docker:
+  extends: .docker
+  stage: build
+  script:
+    - |
+      docker build \
+        --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+        --build-arg VCS_REF=${CI_COMMIT_SHA} \
+        --build-arg VERSION=${CI_COMMIT_TAG#v} \
+        --tag ${DOCKER_IMAGE}:${CI_COMMIT_SHA} \
+        --file ${DOCKERFILE} \
+        .
+    - docker run --rm --entrypoint triage ${DOCKER_IMAGE}:${CI_COMMIT_SHA} --help
+
+# =============================================================================
+# deploy — Docker Hub + GitHub mirror (DEPLOY=true)
+# =============================================================================
+deploy:
+  extends: .docker
+  stage: deploy
+  variables:
+    GIT_DEPTH: 0
+  before_script:
+    - apk add --no-cache git
+    - git fetch --unshallow || true
+    - until docker info >/dev/null 2>&1; do sleep 1; done
+  script:
+    - |
+      if [ "$DOCKER_HUB_ENABLED" = "true" ]; then
+        docker build \
+          --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+          --build-arg VCS_REF=${CI_COMMIT_SHA} \
+          --build-arg VERSION=${CI_COMMIT_TAG#v} \
+          --tag ${DOCKER_IMAGE}:${CI_COMMIT_SHA} \
+          --file ${DOCKERFILE} \
+          .
+        echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+        DOCKER_HUB_IMAGE="${DOCKER_HUB_USER}/${CI_PROJECT_NAME}"
+        for TAG in "${CI_COMMIT_TAG}" "${CI_COMMIT_TAG#v}" latest; do
+          docker tag ${DOCKER_IMAGE}:${CI_COMMIT_SHA} ${DOCKER_HUB_IMAGE}:${TAG}
+          docker push ${DOCKER_HUB_IMAGE}:${TAG}
+        done
+        wget -q https://github.com/christian-korneck/docker-pushrm/releases/download/v1.9.0/docker-pushrm_linux_amd64 -O /usr/local/bin/docker-pushrm
+        chmod +x /usr/local/bin/docker-pushrm
+        docker-pushrm --file deploy/DOCKERHUB.md \
+          --short "Sorts newly requested movies into the right Radarr library, with rules and a local AI." \
+          "${DOCKER_HUB_IMAGE}" || echo "Docker Hub README not updated"
+      fi
+    - |
+      if [ "$GITHUB_DEPLOY_ENABLED" = "true" ]; then
+        git remote add github "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" || true
+        git push github HEAD:refs/heads/${CI_DEFAULT_BRANCH} --force
+        git push github refs/tags/${CI_COMMIT_TAG}:refs/tags/${CI_COMMIT_TAG} --force
+      fi
+  rules:
+    - if: '$DEPLOY == "true"'
+
+# =============================================================================
+# release — GitLab and GitHub releases from GITHUB_RELEASES.md
+# =============================================================================
+release:gitlab:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  before_script:
+    - apk add --no-cache sed gawk
+  script:
+    - *release_notes
+    - release-cli create --name "Triage ${CI_COMMIT_TAG}" --tag-name "${CI_COMMIT_TAG}" --description "$(cat /tmp/release_notes.md)"
+
+release:github:
+  stage: release
+  image: alpine:latest
+  needs:
+    - job: deploy
+      optional: true
+  before_script:
+    - apk add --no-cache curl jq gawk sed
+  script:
+    - *release_notes
+    - |
+      HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X POST \
+        -H "Authorization: token ${GITHUB_TOKEN}" \
+        -H "Accept: application/vnd.github.v3+json" \
+        "https://api.github.com/repos/${GITHUB_REPO}/releases" \
+        -d "$(jq -n --arg tag "${CI_COMMIT_TAG}" --arg name "Triage ${CI_COMMIT_TAG}" \
+              --rawfile body /tmp/release_notes.md \
+              '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}')")
+      cat /tmp/response.json | jq -r '.html_url // .message'
+      [ "$HTTP_CODE" = "201" ]
+  rules:
+    - if: '$DEPLOY == "true" && $GITHUB_DEPLOY_ENABLED == "true"'

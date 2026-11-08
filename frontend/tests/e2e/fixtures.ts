@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, type Page, test as base } from '@playwright/test'
+import { test as base, expect, type Page } from '@playwright/test'
 
 export const USER = { username: 'owner', password: 'correct horse battery' }
 
@@ -32,7 +32,11 @@ export async function expectAccessible(page: Page) {
 
 export async function go(page: Page, label: string) {
   // The sidebar on desktop, the bottom tab bar on mobile; Scans and Status are reached from links there.
-  await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: label }).first().click()
+  await page
+    .getByRole('navigation', { name: 'Main navigation' })
+    .getByRole('link', { name: label })
+    .first()
+    .click()
 }
 
 export const test = base

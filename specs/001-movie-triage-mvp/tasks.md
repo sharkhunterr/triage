@@ -282,13 +282,13 @@ secret gets 401 and no poll.
 
 ## Phase 12: Polish & Cross-Cutting Concerns
 
-- [ ] T092 [P] Write deploy/Dockerfile (node:22-alpine frontend build → python:3.12-slim, uv sync --frozen --no-dev, static files, `/config` volume, port 9393, healthcheck on /healthz) and deploy/entrypoint.sh (PUID/PGID/UMASK like Pressarr v0.2.0, runs migrations then serve)
-- [ ] T093 [P] Write deploy/docker-compose.yml and deploy/DOCKERHUB.md (English)
-- [ ] T094 [P] Write .gitlab-ci.yml (validate: ruff, mypy, Biome, typecheck, openapi drift; test: pytest, vitest; build: image; publish: Docker Hub on tags; release notes from GITHUB_RELEASES.md) following Portalab's pipeline
+- [X] T092 [P] Write deploy/Dockerfile (node:22-alpine frontend build → python:3.12-slim, uv sync --frozen --no-dev, static files, `/config` volume, port 9393, healthcheck on /healthz) and deploy/entrypoint.sh (PUID/PGID/UMASK like Pressarr v0.2.0, runs migrations then serve)
+- [X] T093 [P] Write deploy/docker-compose.yml and deploy/DOCKERHUB.md (English)
+- [X] T094 [P] Write .gitlab-ci.yml (validate: ruff, mypy, Biome, typecheck, openapi drift; test: pytest, vitest; build: image; publish: Docker Hub on tags; release notes from GITHUB_RELEASES.md) following Portalab's pipeline
 - [X] T095 [P] Add accessibility pass: keyboard navigation of review and editor, reduced motion, contrast in both themes; axe on every e2e spec in frontend/tests/e2e/
-- [ ] T096 [P] Write README.md (English: features, screenshots placeholder, quick start, Radarr/Seerr/Ollama setup, how scoring works, safety guarantees) and GITHUB_RELEASES.md with a `# v0.1.0` block
-- [ ] T097 Run quickstart.md end to end against the test Radarr (classifarr-test-radarr) and fix what fails
-- [ ] T098 Verify all quality gates (ruff, mypy strict, Biome, pytest, vitest, Playwright + axe) and the Docker image build, then clean the test image and build cache
+- [X] T096 [P] Write README.md (English: features, screenshots placeholder, quick start, Radarr/Seerr/Ollama setup, how scoring works, safety guarantees) and GITHUB_RELEASES.md with a `# v0.1.0` block
+- [X] T097 Run quickstart.md end to end against the test Radarr (classifarr-test-radarr) and fix what fails
+- [X] T098 Verify all quality gates (ruff, mypy strict, Biome, pytest, vitest, Playwright + axe) and the Docker image build, then clean the test image and build cache
 
 ---
 

@@ -1,0 +1,14 @@
+# Triage next to Radarr, Overseerr/Jellyseerr and (optionally) Ollama.
+services:
+  triage:
+    image: sharkhunterr/triage:latest
+    container_name: triage
+    ports:
+      - "9393:9393"
+    volumes:
+      - ./config:/config
+    environment:
+      - TZ=Europe/Paris
+      - PUID=1000
+      - PGID=1000
+    restart: unless-stopped
