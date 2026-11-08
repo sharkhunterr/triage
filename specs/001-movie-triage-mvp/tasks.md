@@ -91,15 +91,15 @@ movie with the simulation endpoint (or a unit-level call) and get that category.
 
 ### Tests for User Story 3
 
-- [ ] T039 [P] [US3] Write integration tests for category CRUD, validation (root folder must exist in Radarr fake and not be an intake folder, single fallback, cannot delete the last category), reorder, version increments in backend/tests/integration/test_categories.py
-- [ ] T040 [P] [US3] Write integration tests for presets (list, apply movies-animation → two categories with rules, root folders unset until chosen) in backend/tests/integration/test_presets.py
+- [X] T039 [P] [US3] Write integration tests for category CRUD, validation (root folder must exist in Radarr fake and not be an intake folder, single fallback, cannot delete the last category), reorder, version increments in backend/tests/integration/test_categories.py
+- [X] T040 [P] [US3] Write integration tests for presets (list, apply movies-animation → two categories with rules, root folders unset until chosen) in backend/tests/integration/test_presets.py
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Implement the movies-animation preset (Animation genre decisive-weight 60, keywords anime/stop-motion/cartoon/animated feature 30, studios Pixar, Walt Disney Animation Studios, DreamWorks Animation, Studio Ghibli, Illumination, Blue Sky, Aardman, Laika, Sony Pictures Animation, Toei Animation 40; fallback "Films") in backend/src/triage/domain/presets.py
-- [ ] T042 [US3] Implement the categories and presets endpoints per contracts/http-api.md in backend/src/triage/api/categories.py
-- [ ] T043 [P] [US3] Implement the categories list and editor (name, library picker from `/radarr/root-folders`, description, fallback switch, rule rows with field/operator/value/weight/decisive, reorder, delete confirm) in frontend/src/features/categories/
-- [ ] T044 [P] [US3] Implement the first-run preset card (apply preset, then pick libraries) in frontend/src/features/categories/PresetCard.tsx
+- [X] T041 [US3] Implement the movies-animation preset (Animation genre decisive-weight 60, keywords anime/stop-motion/cartoon/animated feature 30, studios Pixar, Walt Disney Animation Studios, DreamWorks Animation, Studio Ghibli, Illumination, Blue Sky, Aardman, Laika, Sony Pictures Animation, Toei Animation 40; fallback "Films") in backend/src/triage/domain/presets.py
+- [X] T042 [US3] Implement the categories and presets endpoints per contracts/http-api.md in backend/src/triage/api/categories.py
+- [X] T043 [P] [US3] Implement the categories list and editor (name, library picker from `/radarr/root-folders`, description, fallback switch, rule rows with field/operator/value/weight/decisive, reorder, delete confirm) in frontend/src/features/categories/
+- [X] T044 [P] [US3] Implement the first-run preset card (apply preset, then pick libraries) in frontend/src/features/categories/PresetCard.tsx
 - [ ] T045 [US3] Add category strings in frontend/src/i18n/en.json and frontend/src/i18n/fr.json and a Playwright test for creating a category on mobile in frontend/tests/e2e/categories.spec.ts
 
 **Checkpoint**: categories are editable and the preset works.

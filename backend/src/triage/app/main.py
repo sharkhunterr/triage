@@ -65,9 +65,9 @@ async def shutdown(app: FastAPI) -> None:
 
 
 def _routers() -> list[APIRouter]:
-    from triage.api import auth
+    from triage.api import auth, categories, settings
 
-    return [auth.router]
+    return [auth.router, categories.router, settings.router]
 
 
 def create_app(

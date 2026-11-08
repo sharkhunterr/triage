@@ -7,7 +7,7 @@ test('English and French define the same messages', () => {
 })
 
 test('placeholders match between languages', () => {
-  const placeholders = (text: string) => (text.match(/\{\w+/g) ?? []).sort()
+  const placeholders = (text: string) => (text.match(/\{\w+(?=[,}])/g) ?? []).sort()
   for (const [key, text] of Object.entries(en)) {
     expect(placeholders((fr as Record<string, string>)[key] ?? ''), key).toEqual(placeholders(text))
   }

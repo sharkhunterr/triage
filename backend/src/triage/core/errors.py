@@ -7,6 +7,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from triage.adapters.types import ServiceError
+
 
 class TriageError(Exception):
     status_code = 400
@@ -65,6 +67,10 @@ def install_error_handlers(app: FastAPI) -> None:
     async def _validation(_request: Request, exc: RequestValidationError) -> JSONResponse:
         errors = [{"loc": list(e["loc"]), "msg": e["msg"]} for e in exc.errors()]
         return _envelope(422, "invalid", "Invalid request", {"errors": errors})
+
+    @app.exception_handler(ServiceError)
+    async def _service(_request: Request, exc: ServiceError) -> JSONResponse:
+        return _envelope(503, "service_unavailable", exc.message, {"service": exc.service})
 
     @app.exception_handler(StarletteHTTPException)
     async def _http(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
