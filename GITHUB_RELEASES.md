@@ -10,20 +10,29 @@ a local AI (Ollama) when the rules are not conclusive, and moves it — or keeps
 
 - **Setup wizard** — Radarr, intake folder, libraries, then optional TMDB, Ollama, email and
   Overseerr/Jellyseerr, each with a *Test* button; run it again any time from Settings.
-- **Your own categories** — name, Radarr library, description for the AI, weighted rules on genres,
-  keywords, production companies, age ratings and original language; one fallback category. A
-  *Movies / Animation* preset to start.
-- **Preview mode by default** — Triage proposes, you apply one proposal or all the confident ones;
-  switch to automatic when you trust it.
-- **Scans** — classify a whole folder (the intake backlog or an existing library); proposals only.
+- **Your own categories** — name, Radarr library, description for the AI and weighted rules on
+  genres, keywords, production companies, age ratings and original language. A rule can add points,
+  settle the category (*decisive*) or **exclude** it. A *Movies / Animation* preset to start: adult
+  content (keywords, R / 16 / 18 ratings), horror and thrillers stay out of Animation, live action
+  remakes go to Movies.
+- **A local AI that knows your rules** — Ollama reads each category's folder, rules and exclusions
+  and what the rules found, then answers in your language. Ask it when the rules are unsure,
+  always (a second opinion), or never.
+- **Preview mode by default** — Triage proposes; apply one proposal, the confident ones, or decide
+  every waiting movie in one dialog. Switch to automatic when you trust it.
+- **Analyze** — one movie from its page, or the intake folder: everything, the movies waiting for
+  a decision, or the new ones only. **Scans** classify a whole library; proposals only.
+- **Activity** — every analysis and move, live, step by step (Radarr, metadata, rules, AI,
+  decision), with a progress indicator on every page.
+- **Explainable decisions** — the movie sheet (synopsis, genres, companies, rating, keywords) in
+  the color of the category each value counted for, points per category, the AI's opinion apart.
+- **Undo** — put a move back, or every move of a period, exactly where the movie came from; the
+  movie waits for you again and is never sorted on its own.
 - **Doubt is never a move** — doubtful movies wait in the review queue; one email per run with
   single-use, expiring one-click links.
-- **Explainable decisions** — facts and AI interpretation shown apart, scores per category, history.
-- **Corrections** — move any sorted movie elsewhere or back to the intake folder; Triage never sorts
-  it on its own again.
 - **Requests keep working** — moves go through Radarr's movie editor (same movie entry); Seerr
-  requests are checked, never edited.
-- **Webhook** for immediate sorting, **status page**, failed-work retries.
+  requests are checked, never edited. The Seerr webhook sorts a request within seconds.
+- **TMDB in your language** — titles, synopsis and your country's age ratings.
 - Mobile and desktop, English and French, light and dark themes.
 
 ### 🐳 Quick start

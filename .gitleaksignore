@@ -1,0 +1,2 @@
+# Reviewed false positives (gitleaks fingerprints). A fake key in a test that checks secrets never leave the server:
+ed787dee7dcc428791843a4575fb11afa7beed5e:backend/tests/integration/test_settings.py:generic-api-key:14

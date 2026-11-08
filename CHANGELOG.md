@@ -1,9 +1,4 @@
 # Changelog
 
-## 0.1.0 — 2026-11-08
-
-First release: intake polling and Seerr webhook, configurable categories and rules with a
-Movies / Animation preset, rules-then-AI scoring (Ollama), preview and automatic modes, folder scans,
-review queue with one-click email links, corrections and history, request verification, status page,
-setup wizard with a test for every service (re-runnable from Settings), demo mode, single Docker
-image with PUID/PGID.
+All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
+[GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.

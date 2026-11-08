@@ -137,6 +137,10 @@ npm run lint && npm run typecheck && npm test
 npm run e2e                                  # Playwright at 360 px and 1280 px, with axe
 ```
 
+Releases: write the `# vX.Y.Z` notes at the top of `GITHUB_RELEASES.md`, commit, then `npm run release`
+(tag + GitLab pipeline: validate, test, build, GitLab release) or `npm run release:full` (also Docker Hub,
+GitHub mirror and GitHub release). `npm run release:dry` shows what would happen.
+
 The design lives in `specs/001-movie-triage-mvp/` (specification, plan, data model, API contracts)
 and `.specify/memory/constitution.md` (the principles every change follows).
 

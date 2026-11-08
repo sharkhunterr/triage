@@ -15,3 +15,9 @@ specs
 .claude
 *.db
 *.log
+.dev-config
+.dev-radarr
+.dev-seerr
+.cache
+docs
+scripts
