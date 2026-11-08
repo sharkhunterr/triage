@@ -1,5 +1,6 @@
 """Move a movie through Radarr's editor and confirm it before calling it done (research R2)."""
 
+from triage.core import clock
 from triage.core.logging import decision_id_var, radarr_id_var
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import arrivals, audit
@@ -46,6 +47,14 @@ async def move_job(ctx: JobContext, item: WorkItem) -> None:
         ref.root_folder_path = target
     if arrival is not None and not same_folder(target, arrival.intake_path):
         await arrivals.close(ctx.db, arrival, "moved_by_triage")
+    if decision.source == "correction" and any(
+        same_folder(target, intake) for intake in ctx.settings.radarr.intake_root_folders
+    ):
+        # Back in the intake folder by the owner's choice: this stay is already decided.
+        back = Arrival(radarr_id=movie.id, intake_path=target, first_seen_at=clock.now())
+        ctx.db.add(back)
+        await ctx.db.flush()
+        decision.arrival_id = back.id
     await audit.record(
         ctx.db,
         actor=decision.actor,

@@ -3,11 +3,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from triage.core import clock
 from triage.core.errors import Conflict, NotFound
 from triage.domain import audit
 from triage.domain import decisions as d
 from triage.domain.categories import to_def
-from triage.models import Category, Decision
+from triage.models import Category, Decision, MovieRef
 from triage.worker import queue
 
 INTAKE = "intake"
@@ -52,3 +53,53 @@ async def category_by_key(db: AsyncSession, key: str) -> Category | None:
         select(Category).where(Category.key == key, Category.deleted_at.is_(None))
     )
     return category
+
+
+async def correct(
+    db: AsyncSession, decision: Decision, choice: int | str, intake_folders: list[str]
+) -> Decision:
+    """Move a movie Triage moved somewhere else (FR-021). The movie is marked corrected: Triage
+    will only ever propose for it from now on. Returns the correction decision."""
+    if decision.status != d.MOVED:
+        raise Conflict("Only a moved movie can be corrected", code="not_moved")
+    snapshot = list(decision.categories_snapshot or [])
+    if choice == INTAKE:
+        target = decision.from_root_folder if decision.source == "intake" else None
+        target = target or (intake_folders[0] if intake_folders else None)
+        if not target:
+            raise Conflict("No intake folder is configured", code="no_intake")
+        category_id = None
+    else:
+        category = await db.get(Category, int(choice))
+        if category is None or category.deleted_at is not None or not category.root_folder_path:
+            raise NotFound("This category does not exist or has no library", code="unknown_category")
+        target = category.root_folder_path
+        category_id = category.id
+        if not any(c.get("id") == category.id for c in snapshot):
+            snapshot.append(to_def(category).to_dict())
+
+    ref = await db.get(MovieRef, decision.radarr_id)
+    if ref is not None:
+        ref.corrected = True
+    correction = Decision(
+        radarr_id=decision.radarr_id,
+        source="correction",
+        from_root_folder=decision.target_root_folder,
+        signals=decision.signals,
+        ai=decision.ai,
+        scores=decision.scores,
+        reasons=[],
+        top_category_id=decision.top_category_id,
+        confidence=decision.confidence,
+        categories_snapshot=snapshot,
+        status=d.MOVING,
+        actor="owner",
+        target_category_id=category_id,
+        target_root_folder=target,
+        created_at=clock.now(),
+    )
+    db.add(correction)
+    await d.transition(db, decision, d.CORRECTED)
+    await db.flush()
+    await queue.enqueue(db, "move", {"decision_id": correction.id})
+    return correction

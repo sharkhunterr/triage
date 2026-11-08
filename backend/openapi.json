@@ -801,6 +801,53 @@
         "title": "DecisionSummary",
         "type": "object"
       },
+      "FailedItem": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "ref": {
+            "additionalProperties": true,
+            "title": "Ref",
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "ref",
+          "attempts",
+          "last_error",
+          "updated_at"
+        ],
+        "title": "FailedItem",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1206,6 +1253,37 @@
         "title": "ScanOut",
         "type": "object"
       },
+      "ServiceOut": {
+        "properties": {
+          "checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "detail",
+          "checked_at"
+        ],
+        "title": "ServiceOut",
+        "type": "object"
+      },
       "SetupBody": {
         "properties": {
           "locale": {
@@ -1248,6 +1326,92 @@
           "needs_setup"
         ],
         "title": "SetupStatus",
+        "type": "object"
+      },
+      "StatusOut": {
+        "properties": {
+          "failed_items": {
+            "items": {
+              "$ref": "#/components/schemas/FailedItem"
+            },
+            "title": "Failed Items",
+            "type": "array"
+          },
+          "folder_warnings": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Folder Warnings",
+            "type": "array"
+          },
+          "last_poll_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Poll At"
+          },
+          "last_poll_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Poll Error"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "next_poll_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Poll At"
+          },
+          "queue": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Queue",
+            "type": "object"
+          },
+          "services": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ServiceOut"
+            },
+            "title": "Services",
+            "type": "object"
+          }
+        },
+        "required": [
+          "mode",
+          "services",
+          "last_poll_at",
+          "next_poll_at",
+          "last_poll_error",
+          "queue",
+          "failed_items",
+          "folder_warnings"
+        ],
+        "title": "StatusOut",
         "type": "object"
       },
       "ValidationError": {
@@ -1909,6 +2073,58 @@
         ]
       }
     },
+    "/api/v1/decisions/{decision_id}/correct": {
+      "post": {
+        "operationId": "correct_api_v1_decisions__decision_id__correct_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChoiceBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Correct",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/decisions/{decision_id}/dismiss": {
       "post": {
         "operationId": "dismiss_api_v1_decisions__decision_id__dismiss_post",
@@ -2016,6 +2232,20 @@
         "summary": "Ollama Models",
         "tags": [
           "settings"
+        ]
+      }
+    },
+    "/api/v1/poll": {
+      "post": {
+        "operationId": "poll_now_api_v1_poll_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Poll Now",
+        "tags": [
+          "status"
         ]
       }
     },
@@ -2556,6 +2786,114 @@
         "summary": "Setup Status",
         "tags": [
           "auth"
+        ]
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "operationId": "status_api_v1_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "status"
+        ]
+      }
+    },
+    "/api/v1/webhooks/seerr": {
+      "post": {
+        "operationId": "seerr_webhook_api_v1_webhooks_seerr_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Authorization",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Seerr Webhook",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/api/v1/work-items/{item_id}/retry": {
+      "post": {
+        "operationId": "retry_api_v1_work_items__item_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "title": "Item Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry",
+        "tags": [
+          "status"
         ]
       }
     }

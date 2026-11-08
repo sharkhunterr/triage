@@ -213,6 +213,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/decisions/{decision_id}/correct": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Correct */
+        post: operations["correct_api_v1_decisions__decision_id__correct_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/decisions/{decision_id}/dismiss": {
         parameters: {
             query?: never;
@@ -262,6 +279,23 @@ export interface paths {
         get: operations["ollama_models_api_v1_ollama_models_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/poll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Poll Now */
+        post: operations["poll_now_api_v1_poll_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -508,6 +542,57 @@ export interface paths {
         get: operations["setup_status_api_v1_setup_status_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_api_v1_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/seerr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Seerr Webhook */
+        post: operations["seerr_webhook_api_v1_webhooks_seerr_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-items/{item_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry */
+        post: operations["retry_api_v1_work_items__item_id__retry_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -764,6 +849,26 @@ export interface components {
             target_root_folder: string | null;
             top_category: components["schemas"]["CategoryRef"] | null;
         };
+        /** FailedItem */
+        FailedItem: {
+            /** Attempts */
+            attempts: number;
+            /** Id */
+            id: number;
+            /** Kind */
+            kind: string;
+            /** Last Error */
+            last_error: string | null;
+            /** Ref */
+            ref: {
+                [key: string]: unknown;
+            };
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -921,6 +1026,15 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** ServiceOut */
+        ServiceOut: {
+            /** Checked At */
+            checked_at: string | null;
+            /** Detail */
+            detail: string;
+            /** State */
+            state: string;
+        };
         /** SetupBody */
         SetupBody: {
             /**
@@ -938,6 +1052,31 @@ export interface components {
         SetupStatus: {
             /** Needs Setup */
             needs_setup: boolean;
+        };
+        /** StatusOut */
+        StatusOut: {
+            /** Failed Items */
+            failed_items: components["schemas"]["FailedItem"][];
+            /** Folder Warnings */
+            folder_warnings: {
+                [key: string]: string;
+            }[];
+            /** Last Poll At */
+            last_poll_at: string | null;
+            /** Last Poll Error */
+            last_poll_error: string | null;
+            /** Mode */
+            mode: string;
+            /** Next Poll At */
+            next_poll_at: string | null;
+            /** Queue */
+            queue: {
+                [key: string]: number;
+            };
+            /** Services */
+            services: {
+                [key: string]: components["schemas"]["ServiceOut"];
+            };
         };
         /** ValidationError */
         ValidationError: {
@@ -1371,6 +1510,41 @@ export interface operations {
             };
         };
     };
+    correct_api_v1_decisions__decision_id__correct_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                decision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChoiceBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     dismiss_api_v1_decisions__decision_id__dismiss_post: {
         parameters: {
             query?: never;
@@ -1450,6 +1624,24 @@ export interface operations {
                 content: {
                     "application/json": string[];
                 };
+            };
+        };
+    };
+    poll_now_api_v1_poll_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1873,6 +2065,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    status_api_v1_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatusOut"];
+                };
+            };
+        };
+    };
+    seerr_webhook_api_v1_webhooks_seerr_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_api_v1_work_items__item_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

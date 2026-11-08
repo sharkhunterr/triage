@@ -5,6 +5,7 @@ import { Badge, Card, ErrorState, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
 import { DecisionActions } from './DecisionActions'
 import { ConfidenceMeter, Poster, ReasonText, StatusBadge } from './parts'
+import { RequestBadge } from './RequestBadge'
 import { SimulateButton } from './SimulateButton'
 
 export function DecisionPage() {
@@ -42,6 +43,7 @@ export function DecisionPage() {
             <StatusBadge status={decision.status} />
             <Badge>{t(`source.${decision.source}`)}</Badge>
             {decision.actor === 'owner' && <Badge tone="info">{t('decision.byOwner')}</Badge>}
+            <RequestBadge check={decision.request_check} />
             <SimulateButton radarrId={decision.movie.radarr_id} />
           </div>
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">

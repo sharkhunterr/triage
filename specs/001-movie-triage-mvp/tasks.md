@@ -215,13 +215,13 @@ page.
 
 ### Tests for User Story 6
 
-- [ ] T075 [P] [US6] Write integration tests for request verification (verify_request item after move; tracked when Seerr fake still resolves tmdbId → same request; Seerr down → retried, move kept; the Seerr fake records zero write calls; the Radarr fake records zero delete/add calls) in backend/tests/integration/test_requests.py
+- [X] T075 [P] [US6] Write integration tests for request verification (verify_request item after move; tracked when Seerr fake still resolves tmdbId → same request; Seerr down → retried, move kept; the Seerr fake records zero write calls; the Radarr fake records zero delete/add calls) in backend/tests/integration/test_requests.py
 
 ### Implementation for User Story 6
 
-- [ ] T076 [US6] Implement the verify_request job and decision.request_check update in backend/src/triage/worker/verify_request.py
-- [ ] T077 [US6] Add category-library checks (missing or not accessible in Radarr) to the status computation in backend/src/triage/domain/health.py
-- [ ] T078 [P] [US6] Show requester and request status on decision cards and detail in frontend/src/features/decisions/RequestBadge.tsx
+- [X] T076 [US6] Implement the verify_request job and decision.request_check update in backend/src/triage/worker/verify_request.py
+- [X] T077 [US6] Add category-library checks (missing or not accessible in Radarr) to the status computation in backend/src/triage/domain/health.py
+- [X] T078 [P] [US6] Show requester and request status on decision cards and detail in frontend/src/features/decisions/RequestBadge.tsx
 
 **Checkpoint**: Seerr requests demonstrably keep tracking moved movies.
 
@@ -236,12 +236,12 @@ history shows both, later polls never auto-sort it.
 
 ### Tests for User Story 7
 
-- [ ] T079 [P] [US7] Write integration tests for corrections (to another category, back to intake → corrected flag, new arrival never auto-sorted, history keeps both decisions and audit events) and history filters in backend/tests/integration/test_corrections.py
+- [X] T079 [P] [US7] Write integration tests for corrections (to another category, back to intake → corrected flag, new arrival never auto-sorted, history keeps both decisions and audit events) and history filters in backend/tests/integration/test_corrections.py
 
 ### Implementation for User Story 7
 
-- [ ] T080 [US7] Implement `/decisions/{id}/correct` and the corrected-movie guard in the classify job in backend/src/triage/api/decisions.py and backend/src/triage/worker/classify.py
-- [ ] T081 [P] [US7] Implement the history screen (search, filters by outcome/category/source/date, infinite list, correct action with category picker) in frontend/src/features/decisions/History.tsx
+- [X] T080 [US7] Implement `/decisions/{id}/correct` and the corrected-movie guard in the classify job in backend/src/triage/api/decisions.py and backend/src/triage/worker/classify.py
+- [X] T081 [P] [US7] Implement the history screen (search, filters by outcome/category/source/date, infinite list, correct action with category picker) in frontend/src/features/decisions/History.tsx
 - [ ] T082 [US7] Add history strings (EN/FR) and a Playwright test correcting a move in frontend/tests/e2e/history.spec.ts
 
 ---
@@ -256,14 +256,14 @@ unreachable service on the status page; secrets never come back in responses.
 ### Tests for User Story 8
 
 - [X] T083 [P] [US8] Write integration tests for settings (PATCH validation incl. intake folders existing in Radarr; secrets write-only and never serialized; test endpoints with unsaved values; `/ollama/models`, `/radarr/root-folders`) in backend/tests/integration/test_settings.py
-- [ ] T084 [P] [US8] Write integration tests for `/status` (per-service states ok/degraded/down/disabled, last/next poll, queue counts, failed items) and `/work-items/{id}/retry`, `/poll` in backend/tests/integration/test_status.py
+- [X] T084 [P] [US8] Write integration tests for `/status` (per-service states ok/degraded/down/disabled, last/next poll, queue counts, failed items) and `/work-items/{id}/retry`, `/poll` in backend/tests/integration/test_status.py
 
 ### Implementation for User Story 8
 
 - [X] T085 [US8] Implement `/settings`, `/settings/test/{service}`, `/radarr/root-folders`, `/ollama/models` in backend/src/triage/api/settings.py
-- [ ] T086 [US8] Implement health probes (cached 60 s) and `/status`, `/poll`, `/work-items/{id}/retry` in backend/src/triage/api/status.py and backend/src/triage/domain/health.py
-- [ ] T087 [P] [US8] Implement the settings screens (sections Radarr + intake folders, TMDB, AI, Seerr + webhook URL/secret to copy, Email, Sorting thresholds; Test buttons with results; secret fields showing "set") in frontend/src/features/settings/
-- [ ] T088 [P] [US8] Implement the status page (service cards, queue, failed items with retry, folder warnings) in frontend/src/features/status/
+- [X] T086 [US8] Implement health probes (cached 60 s) and `/status`, `/poll`, `/work-items/{id}/retry` in backend/src/triage/api/status.py and backend/src/triage/domain/health.py
+- [X] T087 [P] [US8] Implement the settings screens (sections Radarr + intake folders, TMDB, AI, Seerr + webhook URL/secret to copy, Email, Sorting thresholds; Test buttons with results; secret fields showing "set") in frontend/src/features/settings/
+- [X] T088 [P] [US8] Implement the status page (service cards, queue, failed items with retry, folder warnings) in frontend/src/features/status/
 - [ ] T089 [US8] Add settings/status strings (EN/FR) and Playwright tests for settings on mobile and the status page in frontend/tests/e2e/settings.spec.ts
 
 ---
@@ -275,8 +275,8 @@ unreachable service on the status page; secrets never come back in responses.
 **Independent Test**: an approved-request webhook triggers a poll within seconds; a wrong
 secret gets 401 and no poll.
 
-- [ ] T090 [P] [US9] Write integration tests for the webhook (MEDIA_APPROVED and MEDIA_AUTO_APPROVED movie → 202 + poll wake-up; TEST_NOTIFICATION → 204; tv or other types ignored; wrong/missing secret → 401) in backend/tests/integration/test_webhook.py
-- [ ] T091 [US9] Implement `POST /api/v1/webhooks/seerr` in backend/src/triage/api/webhooks.py
+- [X] T090 [P] [US9] Write integration tests for the webhook (MEDIA_APPROVED and MEDIA_AUTO_APPROVED movie → 202 + poll wake-up; TEST_NOTIFICATION → 204; tv or other types ignored; wrong/missing secret → 401) in backend/tests/integration/test_webhook.py
+- [X] T091 [US9] Implement `POST /api/v1/webhooks/seerr` in backend/src/triage/api/webhooks.py
 
 ---
 

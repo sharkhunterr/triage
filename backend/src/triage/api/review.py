@@ -220,3 +220,14 @@ async def simulate(radarr_id: int, db: Db, settings: Settings, adapters: Adapter
     db.add(decision)
     await db.commit()
     return await detail(db, decision)
+
+
+@router.post("/decisions/{decision_id}/correct", response_model=DecisionDetail)
+async def correct(
+    decision_id: int, body: ChoiceBody, db: Db, settings: Settings, state: State
+) -> DecisionDetail:
+    decision = await _decision(db, decision_id)
+    correction = await actions.correct(db, decision, body.choice, settings.radarr.intake_root_folders)
+    await db.commit()
+    state.worker.wake()
+    return await detail(db, correction)
