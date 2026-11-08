@@ -64,6 +64,7 @@ class Worker:
         self.last_poll_at: datetime | None = None
         self.last_poll_error: str | None = None
         self.next_poll_at: datetime | None = None
+        self._follow_ups: list[datetime] = []
 
     # ------------------------------------------------------------------ lifecycle
     def start(self) -> None:
@@ -75,9 +76,11 @@ class Worker:
         if self._task is not None:
             await self._task
 
-    def wake(self) -> None:
-        """Poll as soon as possible (webhook, "check now")."""
-        self.next_poll_at = clock.now()
+    def wake(self, *, follow_up_s: tuple[float, ...] = ()) -> None:
+        """Poll as soon as possible (webhook, "check now"), then again after each ``follow_up_s``."""
+        now = clock.now()
+        self.next_poll_at = now
+        self._follow_ups = sorted({*self._follow_ups, *(now + timedelta(seconds=s) for s in follow_up_s)})
         self._wake.set()
 
     # ------------------------------------------------------------------ one round
@@ -99,7 +102,10 @@ class Worker:
 
     async def poll(self, settings: AppSettings) -> None:
         assert self._poll is not None
-        self.next_poll_at = clock.now() + timedelta(seconds=settings.sorting.poll_interval_s)
+        now = clock.now()
+        self._follow_ups = [t for t in self._follow_ups if t > now]
+        regular = now + timedelta(seconds=settings.sorting.poll_interval_s)
+        self.next_poll_at = min([regular, *self._follow_ups])
         async with self.session_factory() as db:
             try:
                 await self._poll(JobContext(db, settings, self.adapter_factory(settings)))

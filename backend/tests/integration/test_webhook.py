@@ -46,3 +46,23 @@ async def test_other_notifications_are_ignored(owner: AsyncClient, env: Env):
     tv = {"notification_type": "MEDIA_APPROVED", "media": {"media_type": "tv"}}
     assert (await owner.post("/api/v1/webhooks/seerr", json=tv, headers=headers)).status_code == 204
     assert env.state.worker.next_poll_at is None
+
+
+async def test_the_webhook_also_checks_again_shortly_after(owner: AsyncClient, env: Env):
+    """Seerr sends the notification before Radarr has added the movie: Triage checks again soon."""
+    from datetime import timedelta
+
+    from tests.helpers import add_toy_story, decisions, seed_categories
+
+    await seed_categories(env)
+    secret = await _secret(owner)
+    owner.cookies.clear()
+    await owner.post("/api/v1/webhooks/seerr", json=APPROVED, headers={"Authorization": secret})
+    await env.state.worker.tick()  # polls now: Radarr does not have the movie yet
+    assert await decisions(env) == []
+    assert env.state.worker.next_poll_at == env.clock.current + timedelta(seconds=10)
+
+    add_toy_story(env)  # Radarr accepts the request a moment later
+    env.clock.advance(seconds=10)
+    await env.state.worker.tick()
+    assert [d.status for d in await decisions(env)] == ["proposed"]

@@ -14,6 +14,7 @@ from triage.core.errors import Unauthorized
 router = APIRouter(tags=["webhooks"])
 
 APPROVED = {"MEDIA_APPROVED", "MEDIA_AUTO_APPROVED"}
+FOLLOW_UPS = (10.0, 30.0, 90.0)
 
 
 @router.post("/webhooks/seerr", status_code=202)
@@ -28,6 +29,7 @@ async def seerr_webhook(
         raise Unauthorized("Wrong or missing webhook secret", code="bad_webhook_secret")
     media = payload.get("media") or {}
     if payload.get("notification_type") in APPROVED and media.get("media_type") == "movie":
-        state.worker.wake()
+        # Seerr notifies before Radarr has added the movie: check now, then again shortly after.
+        state.worker.wake(follow_up_s=FOLLOW_UPS)
         return Response(status_code=202)
     return Response(status_code=204)
