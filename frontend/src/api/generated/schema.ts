@@ -125,6 +125,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dashboard */
+        get: operations["dashboard_api_v1_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Decisions */
+        get: operations["list_decisions_api_v1_decisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/decisions/{decision_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Decision */
+        get: operations["get_decision_api_v1_decisions__decision_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/presets": {
         parameters: {
             query?: never;
@@ -176,6 +227,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/review/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review Count */
+        get: operations["review_count_api_v1_review_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/setup": {
         parameters: {
             query?: never;
@@ -214,6 +282,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuditOut */
+        AuditOut: {
+            /** Action */
+            action: string;
+            /** Actor */
+            actor: string;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Detail */
+            detail: string | null;
+            /** From Path */
+            from_path: string | null;
+            /** Result */
+            result: string;
+            /** To Path */
+            to_path: string | null;
+        };
         /** CategoryIn */
         CategoryIn: {
             /**
@@ -254,12 +342,165 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** CategoryRef */
+        CategoryRef: {
+            /** Id */
+            id: number;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Root Folder Path */
+            root_folder_path: string | null;
+        };
+        /** Counts */
+        Counts: {
+            /** Failed */
+            failed: number;
+            /** Held */
+            held: number;
+            /** Moved */
+            moved: number;
+            /** Moved Last 7 Days */
+            moved_last_7_days: number;
+            /** Moving */
+            moving: number;
+            /** Proposed */
+            proposed: number;
+        };
         /** Credentials */
         Credentials: {
             /** Password */
             password: string;
             /** Username */
             username: string;
+        };
+        /** Dashboard */
+        Dashboard: {
+            /** Ai Enabled */
+            ai_enabled: boolean;
+            /** Categories */
+            categories: number;
+            counts: components["schemas"]["Counts"];
+            /** Email Enabled */
+            email_enabled: boolean;
+            /** Latest */
+            latest: components["schemas"]["DecisionSummary"][];
+            /** Mode */
+            mode: string;
+            /** Radarr Configured */
+            radarr_configured: boolean;
+        };
+        /** DecisionDetail */
+        DecisionDetail: {
+            /** Actor */
+            actor: string;
+            /** Ai */
+            ai: {
+                [key: string]: unknown;
+            } | null;
+            /** Audit */
+            audit: components["schemas"]["AuditOut"][];
+            /** Categories */
+            categories: {
+                [key: string]: unknown;
+            }[];
+            /** Confidence */
+            confidence: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Error */
+            error: string | null;
+            /** Facts */
+            facts: {
+                [key: string]: string[];
+            };
+            /** From Root Folder */
+            from_root_folder: string | null;
+            /** Id */
+            id: number;
+            /** Margin */
+            margin: number | null;
+            movie: components["schemas"]["MovieOut"];
+            /** Reasons */
+            reasons: {
+                [key: string]: unknown;
+            }[];
+            /** Request Check */
+            request_check: {
+                [key: string]: unknown;
+            } | null;
+            /** Scan Id */
+            scan_id: number | null;
+            /** Scores */
+            scores: {
+                [key: string]: number;
+            };
+            /** Signals */
+            signals: {
+                [key: string]: unknown;
+            }[];
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            target_category: components["schemas"]["CategoryRef"] | null;
+            /** Target Root Folder */
+            target_root_folder: string | null;
+            /** Threshold */
+            threshold: number | null;
+            top_category: components["schemas"]["CategoryRef"] | null;
+        };
+        /** DecisionPage */
+        DecisionPage: {
+            /** Items */
+            items: components["schemas"]["DecisionSummary"][];
+            /** Next Cursor */
+            next_cursor: number | null;
+        };
+        /** DecisionSummary */
+        DecisionSummary: {
+            /** Actor */
+            actor: string;
+            /** Confidence */
+            confidence: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Error */
+            error: string | null;
+            /** From Root Folder */
+            from_root_folder: string | null;
+            /** Id */
+            id: number;
+            movie: components["schemas"]["MovieOut"];
+            /** Reasons */
+            reasons: {
+                [key: string]: unknown;
+            }[];
+            /** Request Check */
+            request_check: {
+                [key: string]: unknown;
+            } | null;
+            /** Scan Id */
+            scan_id: number | null;
+            /** Source */
+            source: string;
+            /** Status */
+            status: string;
+            target_category: components["schemas"]["CategoryRef"] | null;
+            /** Target Root Folder */
+            target_root_folder: string | null;
+            top_category: components["schemas"]["CategoryRef"] | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -280,6 +521,21 @@ export interface components {
             locale: string;
             /** Username */
             username: string;
+        };
+        /** MovieOut */
+        MovieOut: {
+            /** Poster Url */
+            poster_url: string | null;
+            /** Radarr Id */
+            radarr_id: number;
+            /** Root Folder Path */
+            root_folder_path: string | null;
+            /** Title */
+            title: string;
+            /** Tmdb Id */
+            tmdb_id: number | null;
+            /** Year */
+            year: number | null;
         };
         /** PresetCategoryOut */
         PresetCategoryOut: {
@@ -307,6 +563,11 @@ export interface components {
         ReorderBody: {
             /** Ids */
             ids: number[];
+        };
+        /** ReviewCount */
+        ReviewCount: {
+            /** Review */
+            review: number;
         };
         /** RootFolderOut */
         RootFolderOut: {
@@ -661,6 +922,95 @@ export interface operations {
             };
         };
     };
+    dashboard_api_v1_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+        };
+    };
+    list_decisions_api_v1_decisions_get: {
+        parameters: {
+            query?: {
+                status?: string[];
+                source?: string | null;
+                category?: number | null;
+                q?: string | null;
+                since?: string | null;
+                until?: string | null;
+                cursor?: number | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_decision_api_v1_decisions__decision_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                decision_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_presets_api_v1_presets_get: {
         parameters: {
             query?: never;
@@ -728,6 +1078,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RootFolderOut"][];
+                };
+            };
+        };
+    };
+    review_count_api_v1_review_count_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewCount"];
                 };
             };
         };

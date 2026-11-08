@@ -12,7 +12,8 @@ from triage.core.errors import Conflict, NotFound, TriageError
 from triage.core.settings import AppSettings, normalize_folder, same_folder
 from triage.domain import categories as domain
 from triage.domain.presets import PRESETS
-from triage.models import Category, Owner as OwnerRow, Rule
+from triage.models import Category, Rule
+from triage.models import Owner as OwnerRow
 
 router = APIRouter(tags=["categories"], dependencies=[Owner])
 
@@ -96,14 +97,18 @@ async def _validate_folder(path: str | None, settings: AppSettings, adapters: Ad
     folders = [f.path for f in await adapters.radarr.root_folders()]
     if not any(same_folder(path, f) for f in folders):
         raise InvalidFolder(
-            "This folder is not one of Radarr's root folders", code="unknown_root_folder", details={"path": path}
+            "This folder is not one of Radarr's root folders",
+            code="unknown_root_folder",
+            details={"path": path},
         )
 
 
 async def _check_name(db: Db, name: str, exclude_id: int | None = None) -> None:
     clash = await db.scalar(
         select(Category.id).where(
-            func.lower(Category.name) == name.lower(), Category.deleted_at.is_(None), Category.id != (exclude_id or 0)
+            func.lower(Category.name) == name.lower(),
+            Category.deleted_at.is_(None),
+            Category.id != (exclude_id or 0),
         )
     )
     if clash is not None:
@@ -129,7 +134,9 @@ async def list_categories(db: Db) -> list[Category]:
 async def create_category(body: CategoryIn, db: Db, settings: Settings, adapters: AdaptersDep) -> Category:
     await _check_name(db, body.name)
     await _validate_folder(body.root_folder_path, settings, adapters)
-    position = (await db.scalar(select(func.max(Category.position)).where(Category.deleted_at.is_(None)))) or 0
+    position = (
+        await db.scalar(select(func.max(Category.position)).where(Category.deleted_at.is_(None)))
+    ) or 0
     category = Category(
         key=await domain.unique_key(db, body.name),
         name=body.name,
@@ -230,7 +237,9 @@ async def apply_preset(key: str, db: Db) -> list[Category]:
         raise NotFound("Unknown preset")
     locale = await _locale(db)
     existing = {c.name.lower() for c in await domain.active(db)}
-    position = (await db.scalar(select(func.max(Category.position)).where(Category.deleted_at.is_(None)))) or 0
+    position = (
+        await db.scalar(select(func.max(Category.position)).where(Category.deleted_at.is_(None)))
+    ) or 0
     created: list[Category] = []
     for spec in preset.categories:
         name = spec.names[locale]

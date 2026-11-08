@@ -116,19 +116,19 @@ intake folder and automatic mode on, one poll moves each to its library exactly 
 
 ### Tests for User Story 1
 
-- [ ] T046 [P] [US1] Write integration tests for the poller (new movie → arrival + classify item; repeated polls and restart → no duplicate arrival; movie outside intake ignored; movie leaving intake → arrival closed, pending work superseded) in backend/tests/integration/test_poller.py
-- [ ] T047 [P] [US1] Write integration tests for the classify→move pipeline (Toy Story-like → animation library, Heat-like → fallback, move confirmed by re-reading Radarr, editor body never contains deleteFiles=true, Radarr down → retried, no move) in backend/tests/integration/test_pipeline_auto.py
-- [ ] T048 [P] [US1] Write integration tests for the AI path (rules inconclusive → AI called with category descriptions; AI timeout/invalid answer → rules only or hold; AI never called when a decisive rule matched) in backend/tests/integration/test_ai_path.py
+- [X] T046 [P] [US1] Write integration tests for the poller (new movie → arrival + classify item; repeated polls and restart → no duplicate arrival; movie outside intake ignored; movie leaving intake → arrival closed, pending work superseded) in backend/tests/integration/test_poller.py
+- [X] T047 [P] [US1] Write integration tests for the classify→move pipeline (Toy Story-like → animation library, Heat-like → fallback, move confirmed by re-reading Radarr, editor body never contains deleteFiles=true, Radarr down → retried, no move) in backend/tests/integration/test_pipeline_auto.py
+- [X] T048 [P] [US1] Write integration tests for the AI path (rules inconclusive → AI called with category descriptions; AI timeout/invalid answer → rules only or hold; AI never called when a decisive rule matched) in backend/tests/integration/test_ai_path.py
 
 ### Implementation for User Story 1
 
-- [ ] T049 [US1] Implement the poller (interval from settings, wake-up event, arrival open/close per research R10, movie_ref refresh) in backend/src/triage/worker/poller.py
-- [ ] T050 [US1] Implement the classify job (gather signals with TMDB cache, score, consult AI when inconclusive, store decision with signals/ai/scores/snapshot, route to move/hold/proposal by mode) in backend/src/triage/worker/classify.py
-- [ ] T051 [US1] Implement the AI prompt builder (system prompt, category list with keys and descriptions, movie facts) and verdict mapping in backend/src/triage/domain/ai_prompt.py
-- [ ] T052 [US1] Implement the move job (editor call, confirmation read, decision → moved, arrival closed, audit event; failure → retry/failed) in backend/src/triage/worker/move.py
-- [ ] T053 [US1] Implement `/dashboard`, `/decisions` (filters, cursor pagination) and `/decisions/{id}` in backend/src/triage/api/decisions.py
-- [ ] T054 [P] [US1] Implement the dashboard (counts, mode badge, latest decisions with poster, category, confidence, outcome; empty state explaining what will appear) in frontend/src/features/dashboard/
-- [ ] T055 [P] [US1] Implement the decision detail view (signals table labelled "metadata", AI block labelled "AI interpretation" with reasoning, per-category scores bar, snapshot version, audit trail) in frontend/src/features/decisions/DecisionDetail.tsx
+- [X] T049 [US1] Implement the poller (interval from settings, wake-up event, arrival open/close per research R10, movie_ref refresh) in backend/src/triage/worker/poller.py
+- [X] T050 [US1] Implement the classify job (gather signals with TMDB cache, score, consult AI when inconclusive, store decision with signals/ai/scores/snapshot, route to move/hold/proposal by mode) in backend/src/triage/worker/classify.py
+- [X] T051 [US1] Implement the AI prompt builder (system prompt, category list with keys and descriptions, movie facts) and verdict mapping in backend/src/triage/domain/ai_prompt.py
+- [X] T052 [US1] Implement the move job (editor call, confirmation read, decision → moved, arrival closed, audit event; failure → retry/failed) in backend/src/triage/worker/move.py
+- [X] T053 [US1] Implement `/dashboard`, `/decisions` (filters, cursor pagination) and `/decisions/{id}` in backend/src/triage/api/decisions.py
+- [X] T054 [P] [US1] Implement the dashboard (counts, mode badge, latest decisions with poster, category, confidence, outcome; empty state explaining what will appear) in frontend/src/features/dashboard/
+- [X] T055 [P] [US1] Implement the decision detail view (signals table labelled "metadata", AI block labelled "AI interpretation" with reasoning, per-category scores bar, snapshot version, audit trail) in frontend/src/features/decisions/DecisionDetail.tsx
 - [ ] T056 [US1] Add dashboard/decision strings (EN/FR) and a Playwright test of dashboard + decision detail with axe at both widths in frontend/tests/e2e/dashboard.spec.ts
 
 **Checkpoint**: Triage sorts confident movies on its own and explains each decision.

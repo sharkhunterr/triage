@@ -43,7 +43,14 @@ def to_def(category: Category) -> CategoryDef:
         is_fallback=category.is_fallback,
         version=category.version,
         rules=tuple(
-            RuleDef(id=r.id, field=r.field, operator=r.operator, value=r.value, weight=r.weight, decisive=r.decisive)
+            RuleDef(
+                id=r.id,
+                field=r.field,
+                operator=r.operator,
+                value=r.value,
+                weight=r.weight,
+                decisive=r.decisive,
+            )
             for r in category.rules
         ),
     )

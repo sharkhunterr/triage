@@ -48,10 +48,12 @@ class Worker:
         handlers: dict[str, Handler],
         poll: Hook | None = None,
         after_drain: Hook | None = None,
+        give_up: dict[str, Handler] | None = None,
     ) -> None:
         self.session_factory = session_factory
         self.adapter_factory = adapter_factory
         self.handlers = handlers
+        self.give_up = give_up or {}
         self._poll = poll
         self._after_drain = after_drain
         self._wake = asyncio.Event()
@@ -139,6 +141,7 @@ class Worker:
                     assert item is not None
                     message = str(exc)
                     retried = await queue.fail(db, item, message, retryable=exc.retryable)
+                    await self._maybe_give_up(db, item, settings, retried)
                     await db.commit()
                     log.warning(
                         "work item failed", extra={"kind": item.kind, "error": message, "retry": retried}
@@ -147,11 +150,20 @@ class Worker:
                     await db.rollback()
                     item = await db.get(WorkItem, item_id)
                     assert item is not None
-                    await queue.fail(db, item, f"{exc.__class__.__name__}: {exc}", retryable=True)
+                    retried = await queue.fail(db, item, f"{exc.__class__.__name__}: {exc}", retryable=True)
+                    await self._maybe_give_up(db, item, settings, retried)
                     await db.commit()
                     log.exception("work item crashed", extra={"kind": item.kind})
         finally:
             work_item_id_var.reset(token)
+
+    async def _maybe_give_up(
+        self, db: AsyncSession, item: WorkItem, settings: AppSettings, retried: bool
+    ) -> None:
+        """An item that will not be retried lets its job record the failure (e.g. decision failed)."""
+        handler = self.give_up.get(item.kind)
+        if not retried and handler is not None:
+            await handler(JobContext(db, settings, self.adapter_factory(settings)), item)
 
     # ------------------------------------------------------------------ loop
     async def _run(self) -> None:

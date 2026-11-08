@@ -12,7 +12,13 @@ ANIMATION = {
         {"field": "company", "operator": "contains", "value": "Pixar", "weight": 40, "decisive": False},
     ],
 }
-FILMS = {"name": "Films", "description": "Everything else", "root_folder_path": "/media/films", "is_fallback": True, "rules": []}
+FILMS = {
+    "name": "Films",
+    "description": "Everything else",
+    "root_folder_path": "/media/films",
+    "is_fallback": True,
+    "rules": [],
+}
 
 
 async def test_create_list_update_delete(owner: AsyncClient):
@@ -30,7 +36,11 @@ async def test_create_list_update_delete(owner: AsyncClient):
 
     updated = await owner.put(f"/api/v1/categories/{category['id']}", json={**ANIMATION, "name": "Animation"})
     assert updated.status_code == 200
-    assert (updated.json()["name"], updated.json()["version"], updated.json()["key"]) == ("Animation", 2, "dessins-animes")
+    assert (updated.json()["name"], updated.json()["version"], updated.json()["key"]) == (
+        "Animation",
+        2,
+        "dessins-animes",
+    )
 
     assert (await owner.delete(f"/api/v1/categories/{category['id']}")).status_code == 204
     assert [c["name"] for c in (await owner.get("/api/v1/categories")).json()] == ["Films"]
@@ -71,7 +81,9 @@ async def test_the_last_category_cannot_be_deleted(owner: AsyncClient):
 async def test_reorder(owner: AsyncClient):
     a = (await owner.post("/api/v1/categories", json=ANIMATION)).json()
     b = (await owner.post("/api/v1/categories", json=FILMS)).json()
-    assert (await owner.post("/api/v1/categories/reorder", json={"ids": [b["id"], a["id"]]})).status_code == 204
+    assert (
+        await owner.post("/api/v1/categories/reorder", json={"ids": [b["id"], a["id"]]})
+    ).status_code == 204
     assert [c["id"] for c in (await owner.get("/api/v1/categories")).json()] == [b["id"], a["id"]]
 
 

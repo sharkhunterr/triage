@@ -1,6 +1,71 @@
 {
   "components": {
     "schemas": {
+      "AuditOut": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "from_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Path"
+          },
+          "result": {
+            "title": "Result",
+            "type": "string"
+          },
+          "to_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Path"
+          }
+        },
+        "required": [
+          "at",
+          "actor",
+          "action",
+          "from_path",
+          "to_path",
+          "result",
+          "detail"
+        ],
+        "title": "AuditOut",
+        "type": "object"
+      },
       "CategoryIn": {
         "properties": {
           "description": {
@@ -109,6 +174,79 @@
         "title": "CategoryOut",
         "type": "object"
       },
+      "CategoryRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "root_folder_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Folder Path"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "name",
+          "root_folder_path"
+        ],
+        "title": "CategoryRef",
+        "type": "object"
+      },
+      "Counts": {
+        "properties": {
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "held": {
+            "title": "Held",
+            "type": "integer"
+          },
+          "moved": {
+            "title": "Moved",
+            "type": "integer"
+          },
+          "moved_last_7_days": {
+            "title": "Moved Last 7 Days",
+            "type": "integer"
+          },
+          "moving": {
+            "title": "Moving",
+            "type": "integer"
+          },
+          "proposed": {
+            "title": "Proposed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "moved",
+          "held",
+          "proposed",
+          "failed",
+          "moving",
+          "moved_last_7_days"
+        ],
+        "title": "Counts",
+        "type": "object"
+      },
       "Credentials": {
         "properties": {
           "password": {
@@ -129,6 +267,457 @@
           "password"
         ],
         "title": "Credentials",
+        "type": "object"
+      },
+      "Dashboard": {
+        "properties": {
+          "ai_enabled": {
+            "title": "Ai Enabled",
+            "type": "boolean"
+          },
+          "categories": {
+            "title": "Categories",
+            "type": "integer"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts"
+          },
+          "email_enabled": {
+            "title": "Email Enabled",
+            "type": "boolean"
+          },
+          "latest": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionSummary"
+            },
+            "title": "Latest",
+            "type": "array"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "radarr_configured": {
+            "title": "Radarr Configured",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mode",
+          "counts",
+          "latest",
+          "radarr_configured",
+          "ai_enabled",
+          "email_enabled",
+          "categories"
+        ],
+        "title": "Dashboard",
+        "type": "object"
+      },
+      "DecisionDetail": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "ai": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai"
+          },
+          "audit": {
+            "items": {
+              "$ref": "#/components/schemas/AuditOut"
+            },
+            "title": "Audit",
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "facts": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Facts",
+            "type": "object"
+          },
+          "from_root_folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Root Folder"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "margin": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Margin"
+          },
+          "movie": {
+            "$ref": "#/components/schemas/MovieOut"
+          },
+          "reasons": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "request_check": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Check"
+          },
+          "scan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scan Id"
+          },
+          "scores": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Scores",
+            "type": "object"
+          },
+          "signals": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Signals",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "target_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_root_folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Root Folder"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Threshold"
+          },
+          "top_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "source",
+          "actor",
+          "confidence",
+          "movie",
+          "top_category",
+          "target_category",
+          "target_root_folder",
+          "from_root_folder",
+          "reasons",
+          "error",
+          "scan_id",
+          "request_check",
+          "created_at",
+          "decided_at",
+          "signals",
+          "ai",
+          "scores",
+          "facts",
+          "threshold",
+          "margin",
+          "categories",
+          "audit"
+        ],
+        "title": "DecisionDetail",
+        "type": "object"
+      },
+      "DecisionPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "DecisionPage",
+        "type": "object"
+      },
+      "DecisionSummary": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "from_root_folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Root Folder"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "movie": {
+            "$ref": "#/components/schemas/MovieOut"
+          },
+          "reasons": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "request_check": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request Check"
+          },
+          "scan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scan Id"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "target_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_root_folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Root Folder"
+          },
+          "top_category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "source",
+          "actor",
+          "confidence",
+          "movie",
+          "top_category",
+          "target_category",
+          "target_root_folder",
+          "from_root_folder",
+          "reasons",
+          "error",
+          "scan_id",
+          "request_check",
+          "created_at",
+          "decided_at"
+        ],
+        "title": "DecisionSummary",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -177,6 +766,72 @@
           "locale"
         ],
         "title": "Me",
+        "type": "object"
+      },
+      "MovieOut": {
+        "properties": {
+          "poster_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poster Url"
+          },
+          "radarr_id": {
+            "title": "Radarr Id",
+            "type": "integer"
+          },
+          "root_folder_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Root Folder Path"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tmdb_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tmdb Id"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "radarr_id",
+          "tmdb_id",
+          "title",
+          "year",
+          "poster_url",
+          "root_folder_path"
+        ],
+        "title": "MovieOut",
         "type": "object"
       },
       "PresetCategoryOut": {
@@ -252,6 +907,19 @@
           "ids"
         ],
         "title": "ReorderBody",
+        "type": "object"
+      },
+      "ReviewCount": {
+        "properties": {
+          "review": {
+            "title": "Review",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "review"
+        ],
+        "title": "ReviewCount",
         "type": "object"
       },
       "RootFolderOut": {
@@ -770,6 +1438,224 @@
         ]
       }
     },
+    "/api/v1/dashboard": {
+      "get": {
+        "operationId": "dashboard_api_v1_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dashboard"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Dashboard",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/v1/decisions": {
+      "get": {
+        "operationId": "list_decisions_api_v1_decisions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Status",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Decisions",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
+    "/api/v1/decisions/{decision_id}": {
+      "get": {
+        "operationId": "get_decision_api_v1_decisions__decision_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "decision_id",
+            "required": true,
+            "schema": {
+              "title": "Decision Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Decision",
+        "tags": [
+          "decisions"
+        ]
+      }
+    },
     "/api/v1/presets": {
       "get": {
         "operationId": "list_presets_api_v1_presets_get",
@@ -863,6 +1749,27 @@
         "summary": "Radarr Root Folders",
         "tags": [
           "settings"
+        ]
+      }
+    },
+    "/api/v1/review/count": {
+      "get": {
+        "operationId": "review_count_api_v1_review_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewCount"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Review Count",
+        "tags": [
+          "decisions"
         ]
       }
     },

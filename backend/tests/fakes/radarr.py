@@ -17,6 +17,7 @@ class FakeRadarr:
         self.calls: list[tuple[str, Any]] = []
         self.down = False
         self.ignore_moves = False
+        self.fail_moves = False
 
     def add(self, movie_id: int, title: str, folder: str = "/media/intake", **fields: Any) -> RadarrMovie:
         movie = RadarrMovie(
@@ -56,6 +57,8 @@ class FakeRadarr:
         self._guard(
             "move", {"movieIds": [movie_id], "rootFolderPath": root_folder_path, "deleteFiles": False}
         )
+        if self.fail_moves:
+            raise ServiceError("Radarr", "answered HTTP 503")
         if movie_id not in self.library:
             raise ServiceError("Radarr", "not found", retryable=False)
         if not self.ignore_moves:
