@@ -14,7 +14,8 @@
  *   npm run release              # bump + tag + push to GitLab (pipeline: validate, test, build, GitLab release)
  *                                # the version is the one GITHUB_RELEASES.md announces when it is above the
  *                                # current one (v0.1.0 first); otherwise the commits decide (feat → minor…)
- *   npm run release:full         # + Docker Hub, GitHub mirror and GitHub release
+ *   npm run release:full         # + Docker Hub, GitHub mirror and GitHub release; on a version already
+ *                                # released (HEAD is its tag), publishes it without a new version
  *   npm run release:minor        # force the bump (patch | minor | major)
  *   npm run release:dry          # what would happen, nothing changed
  *   npm run release:notes        # print the notes the release pages will show
@@ -92,6 +93,44 @@ function firstRelease() {
   }
 }
 
+/** The release tag on HEAD (`vX.Y.Z`), if HEAD is a release. */
+function tagAtHead() {
+  try {
+    return execSync('git describe --tags --exact-match --match "v[0-9]*" HEAD', {
+      encoding: 'utf8',
+      cwd: ROOT,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/** A version already released (`npm run release`) but not published yet: its tag's pipeline runs again
+ * with DEPLOY=true — Docker Hub, GitHub mirror and release —, no new version. The release jobs are
+ * idempotent: the GitLab release is kept, the GitHub one created or updated. */
+function publishTag(tag) {
+  const pushed = execSync(`git ls-remote --tags origin ${tag}`, { encoding: 'utf8', cwd: ROOT }).trim();
+  if (!pushed && !options.dryRun) {
+    run(`git push origin ${tag}`, `Pushing ${tag} to GitLab`);
+  }
+  let glab = true;
+  try {
+    execSync('glab version', { cwd: ROOT, stdio: 'ignore' });
+  } catch {
+    glab = false;
+  }
+  if (!glab) {
+    console.error(
+      `\nx glab is not installed: run the ${tag} pipeline by hand (GitLab › Build › Pipelines › Run pipeline,\n` +
+        `  ref ${tag}, variable DEPLOY = true).`,
+    );
+    process.exit(1);
+  }
+  run(`glab ci run --branch ${tag} --variables DEPLOY:true`, `Publishing ${tag} (its pipeline with DEPLOY=true)`);
+  console.log(`\nPublishing ${tag}: Docker Hub, GitHub mirror and release.`);
+}
+
 /** a > b, both `X.Y.Z`. */
 function above(a, b) {
   const [x, y] = [a, b].map((v) => v.split('.').map(Number));
@@ -139,6 +178,22 @@ function main() {
   console.log(`GitLab: ${gitlab || 'not configured'}`);
   if (options.gitlab && !gitlab) {
     console.error('x The GitLab remote (origin) is not configured.');
+    process.exit(1);
+  }
+
+  // 0. HEAD is already a release (`npm run release` then `npm run release:full`): publish it, no new version
+  const released = tagAtHead();
+  if (released && !options.releaseType) {
+    if (options.deploy && options.gitlab) {
+      console.log(`\n${released} is already released: publishing it.`);
+      publishTag(released);
+      if (gitlab) console.log(`Pipeline: ${gitlab.replace(/\.git$/, '')}/-/pipelines`);
+      return;
+    }
+    console.error(
+      `\nx HEAD is already ${released}: nothing to release.\n` +
+        '  `npm run release:full` publishes it (Docker Hub, GitHub); commit something new for the next version.',
+    );
     process.exit(1);
   }
 

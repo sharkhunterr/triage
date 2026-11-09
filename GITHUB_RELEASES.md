@@ -1,3 +1,33 @@
+# v0.3.2
+
+## 🎬 Triage 0.3.2 — up-to-date screenshots, an icon for Unraid
+
+Everything 0.3.1 brought (it stayed on GitLab), now on Docker Hub and GitHub too.
+
+### 📚 Documentation
+
+- **Screenshots** — the README and the Docker Hub page show the new dashboard and the paged review
+  queue, on desktop and on a phone.
+- **An icon for Unraid** — the app icon as PNG (and JPEG), 512 px, to use as the template's
+  *Icon URL*: `https://raw.githubusercontent.com/sharkhunterr/triage/main/docs/images/icon.png`.
+  The README tells the Unraid mapping (`/config`, port 9393, `PUID=99`, `PGID=100`).
+
+### Closed issues
+
+#### Documentation and tooling
+
+- `doc` The README's screenshots follow the new dashboard and review queue, and the app icon is
+  published as PNG and JPEG for Unraid.
+- `doc` Releasing publishes reliably: `npm run release:full` after `npm run release` publishes that
+  same version instead of making a new one, and publishing a tag again no longer fails on its
+  existing release.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.3.2
+```
+
 # v0.3.1
 
 ## 🎬 Triage 0.3.1 — up-to-date screenshots, an icon for Unraid
