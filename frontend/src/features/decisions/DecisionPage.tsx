@@ -19,7 +19,16 @@ import { CategoryDot, categoryColor, tint } from '../categories/colors'
 import { AnalyzeButton } from './AnalyzeButton'
 import { DecisionActions } from './DecisionActions'
 import { MatchCheck } from './MatchCheck'
-import { backFrom, ConfidenceMeter, isUndo, Poster, ReasonText, StatusBadge } from './parts'
+import {
+  backFrom,
+  ConfidenceMeter,
+  isUndo,
+  knowsArrival,
+  Poster,
+  ReasonText,
+  Requested,
+  StatusBadge,
+} from './parts'
 import { RequestBadge } from './RequestBadge'
 
 type Signal = DecisionDetail['signals'][number]
@@ -91,6 +100,11 @@ function Header({ decision }: { decision: DecisionDetail }) {
               <span className="font-normal text-muted"> ({decision.movie.year})</span>
             ) : null}
           </h1>
+          {knowsArrival(decision.movie) ? (
+            <p className="text-sm text-muted">
+              <Requested movie={decision.movie} full />
+            </p>
+          ) : null}
           <div className="flex flex-wrap items-center gap-1.5">
             {undo ? <Badge>{t('status.undone')}</Badge> : <StatusBadge status={decision.status} />}
             <Badge>{t(`source.${decision.source}`)}</Badge>

@@ -1,4 +1,5 @@
-import { ArrowRight, Bot, Film, Undo2 } from 'lucide-react'
+import { ArrowRight, Bot, CalendarPlus, Film, Undo2, UserRound } from 'lucide-react'
+import { useIntl } from 'react-intl'
 import { Link, useLocation } from 'react-router'
 import type { DecisionSummary } from '../../api/decisions'
 import { Badge, Card, type Tone } from '../../design-system'
@@ -96,6 +97,43 @@ export function ReasonText({ reason }: { reason: Reason }) {
     else if (value != null) values[key] = String(value)
   }
   return <>{t(`reason.${code}`, values)}</>
+}
+
+type MovieDates = Pick<DecisionSummary['movie'], 'requested_by' | 'requested_at' | 'added_at'>
+
+/** Whether there is anything to say of who asked for the movie or when it arrived. */
+export const knowsArrival = (movie: MovieDates) => Boolean(movie.requested_by || movie.added_at)
+
+/** Who asked for the movie in Seerr and when — else when Radarr added it; nothing when neither is known.
+ * `full` (the movie's sheet) says the hour too. */
+export function Requested({ movie, full = false }: { movie: MovieDates; full?: boolean }) {
+  const text = full ? '' : 'truncate'
+  const t = useT()
+  const intl = useIntl()
+  const when = (value: string) =>
+    intl.formatDate(
+      value,
+      full ? { dateStyle: 'medium', timeStyle: 'short' } : { day: 'numeric', month: 'short' },
+    )
+  if (movie.requested_by)
+    return (
+      <span className="inline-flex min-w-0 items-start gap-1">
+        <UserRound className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+        <span className={text}>
+          {movie.requested_at
+            ? t('movie.requestedOn', { who: movie.requested_by, when: when(movie.requested_at) })
+            : t('movie.requestedBy', { who: movie.requested_by })}
+        </span>
+      </span>
+    )
+  if (movie.added_at)
+    return (
+      <span className="inline-flex min-w-0 items-start gap-1">
+        <CalendarPlus className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+        <span className={text}>{t('movie.addedOn', { when: when(movie.added_at) })}</span>
+      </span>
+    )
+  return null
 }
 
 /** The pages a movie's sheet may be opened from, and how its back link names them. */

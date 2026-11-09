@@ -19,6 +19,7 @@ async def upsert_movie(db: AsyncSession, movie: RadarrMovie) -> MovieRef:
     ref.title = movie.title
     ref.year = movie.year
     ref.poster_url = movie.poster_url
+    ref.added_at = movie.added or ref.added_at
     ref.root_folder_path = normalize_folder(movie.root_folder_path) if movie.root_folder_path else None
     ref.updated_at = clock.now()
     await db.flush()

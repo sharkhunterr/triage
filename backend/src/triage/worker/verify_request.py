@@ -14,10 +14,14 @@ async def verify_request_job(ctx: JobContext, item: WorkItem) -> None:
     if ref is None or not ref.tmdb_id:
         return
     request = await ctx.adapters.seerr.request_for(ref.tmdb_id)
+    if request is not None:  # the movie's sheet says who asked for it
+        ref.requested_by, ref.requested_at = request.requested_by, request.requested_at
+        ref.request_checked_at = clock.now()
     decision.request_check = {
         "tracked": request is not None,
         "request_id": request.id if request else None,
         "requester": request.requested_by if request else None,
         "status": request.status if request else None,
+        "requested_at": request.requested_at.isoformat() if request and request.requested_at else None,
         "checked_at": clock.now().isoformat(),
     }

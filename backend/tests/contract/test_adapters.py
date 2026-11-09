@@ -1,6 +1,7 @@
 """Real adapters against recorded payloads (contracts/external-services.md)."""
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,7 @@ async def test_radarr_reads_movies_and_root_folders():
     assert movie.genres[0] == "Animation" and movie.studio == "Pixar"
     assert movie.original_language == "English" and movie.certification == "G"
     assert movie.poster_url and movie.poster_url.startswith("https://image.tmdb.org")
+    assert movie.added == datetime(2026, 11, 8, 9, 30, tzinfo=UTC)  # when Radarr added it
     folders = await radarr.root_folders()
     assert [f.accessible for f in folders] == [True, True, False]
     assert all(r.headers["X-Api-Key"] == "key" for r in rec.requests)
@@ -197,4 +199,23 @@ async def test_seerr_finds_the_request_of_a_movie_read_only():
     assert request is not None
     assert (request.id, request.status, request.requested_by) == (41, "approved", "Alice")
     assert await seerr.request_for(12345) is None
+    assert request.requested_at == datetime(2026, 11, 8, 10, 0, tzinfo=UTC)
+
+
+async def test_seerr_reads_every_movie_request_in_one_pass():
+    older = {
+        "id": 30,
+        "status": 5,
+        "createdAt": "2025-01-02T10:00:00.000Z",
+        "type": "movie",
+        "media": {"tmdbId": 862},
+        "requestedBy": {"displayName": "Bob"},
+    }
+    body = payload("seerr_requests.json")
+    body["results"].append(older)
+    rec = Recorder({("GET", "/api/v1/request"): body})
+    latest = await SeerrClient("http://seerr:5055", "key", rec.client()).movie_requests()
+    assert set(latest) == {862, 949}
+    assert (latest[862].requested_by, latest[862].id) == ("Alice", 41)  # the latest request, not Bob's
+    assert len(rec.requests) == 1  # one page holds them all
     assert {r.method for r in rec.requests} == {"GET"}

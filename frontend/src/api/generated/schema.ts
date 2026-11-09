@@ -1164,10 +1164,16 @@ export interface components {
         };
         /** MovieOut */
         MovieOut: {
+            /** Added At */
+            added_at?: string | null;
             /** Poster Url */
             poster_url: string | null;
             /** Radarr Id */
             radarr_id: number;
+            /** Requested At */
+            requested_at?: string | null;
+            /** Requested By */
+            requested_by?: string | null;
             /** Root Folder Path */
             root_folder_path: string | null;
             /** Title */
@@ -1190,6 +1196,11 @@ export interface components {
         };
         /** PresetOut */
         PresetOut: {
+            /**
+             * Addon
+             * @default false
+             */
+            addon: boolean;
             /** Categories */
             categories: components["schemas"]["PresetCategoryOut"][];
             /** Description */

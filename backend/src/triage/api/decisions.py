@@ -26,6 +26,9 @@ class MovieOut(BaseModel):
     year: int | None
     poster_url: str | None
     root_folder_path: str | None
+    added_at: datetime | None = None  # when Radarr added it
+    requested_by: str | None = None  # who asked for it in Seerr, when known
+    requested_at: datetime | None = None
 
 
 class CategoryRef(BaseModel):
@@ -154,6 +157,9 @@ def _movie(ref: MovieRef | None, radarr_id: int) -> MovieOut:
         year=ref.year,
         poster_url=ref.poster_url,
         root_folder_path=ref.root_folder_path,
+        added_at=ref.added_at,
+        requested_by=ref.requested_by,
+        requested_at=ref.requested_at,
     )
 
 

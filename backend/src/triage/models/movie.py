@@ -22,6 +22,11 @@ class MovieRef(Base):
     root_folder_path: Mapped[str | None] = mapped_column(String(500))
     corrected: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime]
+    added_at: Mapped[datetime | None]  # when Radarr added it
+    # the Seerr request (Overseerr / Jellyseerr), when there is one: who asked for it and when
+    requested_by: Mapped[str | None] = mapped_column(String(200))
+    requested_at: Mapped[datetime | None]
+    request_checked_at: Mapped[datetime | None]  # Seerr was asked (a movie no one requested stays None above)
 
 
 class MetadataCache(Base):

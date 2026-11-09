@@ -3,11 +3,14 @@ that left it (moved by hand, by another tool, or removed)."""
 
 import logging
 
+from sqlalchemy import select
+
 from triage.core import clock
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import arrivals
-from triage.models import Arrival
+from triage.models import Arrival, MovieRef
 from triage.worker import queue
+from triage.worker.requests import look_up_requests
 from triage.worker.runner import JobContext
 
 log = logging.getLogger(__name__)
@@ -51,3 +54,9 @@ async def poll(ctx: JobContext) -> None:
         new += 1
     if new:
         log.info("new movies in intake", extra={"count": new})
+    # the movies Triage already knows (sorted, scanned) learn when Radarr added them — read just now
+    for ref in await ctx.db.scalars(select(MovieRef).where(MovieRef.added_at.is_(None))):
+        known = movies.get(ref.radarr_id)
+        if known is not None and known.added is not None:
+            ref.added_at = known.added
+    await look_up_requests(ctx)

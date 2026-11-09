@@ -1259,6 +1259,18 @@
       },
       "MovieOut": {
         "properties": {
+          "added_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Added At"
+          },
           "poster_url": {
             "anyOf": [
               {
@@ -1273,6 +1285,29 @@
           "radarr_id": {
             "title": "Radarr Id",
             "type": "integer"
+          },
+          "requested_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested At"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
           },
           "root_folder_path": {
             "anyOf": [
@@ -1353,6 +1388,11 @@
       },
       "PresetOut": {
         "properties": {
+          "addon": {
+            "default": false,
+            "title": "Addon",
+            "type": "boolean"
+          },
           "categories": {
             "items": {
               "$ref": "#/components/schemas/PresetCategoryOut"

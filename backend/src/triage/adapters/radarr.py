@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 
-from triage.adapters.http import request_json, timed_check
+from triage.adapters.http import parse_time, request_json, timed_check
 from triage.adapters.types import RadarrMovie, RootFolder, ServiceCheck, ServiceError
 
 SERVICE = "Radarr"
@@ -30,6 +30,7 @@ def parse_movie(data: dict[str, Any]) -> RadarrMovie:
         overview=data.get("overview") or None,
         poster_url=poster,
         has_file=bool(data.get("hasFile")),
+        added=parse_time(data.get("added")),
     )
 
 

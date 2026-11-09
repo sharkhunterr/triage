@@ -42,7 +42,7 @@ async def enqueue(db: AsyncSession, kind: str, ref: dict[str, Any], *, delay_s: 
 
 
 # Analyses can be long (an AI call each): what the owner is waiting for goes first.
-BACKGROUND = ("classify", "scan_start", "scan_movie", "refresh_titles")
+BACKGROUND = ("classify", "scan_start", "scan_movie", "refresh_titles", "seerr_requests")
 _priority = case((WorkItem.kind.in_(BACKGROUND), 1), else_=0)
 
 

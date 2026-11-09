@@ -1,6 +1,7 @@
 """Shared HTTP plumbing: one place that turns transport and status errors into ServiceError."""
 
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -42,6 +43,18 @@ async def request_json(client: httpx.AsyncClient, service: str, method: str, url
         return response.json()
     except ValueError as exc:
         raise ServiceError(service, "answered something that is not JSON") from exc
+
+
+def parse_time(value: object) -> datetime | None:
+    """An ISO date a service sends (``2026-11-08T10:00:00Z``), as an aware datetime; none when absent,
+    malformed or a placeholder (Radarr's ``0001-01-01``)."""
+    if not isinstance(value, str) or not value or value.startswith("0001-"):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 async def timed_check(service: str, call: Any) -> ServiceCheck:

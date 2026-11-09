@@ -5,6 +5,7 @@ Real clients live next to this module; tests use fakes with the same methods
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Protocol
 
 
@@ -41,6 +42,7 @@ class RadarrMovie:
     overview: str | None = None
     poster_url: str | None = None
     has_file: bool = False
+    added: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +71,7 @@ class SeerrRequest:
     tmdb_id: int
     status: str
     requested_by: str | None = None
+    requested_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -109,6 +112,7 @@ class Ollama(Protocol):
 class Seerr(Protocol):
     async def check(self) -> ServiceCheck: ...
     async def request_for(self, tmdb_id: int) -> SeerrRequest | None: ...
+    async def movie_requests(self) -> dict[int, SeerrRequest]: ...
 
 
 class Mailer(Protocol):

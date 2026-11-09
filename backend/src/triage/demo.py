@@ -5,6 +5,7 @@ reaches the network.
 """
 
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -13,6 +14,7 @@ from triage.adapters.types import (
     EmailMessage,
     RadarrMovie,
     RootFolder,
+    SeerrRequest,
     ServiceCheck,
     ServiceError,
     TmdbDetails,
@@ -22,6 +24,7 @@ from triage.core.settings import AppSettings, load_settings, save_settings
 INTAKE = "/movies/Nouveaux"
 FILMS = "/movies/Films"
 ANIMATION = "/movies/Dessins animés"
+ADDED = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)  # the demo library's « now »
 
 
 @dataclass(frozen=True)
@@ -134,6 +137,7 @@ class DemoRadarr:
                 keywords=s.keywords,
                 studio=s.companies[0] if s.companies else None,
                 overview=s.overview,
+                added=ADDED - timedelta(days=s.id, hours=s.id * 3),
             )
             for s in SAMPLES
         }
@@ -154,6 +158,34 @@ class DemoRadarr:
         if movie_id not in self.library:
             raise ServiceError("Radarr", "not found", retryable=False)
         self.library[movie_id] = replace(self.library[movie_id], root_folder_path=root_folder_path)
+
+
+class DemoSeerr:
+    """The intake movies were asked for by the household — the library's older ones by no one."""
+
+    REQUESTERS = ("Alice", "Léo", "Maman", "Hugo")
+
+    def __init__(self, library: dict[int, RadarrMovie]) -> None:
+        self.requests = {
+            movie.tmdb_id: SeerrRequest(
+                id=movie.id,
+                tmdb_id=movie.tmdb_id,
+                status="approved",
+                requested_by=self.REQUESTERS[movie.id % len(self.REQUESTERS)],
+                requested_at=(movie.added or ADDED) - timedelta(minutes=2),
+            )
+            for movie in library.values()
+            if movie.tmdb_id and movie.root_folder_path == INTAKE
+        }
+
+    async def check(self) -> ServiceCheck:
+        return ServiceCheck(True, "Seerr (demo)")
+
+    async def request_for(self, tmdb_id: int) -> SeerrRequest | None:
+        return self.requests.get(tmdb_id)
+
+    async def movie_requests(self) -> dict[int, SeerrRequest]:
+        return dict(self.requests)
 
 
 class DemoTmdb:
@@ -181,6 +213,7 @@ class DemoMailer:
 class Demo:
     def __init__(self) -> None:
         self.radarr = DemoRadarr()
+        self.seerr = DemoSeerr(self.radarr.library)
         self.tmdb = DemoTmdb()
         self.mailer = DemoMailer()
 
@@ -188,6 +221,7 @@ class Demo:
         return Adapters(
             radarr=self.radarr,
             tmdb=self.tmdb,
+            seerr=self.seerr,
             mailer=self.mailer if settings.email_enabled else None,
         )
 

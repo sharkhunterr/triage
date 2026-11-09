@@ -7,6 +7,7 @@ from triage.worker.classify import classify_job
 from triage.worker.email import notify_held, send_email_job
 from triage.worker.move import move_given_up, move_job
 from triage.worker.poller import poll
+from triage.worker.requests import seerr_requests_job
 from triage.worker.runner import Handler, Worker
 from triage.worker.scan import scan_movie_job, scan_start_job
 from triage.worker.titles import refresh_titles_job
@@ -24,6 +25,7 @@ def build_worker(
         "scan_movie": scan_movie_job,
         "verify_request": verify_request_job,
         "refresh_titles": refresh_titles_job,
+        "seerr_requests": seerr_requests_job,
     }
     return Worker(
         session_factory,
