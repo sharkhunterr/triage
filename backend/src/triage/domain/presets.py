@@ -28,6 +28,7 @@ class Preset:
     names: dict[str, str]
     descriptions: dict[str, str]
     categories: tuple[PresetCategory, ...] = field(default_factory=tuple)
+    addon: bool = False  # one more category beside the ones already there (no fallback of its own)
 
 
 ANIMATION_STUDIOS = (
@@ -101,4 +102,88 @@ MOVIES_ANIMATION = Preset(
     ),
 )
 
-PRESETS = {MOVIES_ANIMATION.key: MOVIES_ANIMATION}
+# Shows and concerts: TMDB tags them by keywords (they share no genre of their own). A strong keyword is
+# enough to move the movie; a weaker one (an opera, a ballet: often in films too) leaves it to review.
+SHOWS = Preset(
+    key="shows",
+    names={"en": "Shows", "fr": "Spectacles"},
+    descriptions={
+        "en": "Adds a Shows category: stand-up, one-man shows, filmed theatre, opera, ballet and circus.",
+        "fr": (
+            "Ajoute une catégorie Spectacles : stand-up, one-man-shows, théâtre filmé, opéra, ballet "
+            "et cirque."
+        ),
+    },
+    addon=True,
+    categories=(
+        PresetCategory(
+            names={"en": "Shows", "fr": "Spectacles"},
+            descriptions={
+                "en": (
+                    "Recordings of live stage shows: stand-up comedy specials, one-man shows, filmed "
+                    "theatre plays, opera, ballet, circus and magic shows. Not fiction films about "
+                    "comedians or the stage."
+                ),
+                "fr": (
+                    "Captations de spectacles sur scène : spectacles d'humour et de stand-up, "
+                    "one-man-shows, théâtre filmé, opéra, ballet, cirque et magie. Pas les films de "
+                    "fiction sur des humoristes ou la scène."
+                ),
+            },
+            rules=(
+                PresetRule("keyword", "contains", "stand-up comedy", 60),
+                PresetRule("keyword", "contains", "comedy special", 90, decisive=True),
+                PresetRule("keyword", "contains", "stand-up special", 90, decisive=True),
+                PresetRule("keyword", "contains", "one-man show", 90, decisive=True),
+                PresetRule("keyword", "contains", "one man show", 90, decisive=True),
+                PresetRule("keyword", "contains", "filmed theater", 90, decisive=True),
+                PresetRule("keyword", "contains", "filmed play", 90, decisive=True),
+                PresetRule("keyword", "contains", "stage play", 50),
+                PresetRule("keyword", "contains", "live performance", 30),
+                PresetRule("keyword", "is", "opera", 40),
+                PresetRule("keyword", "is", "ballet", 40),
+                PresetRule("keyword", "contains", "circus", 30),
+                PresetRule("keyword", "contains", "magic show", 50),
+            ),
+        ),
+    ),
+)
+
+CONCERTS = Preset(
+    key="concerts",
+    names={"en": "Concerts", "fr": "Concerts"},
+    descriptions={
+        "en": "Adds a Concerts category: concert films and live recordings of tours and festivals.",
+        "fr": "Ajoute une catégorie Concerts : films de concert, captations de tournées et de festivals.",
+    },
+    addon=True,
+    categories=(
+        PresetCategory(
+            names={"en": "Concerts", "fr": "Concerts"},
+            descriptions={
+                "en": (
+                    "Concert films: a band or a singer filmed live on stage, a tour or a festival. Not "
+                    "biopics or fiction about musicians."
+                ),
+                "fr": (
+                    "Films de concert : un groupe ou un artiste filmé en live sur scène, une tournée ou "
+                    "un festival. Pas les biopics ni les fictions sur des musiciens."
+                ),
+            },
+            rules=(
+                PresetRule("keyword", "contains", "concert film", 90, decisive=True),
+                PresetRule("keyword", "contains", "live concert", 90, decisive=True),
+                PresetRule("keyword", "contains", "concert tour", 70),
+                PresetRule("keyword", "contains", "music festival", 50),
+                PresetRule("keyword", "is", "concert", 50),
+                PresetRule("keyword", "contains", "live performance", 30),
+                PresetRule("genre", "is", "Music", 20),
+                # a story about musicians, not a concert
+                PresetRule("keyword", "contains", "biography", 1, excludes=True),
+                PresetRule("keyword", "contains", "biopic", 1, excludes=True),
+            ),
+        ),
+    ),
+)
+
+PRESETS = {preset.key: preset for preset in (MOVIES_ANIMATION, SHOWS, CONCERTS)}

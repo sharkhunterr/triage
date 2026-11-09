@@ -296,7 +296,7 @@
   "work.scan_start": "Start a scan",
   "work.scan_movie": "Scan a movie",
   "work.verify_request": "Check a request",
-  "request.tracked": "Requested by {requester} · still followed",
+  "request.tracked": "Request still followed",
   "request.none": "No request found",
   "wizard.title": "Set up Triage",
   "wizard.progress": "Step {current} of {total}",
@@ -503,5 +503,10 @@
   "dashboard.details": "Details",
   "dashboard.servicesOk": "Everything answers.",
   "dashboard.servicesDown": "{count, plural, one {# service does not answer} other {# services do not answer}}",
-  "dashboard.seeHistory": "All the history"
+  "dashboard.seeHistory": "All the history",
+  "movie.requestedOn": "Requested by {who} on {when}",
+  "movie.requestedBy": "Requested by {who}",
+  "movie.addedOn": "Added on {when}",
+  "categories.addons": "Ready-made categories to add",
+  "categories.addPreset": "Add « {name} »"
 }

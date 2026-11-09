@@ -89,6 +89,7 @@ class PresetOut(BaseModel):
     name: str
     description: str
     categories: list[PresetCategoryOut]
+    addon: bool = False  # adds one category beside those already there
 
 
 class InvalidFolder(TriageError):
@@ -232,6 +233,7 @@ async def list_presets(db: Db) -> list[PresetOut]:
             key=p.key,
             name=p.names[locale],
             description=p.descriptions[locale],
+            addon=p.addon,
             categories=[
                 PresetCategoryOut(
                     name=c.names[locale],

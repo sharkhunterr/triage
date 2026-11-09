@@ -24,15 +24,23 @@ import { useT } from '../../i18n'
 import { CategoryEditor } from './CategoryEditor'
 import { CategoryDot } from './colors'
 
-export function PresetCard() {
+/** Ready-made categories: the starters on an empty page; beside existing categories, the add-ons
+ * (Shows, Concerts…) whose categories are not there yet. */
+export function PresetCard({ existing }: { existing?: string[] }) {
   const t = useT()
   const presets = usePresets()
   const apply = useApplyPreset()
   const toast = useToast()
-  if (!presets.data?.length) return null
+  const have = new Set((existing ?? []).map((name) => name.toLowerCase()))
+  const shown = (presets.data ?? []).filter((preset) =>
+    existing === undefined
+      ? !preset.addon
+      : preset.addon && !preset.categories.every((c) => have.has(c.name.toLowerCase())),
+  )
+  if (!shown.length) return null
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {presets.data.map((preset) => (
+      {shown.map((preset) => (
         <Card key={preset.key} className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <Sparkles className="size-5 text-accent" aria-hidden />
@@ -53,7 +61,7 @@ export function PresetCard() {
               apply.mutate(preset.key, { onSuccess: () => toast(t('categories.presetApplied'), 'success') })
             }
           >
-            {t('categories.applyPreset')}
+            {preset.addon ? t('categories.addPreset', { name: preset.name }) : t('categories.applyPreset')}
           </Button>
         </Card>
       ))}
@@ -172,6 +180,14 @@ export function CategoriesPage() {
           </li>
         ))}
       </ul>
+      {categories.data?.length ? (
+        <section aria-labelledby="addons" className="mt-8 flex flex-col gap-3">
+          <h2 id="addons" className="font-semibold">
+            {t('categories.addons')}
+          </h2>
+          <PresetCard existing={categories.data.map((c) => c.name)} />
+        </section>
+      ) : null}
 
       {editing && (
         <CategoryEditor

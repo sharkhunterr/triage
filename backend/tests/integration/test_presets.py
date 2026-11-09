@@ -3,8 +3,9 @@ from httpx import AsyncClient
 
 async def test_presets_are_listed(owner: AsyncClient):
     presets = (await owner.get("/api/v1/presets")).json()
-    assert [p["key"] for p in presets] == ["movies-animation"]
+    assert [p["key"] for p in presets] == ["movies-animation", "shows", "concerts"]
     assert len(presets[0]["categories"]) == 2
+    assert [p["addon"] for p in presets] == [False, True, True]
 
 
 async def test_apply_movies_animation_in_french(owner: AsyncClient):
@@ -31,3 +32,16 @@ async def test_applying_twice_does_not_duplicate_names(owner: AsyncClient):
 
 async def test_unknown_preset(owner: AsyncClient):
     assert (await owner.post("/api/v1/presets/nope/apply")).status_code == 404
+
+
+async def test_shows_and_concerts_add_one_category_each(owner: AsyncClient):
+    """Shows and Concerts each add one category beside Movies / Animation — never a second fallback."""
+    await owner.put("/api/v1/auth/me/locale", json={"locale": "fr"})
+    await owner.post("/api/v1/presets/movies-animation/apply")
+    for key in ("shows", "concerts"):
+        assert (await owner.post(f"/api/v1/presets/{key}/apply")).status_code == 201
+    categories = (await owner.get("/api/v1/categories")).json()
+    assert [c["name"] for c in categories] == ["Dessins animés", "Films", "Spectacles", "Concerts"]
+    assert [c["name"] for c in categories if c["is_fallback"]] == ["Films"]
+    shows = next(c for c in categories if c["name"] == "Spectacles")
+    assert any(r["value"] == "comedy special" and r["decisive"] for r in shows["rules"])
