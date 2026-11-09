@@ -1,4 +1,4 @@
-"""TMDB API v3: one call per movie for genres, keywords, companies, certifications.
+"""TMDB API v3: one call per movie for genres, keywords, companies, certifications, images.
 
 The movie is read in English, the language rules are written in (genres, keywords). The configured
 language only picks the synopsis translation and the country whose age ratings are kept."""
@@ -45,6 +45,16 @@ def _translated(data: dict[str, Any], language: str, country: str, key: str) -> 
     return str(other["data"][key]) if other else None
 
 
+IMAGES = 8
+
+
+def _images(data: dict[str, Any]) -> tuple[str, ...]:
+    """Backdrops to recognise the movie by: stills without text first, the best voted first."""
+    backdrops = (data.get("images") or {}).get("backdrops") or []
+    ranked = sorted(backdrops, key=lambda b: (b.get("iso_639_1") is not None, -(b.get("vote_average") or 0)))
+    return tuple(b["file_path"] for b in ranked if b.get("file_path"))[:IMAGES]
+
+
 def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:
     lang, _, country = language.partition("-")
     # the country's ratings, else the US ones (TMDB's most complete)
@@ -59,6 +69,7 @@ def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:
         original_language=data.get("original_language") or None,
         overview=_translated(data, lang, country, "overview") or data.get("overview") or None,
         title=_translated(data, lang, country, "title"),
+        images=_images(data),
     )
 
 
@@ -113,7 +124,13 @@ class TmdbClient:
         return await timed_check(SERVICE, call)
 
     async def details(self, tmdb_id: int) -> TmdbDetails:
+        lang = self._language.split("-")[0]
         data = await self._get(
-            f"/movie/{tmdb_id}", {"append_to_response": "keywords,release_dates,translations"}
+            f"/movie/{tmdb_id}",
+            {
+                "append_to_response": "keywords,release_dates,translations,images",
+                # images of the language, else English ones, and those without text ("null")
+                "include_image_language": ",".join(dict.fromkeys([lang, "en", "null"])),
+            },
         )
         return parse_details(data, self._language)

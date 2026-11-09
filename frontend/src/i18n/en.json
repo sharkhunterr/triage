@@ -466,5 +466,9 @@
   "decision.analyzed": "Analyzed with today's rules",
   "work.analyze": "Analyze a movie (by you)",
   "work.refresh_titles": "Update the titles",
-  "activity.step.titles": "Titles"
+  "activity.step.titles": "Titles",
+  "match.title": "Is it the right movie?",
+  "match.tmdb": "See on TMDB",
+  "match.still": "Still {n} from TMDB",
+  "match.noImages": "TMDB has no image for this movie."
 }

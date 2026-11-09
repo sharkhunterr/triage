@@ -20,7 +20,7 @@ from triage.domain.signals import gather_facts
 from triage.models import MetadataCache, MovieRef
 
 CACHE_TTL = timedelta(days=7)
-CACHE_VERSION = 2  # 2: translated titles, the country's own translation first
+CACHE_VERSION = 3  # 2: translated titles, the country's own translation first; 3: images
 
 
 @dataclass
@@ -64,6 +64,7 @@ async def tmdb_details(
             original_language=payload.get("original_language"),
             overview=payload.get("overview"),
             title=payload.get("title"),
+            images=tuple(payload.get("images") or ()),
         )
     details = await adapters.tmdb.details(tmdb_id)
     payload = {k: list(v) if isinstance(v, tuple) else v for k, v in details.__dict__.items()}

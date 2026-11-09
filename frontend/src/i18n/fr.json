@@ -466,5 +466,9 @@
   "decision.analyzed": "Analysé avec les règles actuelles",
   "work.analyze": "Analyser un film (par vous)",
   "work.refresh_titles": "Mettre à jour les titres",
-  "activity.step.titles": "Titres"
+  "activity.step.titles": "Titres",
+  "match.title": "Est-ce le bon film ?",
+  "match.tmdb": "Voir sur TMDB",
+  "match.still": "Image {n} de TMDB",
+  "match.noImages": "TMDB n'a pas d'image pour ce film."
 }

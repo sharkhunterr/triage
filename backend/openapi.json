@@ -1165,6 +1165,20 @@
         "title": "Me",
         "type": "object"
       },
+      "MovieMedia": {
+        "properties": {
+          "images": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Images",
+            "type": "array"
+          }
+        },
+        "title": "MovieMedia",
+        "type": "object"
+      },
       "MovieOut": {
         "properties": {
           "poster_url": {
@@ -2854,6 +2868,49 @@
         "summary": "Analyze",
         "tags": [
           "review"
+        ]
+      }
+    },
+    "/api/v1/movies/{radarr_id}/media": {
+      "get": {
+        "description": "A few TMDB stills, to see at a glance whether Radarr matched the right movie. Best effort:\nwithout TMDB there are none.",
+        "operationId": "movie_media_api_v1_movies__radarr_id__media_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "radarr_id",
+            "required": true,
+            "schema": {
+              "title": "Radarr Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovieMedia"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Movie Media",
+        "tags": [
+          "decisions"
         ]
       }
     },

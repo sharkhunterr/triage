@@ -52,6 +52,7 @@ class TmdbDetails:
     original_language: str | None = None
     overview: str | None = None
     title: str | None = None  # in the configured language, when TMDB has a translation
+    images: tuple[str, ...] = ()  # backdrop file paths, stills without text first
 
 
 @dataclass(frozen=True)

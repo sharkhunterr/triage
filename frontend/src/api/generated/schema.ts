@@ -370,6 +370,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/movies/{radarr_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Movie Media
+         * @description A few TMDB stills, to see at a glance whether Radarr matched the right movie. Best effort:
+         *     without TMDB there are none.
+         */
+        get: operations["movie_media_api_v1_movies__radarr_id__media_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/movies/{radarr_id}/simulate": {
         parameters: {
             query?: never;
@@ -1081,6 +1102,14 @@ export interface components {
             locale: string;
             /** Username */
             username: string;
+        };
+        /** MovieMedia */
+        MovieMedia: {
+            /**
+             * Images
+             * @default []
+             */
+            images: string[];
         };
         /** MovieOut */
         MovieOut: {
@@ -2016,6 +2045,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DecisionDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    movie_media_api_v1_movies__radarr_id__media_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                radarr_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MovieMedia"];
                 };
             };
             /** @description Validation Error */

@@ -18,6 +18,7 @@ import { useT } from '../../i18n'
 import { CategoryDot, categoryColor, tint } from '../categories/colors'
 import { AnalyzeButton } from './AnalyzeButton'
 import { DecisionActions } from './DecisionActions'
+import { MatchCheck } from './MatchCheck'
 import { ConfidenceMeter, isUndo, Poster, ReasonText, StatusBadge } from './parts'
 import { RequestBadge } from './RequestBadge'
 
@@ -454,6 +455,7 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
       ) : (
         <p className="text-sm text-muted">{t('sheet.noOverview')}</p>
       )}
+      <MatchCheck radarrId={decision.movie.radarr_id} tmdbId={decision.movie.tmdb_id} />
       <div>
         <h3 className="flex items-center gap-2 font-semibold">
           <Database className="size-4" aria-hidden /> {t('decision.metadata')}

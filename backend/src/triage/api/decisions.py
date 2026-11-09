@@ -7,11 +7,13 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from sqlalchemy import and_, func, not_, or_, select
 
-from triage.api.deps import Db, Owner, Settings
+from triage.adapters.types import ServiceError
+from triage.api.deps import AdaptersDep, Db, Owner, Settings
 from triage.core import clock
 from triage.core.errors import NotFound
 from triage.domain import decisions as d
 from triage.domain.categories import active
+from triage.domain.classify import tmdb_details
 from triage.models import AuditEvent, Decision, MetadataCache, MovieRef
 
 router = APIRouter(tags=["decisions"], dependencies=[Owner])
@@ -75,6 +77,10 @@ class DecisionDetail(DecisionSummary):
     margin: int | None
     categories: list[dict[str, Any]]
     audit: list[AuditOut]
+
+
+class MovieMedia(BaseModel):
+    images: list[str] = []  # TMDB file paths, to put behind https://image.tmdb.org/t/p/<size>
 
 
 class DecisionPage(BaseModel):
@@ -307,6 +313,19 @@ async def get_decision(decision_id: int, db: Db) -> DecisionDetail:
     if decision is None:
         raise NotFound("Unknown decision")
     return await detail(db, decision)
+
+
+@router.get("/movies/{radarr_id}/media", response_model=MovieMedia)
+async def movie_media(radarr_id: int, db: Db, settings: Settings, adapters: AdaptersDep) -> MovieMedia:
+    """A few TMDB stills, to see at a glance whether Radarr matched the right movie. Best effort:
+    without TMDB there are none."""
+    ref = await db.get(MovieRef, radarr_id)
+    try:
+        details = await tmdb_details(db, adapters, ref.tmdb_id if ref else None, settings.tmdb.language)
+        await db.commit()
+    except ServiceError:
+        details = None
+    return MovieMedia(images=list(details.images) if details else [])
 
 
 @router.get("/review/count", response_model=ReviewCount)

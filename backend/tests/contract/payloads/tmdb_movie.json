@@ -115,5 +115,29 @@
         }
       }
     ]
+  },
+  "images": {
+    "backdrops": [
+      {
+        "file_path": "/fr-text.jpg",
+        "iso_639_1": "fr",
+        "vote_average": 6.0
+      },
+      {
+        "file_path": "/plain-low.jpg",
+        "iso_639_1": null,
+        "vote_average": 5.1
+      },
+      {
+        "file_path": "/plain-top.jpg",
+        "iso_639_1": null,
+        "vote_average": 5.8
+      },
+      {
+        "file_path": "/en-text.jpg",
+        "iso_639_1": "en",
+        "vote_average": 7.0
+      }
+    ]
   }
 }

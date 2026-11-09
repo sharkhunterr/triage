@@ -89,8 +89,11 @@ async def test_tmdb_details_with_keywords_and_certifications():
     assert details.companies == ("Pixar",)
     assert details.certifications == ("G",)  # the country of the TMDB language (en-US by default)
     (request,) = rec.requests
-    assert request.url.params["append_to_response"] == "keywords,release_dates,translations"
+    assert request.url.params["append_to_response"] == "keywords,release_dates,translations,images"
+    assert request.url.params["include_image_language"] == "en,null"
     assert request.url.params["api_key"] == "v3key"
+    # stills without text first, the best voted first among them
+    assert details.images == ("/plain-top.jpg", "/plain-low.jpg", "/en-text.jpg", "/fr-text.jpg")
 
 
 async def test_tmdb_in_french_gives_the_french_rating_and_synopsis():
@@ -100,6 +103,7 @@ async def test_tmdb_in_french_gives_the_french_rating_and_synopsis():
     assert details.overview == "Woody, le jouet préféré d'Andy, voit arriver Buzz l'Éclair."
     assert details.title == "Toy Story : les jouets"
     assert details.genres[0] == "Animation"  # genres stay in English, the language rules are written in
+    assert rec.requests[0].url.params["include_image_language"] == "fr,en,null"
 
 
 async def test_tmdb_without_a_rating_for_the_country_falls_back_to_the_us_one():
