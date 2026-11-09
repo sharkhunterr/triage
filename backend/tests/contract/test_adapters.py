@@ -159,6 +159,37 @@ def test_ollama_answers_off_schema_are_errors(content: str):
         parse_verdict(content, ["animation", "films"])
 
 
+async def test_seerr_asks_only_what_every_seerr_knows_and_skips_series():
+    """Overseerr 1.35 refuses a query parameter it does not know (`mediaType`, a Jellyseerr one) with
+    HTTP 400: the requests are asked without it, and a series sharing the movie's TMDB id is skipped."""
+    known = {"take", "skip", "filter", "sort", "requestedBy"}
+    series = {"id": 50, "status": 2, "type": "tv", "media": {"id": 9, "tmdbId": 862, "mediaType": "tv"}}
+    body = payload("seerr_requests.json")
+    body["results"].insert(0, series)
+
+    def overseerr(request: httpx.Request) -> httpx.Response:
+        unknown = set(request.url.params) - known
+        if unknown:
+            message = f"Unknown query parameter '{sorted(unknown)[0]}'"
+            return httpx.Response(400, json={"message": message, "errors": [{"message": message}]})
+        return httpx.Response(200, json=body)
+
+    seerr = SeerrClient(
+        "http://seerr:5055", "key", httpx.AsyncClient(transport=httpx.MockTransport(overseerr))
+    )
+    request = await seerr.request_for(862)
+    assert request is not None and request.id == 41  # the movie's, not the series'
+
+
+async def test_a_refusal_tells_the_services_own_message():
+    def refuse(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(400, json={"message": "Unknown query parameter 'x'"})
+
+    seerr = SeerrClient("http://seerr:5055", "key", httpx.AsyncClient(transport=httpx.MockTransport(refuse)))
+    with pytest.raises(ServiceError, match="HTTP 400: Unknown query parameter 'x'"):
+        await seerr.request_for(1)
+
+
 async def test_seerr_finds_the_request_of_a_movie_read_only():
     rec = Recorder({("GET", "/api/v1/request"): payload("seerr_requests.json")})
     seerr = SeerrClient("http://seerr:5055", "key", rec.client())

@@ -8,6 +8,16 @@ import httpx
 from triage.adapters.types import ServiceCheck, ServiceError
 
 
+def _message(response: httpx.Response) -> str | None:
+    """What a service says of its refusal (``message`` in its JSON body), kept short."""
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    message = body.get("message") if isinstance(body, dict) else None
+    return str(message)[:200] if message else None
+
+
 async def request_json(client: httpx.AsyncClient, service: str, method: str, url: str, **kwargs: Any) -> Any:
     try:
         response = await client.request(method, url, **kwargs)
@@ -20,8 +30,11 @@ async def request_json(client: httpx.AsyncClient, service: str, method: str, url
     if response.status_code == 404:
         raise ServiceError(service, "not found", retryable=False)
     if response.status_code >= 400:
+        told = _message(response)
         raise ServiceError(
-            service, f"answered HTTP {response.status_code}", retryable=response.status_code >= 500
+            service,
+            f"answered HTTP {response.status_code}" + (f": {told}" if told else ""),
+            retryable=response.status_code >= 500,
         )
     if not response.content:
         return None

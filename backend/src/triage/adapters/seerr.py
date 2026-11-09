@@ -15,8 +15,9 @@ STATUSES = {1: "pending", 2: "approved", 3: "declined", 4: "failed", 5: "complet
 
 
 def parse_request(data: dict[str, Any]) -> SeerrRequest | None:
+    """A movie request — a series' is none: its TMDB id may be a movie's too."""
     media = data.get("media") or {}
-    if not media.get("tmdbId"):
+    if not media.get("tmdbId") or (data.get("type") or media.get("mediaType") or "movie") != "movie":
         return None
     user = data.get("requestedBy") or {}
     status = data.get("status")
@@ -47,7 +48,8 @@ class SeerrClient:
         return await timed_check(SERVICE, call)
 
     async def request_for(self, tmdb_id: int) -> SeerrRequest | None:
-        """The most recent movie request for ``tmdb_id`` (newest pages first)."""
+        """The most recent movie request for ``tmdb_id`` (newest pages first). Only the parameters every
+        Seerr knows: Overseerr refuses an unknown one (``mediaType`` is Jellyseerr's) with HTTP 400."""
         for page in range(MAX_PAGES):
             data = await self._get(
                 "/api/v1/request",
@@ -56,7 +58,6 @@ class SeerrClient:
                     "skip": page * PAGE,
                     "filter": "all",
                     "sort": "modified",
-                    "mediaType": "movie",
                 },
             )
             results = (data or {}).get("results") or []
