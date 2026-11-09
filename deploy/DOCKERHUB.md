@@ -8,10 +8,12 @@ against your categories (genres, keywords, production companies, age ratings, la
 local AI only for ambiguous movies, and moves it to the right library — or keeps it aside and sends
 you an email with one-click choices.
 
+- A dashboard at a glance: what waits for you, the week's trend, the month, each library
 - Your own categories (*Movies / Animation* is just a preset)
 - Preview mode by default; never moves on doubt; never deletes anything
 - Every decision explained; scans of whole folders; corrections
-- Requests keep working: only the root folder changes, through Radarr's editor
+- Requests keep working: only the root folder changes, through Radarr's editor (Overseerr and
+  Jellyseerr alike)
 - Phone and desktop, English and French
 
 ```yaml
@@ -23,6 +25,9 @@ services:
     environment: [TZ=Europe/Paris, PUID=1000, PGID=1000]
     restart: unless-stopped
 ```
+
+On Unraid: `/config` → `/mnt/user/appdata/triage`, port 9393, `PUID=99`, `PGID=100`, icon
+`https://raw.githubusercontent.com/sharkhunterr/triage/main/docs/images/icon.png`.
 
 Open `http://<host>:9393`, create your account, connect Radarr and pick the intake folder, apply the
 preset, scan, then switch to automatic. `TRIAGE_DEMO=1` runs a built-in demo library.

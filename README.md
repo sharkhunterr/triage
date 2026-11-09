@@ -29,6 +29,9 @@ Triage does it for you:
 
 ## Highlights
 
+- **At a glance** — the dashboard puts what waits for you first, with one tap to decide or to apply
+  the confident proposals, then the week's trend, the last 30 days (Triage's own moves apart from
+  yours), how full each library is and the state of every service.
 - **Your categories, not ours** — *Movies / Animation* is just a preset. Documentaries, kids, concerts,
   languages: any split works, each with its own rules, library, and plain-language description.
 - **Safe by default** — starts in **preview mode**: Triage proposes, you apply. It never moves a movie
@@ -38,14 +41,17 @@ Triage does it for you:
 - **Scans** — check a whole folder at once: the intake backlog, or an existing library to find the
   cartoons hiding among your films. Scans only propose.
 - **Requests keep working** — a move only changes the movie's root folder through Radarr's editor;
-  the movie entry is never recreated, so Overseerr/Jellyseerr requests keep following it.
+  the movie entry is never recreated, so requests keep following it. Works with **Overseerr** and
+  **Jellyseerr** alike.
+- **A queue that scales** — the review queue comes a page at a time (12 to 96 movies), even with
+  hundreds of proposals, and a movie's sheet always takes you back where you came from.
 - **Works without the AI** — rules alone sort most movies; the AI only helps with the ambiguous ones
   (adult animation, live action mixed with animation…).
 - **Phone and desktop**, English and French, light and dark.
 
 | Review queue | A decision, explained | On a phone |
 |---|---|---|
-| ![Review](docs/images/review.png) | ![Decision](docs/images/decision.png) | ![Mobile](docs/images/mobile-review.png) |
+| ![Review](docs/images/review.png) | ![Decision](docs/images/decision.png) | ![Mobile](docs/images/mobile-dashboard.png) |
 
 | Categories and rules | Scan a library | Settings |
 |---|---|---|
@@ -68,6 +74,10 @@ services:
       - PGID=1000
     restart: unless-stopped
 ```
+
+On **Unraid**: map the container path `/config` to `/mnt/user/appdata/triage`, port `9393`, set
+`PUID=99` and `PGID=100`, and use this icon URL:
+`https://raw.githubusercontent.com/sharkhunterr/triage/main/docs/images/icon.png`.
 
 Open `http://<host>:9393` and create your account. A **setup wizard** then walks you through it,
 with a *Test* button for every service:
