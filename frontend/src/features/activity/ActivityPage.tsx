@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { type Activity, type ActivityEntry, isWorking, useActivity } from '../../api/activity'
 import { Badge, Card, cx, EmptyState, ErrorState, PageHeader, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
-import { StatusBadge } from '../decisions/parts'
+import { StatusBadge, useFromHere } from '../decisions/parts'
 
 type Step = ActivityEntry['steps'][number]
 
@@ -104,6 +104,7 @@ function RunCard({ activity }: { activity: Activity }) {
 
 function EntryView({ entry, expanded = false }: { entry: ActivityEntry; expanded?: boolean }) {
   const t = useT()
+  const here = useFromHere()
   const ms = entry.finished_at
     ? new Date(entry.finished_at).getTime() - new Date(entry.started_at).getTime()
     : null
@@ -113,7 +114,7 @@ function EntryView({ entry, expanded = false }: { entry: ActivityEntry; expanded
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-xs text-muted">{t(`work.${entry.kind}`)}</span>
         {entry.decision_id ? (
-          <Link to={`/decisions/${entry.decision_id}`} className="font-medium hover:underline">
+          <Link to={`/decisions/${entry.decision_id}`} state={here} className="font-medium hover:underline">
             {title}
           </Link>
         ) : (

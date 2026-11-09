@@ -470,5 +470,13 @@
   "match.title": "Is it the right movie?",
   "match.tmdb": "See on TMDB",
   "match.still": "Still {n} from TMDB",
-  "match.noImages": "TMDB has no image for this movie."
+  "match.noImages": "TMDB has no image for this movie.",
+  "common.back": "Back",
+  "review.pages": "Pages",
+  "review.range": "{first}–{last} of {total}",
+  "review.previous": "Previous",
+  "review.next": "Next",
+  "review.pageOf": "Page {page} / {pages}",
+  "review.perPage": "Movies per page",
+  "review.perPageOption": "{count} per page"
 }

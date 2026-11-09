@@ -1426,6 +1426,53 @@
         "title": "ReviewCount",
         "type": "object"
       },
+      "ReviewPage": {
+        "description": "One page of a review tab, and how many movies wait in each tab.",
+        "properties": {
+          "confident": {
+            "title": "Confident",
+            "type": "integer"
+          },
+          "held": {
+            "title": "Held",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "per_page": {
+            "title": "Per Page",
+            "type": "integer"
+          },
+          "proposed": {
+            "title": "Proposed",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "per_page",
+          "held",
+          "proposed",
+          "confident"
+        ],
+        "title": "ReviewPage",
+        "type": "object"
+      },
       "RootFolderOut": {
         "properties": {
           "accessible": {
@@ -3135,6 +3182,77 @@
         "summary": "Review Count",
         "tags": [
           "decisions"
+        ]
+      }
+    },
+    "/api/v1/review/page": {
+      "get": {
+        "description": "The review queue a page at a time \u2014 hundreds of proposals are not loaded at every look.",
+        "operationId": "review_page_api_v1_review_page_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tab",
+            "required": false,
+            "schema": {
+              "default": "held",
+              "enum": [
+                "held",
+                "proposed"
+              ],
+              "title": "Tab",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "required": false,
+            "schema": {
+              "default": 24,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Per Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Page",
+        "tags": [
+          "review"
         ]
       }
     },

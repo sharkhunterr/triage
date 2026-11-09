@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Form, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from triage.api.decisions import DecisionDetail, DecisionSummary, detail, summaries
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
@@ -52,6 +52,61 @@ async def review_queue(db: Db) -> list[DecisionSummary]:
         .order_by(Decision.created_at, Decision.id)
     )
     return await summaries(db, list(rows))
+
+
+class ReviewPage(BaseModel):
+    """One page of a review tab, and how many movies wait in each tab."""
+
+    items: list[DecisionSummary]
+    total: int  # in the tab asked
+    page: int
+    per_page: int
+    held: int
+    proposed: int
+    confident: int  # proposals sure enough to apply in one go
+
+
+@router.get("/review/page", response_model=ReviewPage)
+async def review_page(
+    db: Db,
+    tab: Literal["held", "proposed"] = "held",
+    page: Annotated[int, Query(ge=1)] = 1,
+    per_page: Annotated[int, Query(ge=1, le=200)] = 24,
+) -> ReviewPage:
+    """The review queue a page at a time — hundreds of proposals are not loaded at every look."""
+    counts = dict(
+        (
+            await db.execute(
+                select(Decision.status, func.count())
+                .where(Decision.status.in_([d.HELD, d.PROPOSED]))
+                .group_by(Decision.status)
+            )
+        )
+        .tuples()
+        .all()
+    )
+    confident = await db.scalar(
+        select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0)
+    )
+    status = d.HELD if tab == "held" else d.PROPOSED
+    total = int(counts.get(status, 0))
+    page = min(page, max(1, -(-total // per_page)))  # past the end (the last movies just decided): the last
+    rows = await db.scalars(
+        select(Decision)
+        .where(Decision.status == status)
+        .order_by(Decision.created_at, Decision.id)
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    return ReviewPage(
+        items=await summaries(db, list(rows)),
+        total=total,
+        page=page,
+        per_page=per_page,
+        held=int(counts.get(d.HELD, 0)),
+        proposed=int(counts.get(d.PROPOSED, 0)),
+        confident=int(confident or 0),
+    )
 
 
 async def _decision(db: Db, decision_id: int) -> Decision:

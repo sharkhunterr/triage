@@ -531,6 +531,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/review/page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Review Page
+         * @description The review queue a page at a time — hundreds of proposals are not loaded at every look.
+         */
+        get: operations["review_page_api_v1_review_page_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scans": {
         parameters: {
             query?: never;
@@ -1199,6 +1219,26 @@ export interface components {
         ReviewCount: {
             /** Review */
             review: number;
+        };
+        /**
+         * ReviewPage
+         * @description One page of a review tab, and how many movies wait in each tab.
+         */
+        ReviewPage: {
+            /** Confident */
+            confident: number;
+            /** Held */
+            held: number;
+            /** Items */
+            items: components["schemas"]["DecisionSummary"][];
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+            /** Proposed */
+            proposed: number;
+            /** Total */
+            total: number;
         };
         /** RootFolderOut */
         RootFolderOut: {
@@ -2265,6 +2305,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReviewCount"];
+                };
+            };
+        };
+    };
+    review_page_api_v1_review_page_get: {
+        parameters: {
+            query?: {
+                tab?: "held" | "proposed";
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

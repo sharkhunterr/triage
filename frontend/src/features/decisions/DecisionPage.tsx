@@ -11,7 +11,7 @@ import {
   Scale,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useLocation, useParams } from 'react-router'
 import { type DecisionDetail, useDecision } from '../../api/decisions'
 import { Badge, Card, cx, ErrorState, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
@@ -19,7 +19,7 @@ import { CategoryDot, categoryColor, tint } from '../categories/colors'
 import { AnalyzeButton } from './AnalyzeButton'
 import { DecisionActions } from './DecisionActions'
 import { MatchCheck } from './MatchCheck'
-import { ConfidenceMeter, isUndo, Poster, ReasonText, StatusBadge } from './parts'
+import { backFrom, ConfidenceMeter, isUndo, Poster, ReasonText, StatusBadge } from './parts'
 import { RequestBadge } from './RequestBadge'
 
 type Signal = DecisionDetail['signals'][number]
@@ -33,6 +33,7 @@ export function DecisionPage() {
   const t = useT()
   const id = Number(useParams().id)
   const query = useDecision(id)
+  const back = backFrom(useLocation().state) // the list it was opened from, its page and filters kept
   if (query.isPending) return <Spinner label={t('common.loading')} />
   if (query.isError)
     return (
@@ -59,8 +60,8 @@ export function DecisionPage() {
   return (
     <article className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2">
-        <Link to="/history" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
-          <ArrowLeft className="size-4" aria-hidden /> {t('nav.history')}
+        <Link to={back.to} className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
+          <ArrowLeft className="size-4" aria-hidden /> {t(back.label)}
         </Link>
         <AnalyzeButton radarrId={decision.movie.radarr_id} />
       </div>

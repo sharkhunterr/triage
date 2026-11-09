@@ -470,5 +470,13 @@
   "match.title": "Est-ce le bon film ?",
   "match.tmdb": "Voir sur TMDB",
   "match.still": "Image {n} de TMDB",
-  "match.noImages": "TMDB n'a pas d'image pour ce film."
+  "match.noImages": "TMDB n'a pas d'image pour ce film.",
+  "common.back": "Retour",
+  "review.pages": "Pages",
+  "review.range": "{first}–{last} sur {total}",
+  "review.previous": "Précédente",
+  "review.next": "Suivante",
+  "review.pageOf": "Page {page} / {pages}",
+  "review.perPage": "Films par page",
+  "review.perPageOption": "{count} par page"
 }

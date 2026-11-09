@@ -19,12 +19,19 @@ const initialChoice = (d: DecisionSummary): Choice => {
 }
 
 /** One dialog to decide every waiting movie: proposals start accepted, doubts start "later". */
-export function ReviewAll({ items }: { items: DecisionSummary[] }) {
+export function ReviewAll({ count }: { count: number }) {
   const t = useT()
   const toast = useToast()
   const queryClient = useQueryClient()
   const categories = useCategories()
   const [open, setOpen] = useState(false)
+  // the whole queue, only once the window is open (the page itself shows one page of it)
+  const queue = useQuery({
+    queryKey: ['review', 'all'],
+    queryFn: () => api<DecisionSummary[]>('/review'),
+    enabled: open,
+  })
+  const items = queue.data ?? []
   const [choices, setChoices] = useState<Record<number, Choice>>({})
   const libraries = (categories.data ?? []).filter((c) => c.root_folder_path)
   const choiceOf = (d: DecisionSummary) => choices[d.id] ?? initialChoice(d)
@@ -56,7 +63,7 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
     onError: (error) => toast(error.message, 'danger'),
   })
 
-  if (items.length === 0) return null
+  if (count === 0) return null
   return (
     <>
       <Button icon={<ListChecks className="size-4" aria-hidden />} onClick={() => setOpen(true)}>
@@ -65,7 +72,7 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
       <Dialog
         open={open}
         onOpenChange={setOpen}
-        title={t('reviewAll.title', { count: items.length })}
+        title={t('reviewAll.title', { count: queue.data ? items.length : count })}
         description={t('reviewAll.text')}
         closeLabel={t('common.close')}
       >
@@ -89,7 +96,7 @@ export function ReviewAll({ items }: { items: DecisionSummary[] }) {
               {t('reviewAll.allLater')}
             </Button>
           </div>
-          {categories.isPending ? (
+          {categories.isPending || queue.isPending ? (
             <Spinner label={t('common.loading')} />
           ) : (
             <ul className="flex flex-col divide-y divide-border">
