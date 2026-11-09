@@ -1,3 +1,26 @@
+# v0.2.0
+
+## 🎬 Triage 0.2.0 — is it the right movie?
+
+### ✨ Features
+
+- **TMDB stills on the movie sheet** — up to eight backdrops (textless ones first) and a link to
+  the TMDB page, to see at a glance whether Radarr matched the right movie. Tap a still to open it
+  full size. Read from the TMDB cache; without TMDB the sheet shows as before.
+
+### Closed issues
+
+#### New
+
+- `feat` Movie sheet: TMDB stills to check the match — the sheet shows a strip of TMDB backdrops
+  and a link to the movie's TMDB page.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.2.0
+```
+
 # v0.1.0
 
 ## 🎬 Triage 0.1.0 — first release
