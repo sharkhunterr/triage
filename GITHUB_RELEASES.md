@@ -1,3 +1,47 @@
+# v0.3.0
+
+## 🎬 Triage 0.3.0 — a dashboard at a glance, a review queue that scales
+
+### ✨ Features
+
+- **A new dashboard** — what waits for you comes first, with *Decide* and *Apply the confident
+  proposals* (or *All sorted* when nothing waits). Four figures follow, this week's against the week
+  before. The last 30 days are drawn a bar a day, Triage's own moves apart from yours. Each library
+  shows how full it is in its category's colour, the services' state sits beside it, and the latest
+  decisions come as a compact list.
+- **To review, a page at a time** — both tabs (held movies and proposals) come in pages of 12, 24,
+  48 or 96 movies, the size remembered. Hundreds of proposals no longer load at every look.
+  *Decide all* loads the whole queue only when its window opens.
+- **Back where you came from** — a movie's sheet goes back to the page it was opened from: the
+  dashboard, To review at the same page, the activity, the history with its filters, a scan.
+
+### 🐛 Fixes
+
+- **Overseerr and Jellyseerr alike** — checking a request no longer fails with « HTTP 400 » on
+  Overseerr: Triage only asks what both know, and a series sharing a movie's TMDB id is never taken
+  for it. A service's refusal now shows its own message.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` Checking a request failed with « Seerr: answered HTTP 400 » on Overseerr — it works with
+  Overseerr and Jellyseerr alike.
+- `bug` A movie's sheet always went back to the history — it goes back to the page it was opened
+  from.
+
+#### New
+
+- `feat` To review: pages and a number of movies per page, on both tabs.
+- `feat` A more modern dashboard: what waits first, the week's trend, the last 30 days, the
+  libraries and the services.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.3.0
+```
+
 # v0.2.0
 
 ## 🎬 Triage 0.2.0 — is it the right movie?
