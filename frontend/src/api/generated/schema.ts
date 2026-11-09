@@ -920,15 +920,35 @@ export interface components {
             ai_enabled: boolean;
             /** Categories */
             categories: number;
+            /** Confident */
+            confident: number;
             counts: components["schemas"]["Counts"];
+            /** Days */
+            days: components["schemas"]["DayOut"][];
             /** Email Enabled */
             email_enabled: boolean;
             /** Latest */
             latest: components["schemas"]["DecisionSummary"][];
+            /** Libraries */
+            libraries: components["schemas"]["LibraryOut"][];
             /** Mode */
             mode: string;
+            /** Previous Week */
+            previous_week: number;
             /** Radarr Configured */
             radarr_configured: boolean;
+        };
+        /** DayOut */
+        DayOut: {
+            /** Auto */
+            auto: number;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Moved */
+            moved: number;
         };
         /** DecisionDetail */
         DecisionDetail: {
@@ -1107,6 +1127,17 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** LibraryOut */
+        LibraryOut: {
+            /** Count */
+            count: number;
+            /** Id */
+            id: number;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
         };
         /** LocaleBody */
         LocaleBody: {

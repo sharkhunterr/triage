@@ -171,7 +171,7 @@ function ReviewCard({ decision }: { decision: DecisionSummary }) {
   )
 }
 
-function ApplyConfident({ count }: { count: number }) {
+export function ApplyConfident({ count }: { count: number }) {
   const t = useT()
   const toast = useToast()
   const queryClient = useQueryClient()

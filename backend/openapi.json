@@ -471,8 +471,19 @@
             "title": "Categories",
             "type": "integer"
           },
+          "confident": {
+            "title": "Confident",
+            "type": "integer"
+          },
           "counts": {
             "$ref": "#/components/schemas/Counts"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayOut"
+            },
+            "title": "Days",
+            "type": "array"
           },
           "email_enabled": {
             "title": "Email Enabled",
@@ -485,9 +496,20 @@
             "title": "Latest",
             "type": "array"
           },
+          "libraries": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryOut"
+            },
+            "title": "Libraries",
+            "type": "array"
+          },
           "mode": {
             "title": "Mode",
             "type": "string"
+          },
+          "previous_week": {
+            "title": "Previous Week",
+            "type": "integer"
           },
           "radarr_configured": {
             "title": "Radarr Configured",
@@ -497,6 +519,10 @@
         "required": [
           "mode",
           "counts",
+          "previous_week",
+          "confident",
+          "days",
+          "libraries",
           "latest",
           "radarr_configured",
           "ai_enabled",
@@ -504,6 +530,30 @@
           "categories"
         ],
         "title": "Dashboard",
+        "type": "object"
+      },
+      "DayOut": {
+        "properties": {
+          "auto": {
+            "title": "Auto",
+            "type": "integer"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "moved": {
+            "title": "Moved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "moved",
+          "auto"
+        ],
+        "title": "DayOut",
         "type": "object"
       },
       "DecisionDetail": {
@@ -1128,6 +1178,34 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LibraryOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "name",
+          "count"
+        ],
+        "title": "LibraryOut",
         "type": "object"
       },
       "LocaleBody": {

@@ -1,6 +1,6 @@
 """Dashboard, decision history, and decision detail (contracts/http-api.md — Decisions)."""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, Query
@@ -14,7 +14,7 @@ from triage.core.errors import NotFound
 from triage.domain import decisions as d
 from triage.domain.categories import active
 from triage.domain.classify import tmdb_details
-from triage.models import AuditEvent, Decision, MetadataCache, MovieRef
+from triage.models import AuditEvent, Category, Decision, MetadataCache, MovieRef
 
 router = APIRouter(tags=["decisions"], dependencies=[Owner])
 
@@ -97,9 +97,26 @@ class Counts(BaseModel):
     moved_last_7_days: int
 
 
+class DayOut(BaseModel):
+    day: date
+    moved: int  # movies sorted into a library that day
+    auto: int  # of which by Triage itself (the rest: by the owner)
+
+
+class LibraryOut(BaseModel):
+    id: int
+    key: str
+    name: str
+    count: int  # movies sorted into it, ever
+
+
 class Dashboard(BaseModel):
     mode: str
     counts: Counts
+    previous_week: int  # sorted the 7 days before the last 7: the trend
+    confident: int  # proposals sure enough to apply in one go
+    days: list[DayOut]  # the last 30 days, oldest first
+    libraries: list[LibraryOut]  # the libraries, the fullest first
     latest: list[DecisionSummary]
     radarr_configured: bool
     ai_enabled: bool
@@ -235,6 +252,44 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
     week = await db.scalar(
         select(func.count()).where(SORTED, Decision.decided_at >= clock.now() - timedelta(days=7))
     )
+    now = clock.now()
+    previous = await db.scalar(
+        select(func.count()).where(
+            SORTED,
+            Decision.decided_at >= now - timedelta(days=14),
+            Decision.decided_at < now - timedelta(days=7),
+        )
+    )
+    confident = await db.scalar(
+        select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0)
+    )
+    # the last 30 days, day by day: what was sorted, and how much of it Triage did alone
+    today = now.date()
+    per_day = {day: [0, 0] for day in (today - timedelta(days=n) for n in range(29, -1, -1))}
+    for decided_at, actor in (
+        await db.execute(
+            select(Decision.decided_at, Decision.actor).where(
+                SORTED,
+                Decision.decided_at
+                >= datetime.combine(today - timedelta(days=29), datetime.min.time(), tzinfo=now.tzinfo),
+            )
+        )
+    ).all():
+        bucket = per_day.get(decided_at.date()) if decided_at else None
+        if bucket is not None:
+            bucket[0] += 1
+            bucket[1] += int(actor == "triage")
+    library = func.coalesce(Decision.target_category_id, Decision.top_category_id)
+    filled = dict(
+        (await db.execute(select(library, func.count()).where(SORTED).group_by(library))).tuples().all()
+    )
+    libraries = sorted(
+        (
+            LibraryOut(id=c.id, key=c.key, name=c.name, count=int(filled.get(c.id, 0)))
+            for c in await db.scalars(select(Category).where(Category.root_folder_path.is_not(None)))
+        ),
+        key=lambda lib: (-lib.count, lib.name),
+    )
     latest = list(
         await db.scalars(
             select(Decision)
@@ -245,6 +300,10 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
     )
     return Dashboard(
         mode=settings.sorting.mode,
+        previous_week=int(previous or 0),
+        confident=int(confident or 0),
+        days=[DayOut(day=day, moved=moved, auto=auto) for day, (moved, auto) in per_day.items()],
+        libraries=libraries,
         counts=Counts(
             moved=int(sorted_ or 0),
             held=by_status.get(d.HELD, 0),

@@ -158,3 +158,20 @@ async def test_decision_detail_separates_facts_from_ai(owner: AsyncClient, env: 
     assert dashboard["counts"]["proposed"] == 1
     assert dashboard["mode"] == "preview"
     assert dashboard["latest"][0]["movie"]["title"] == "Toy Story"
+
+
+async def test_the_dashboard_tells_the_days_the_libraries_and_the_trend(owner: AsyncClient, env: Env):
+    """The dashboard's month: each day what was sorted (and how much by Triage alone), each library
+    filled the fullest first, and the week before for the trend."""
+    await seed_categories(env)
+    await automatic(env)
+    add_toy_story(env)
+    add_heat(env)
+    await env.state.worker.tick(poll=True)
+    dashboard = (await owner.get("/api/v1/dashboard")).json()
+    assert len(dashboard["days"]) == 30
+    assert dashboard["days"][-1] == {"day": env.clock.current.date().isoformat(), "moved": 2, "auto": 2}
+    assert sum(day["moved"] for day in dashboard["days"]) == 2
+    filled = {lib["key"]: lib["count"] for lib in dashboard["libraries"]}
+    assert filled["animation"] == 1 and sum(filled.values()) == 2
+    assert dashboard["previous_week"] == 0 and dashboard["confident"] == 0
