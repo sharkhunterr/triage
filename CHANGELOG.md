@@ -3,6 +3,19 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.3.0](https://github.com/sharkhunterr/triage/compare/v0.2.0...v0.3.0) (2026-11-09)
+
+
+### Features
+
+* **dashboard:** a more modern dashboard — what waits first, the week's trend, the month, the libraries, the services ([a6d7717](https://github.com/sharkhunterr/triage/commit/a6d7717abd64e712a1752e03b0da7cc6883d0086))
+* **review:** pages and a number of movies per page; a movie's sheet goes back where it was opened from ([f054f03](https://github.com/sharkhunterr/triage/commit/f054f0338c510f24cb254108cf4a86305cea56c4))
+
+
+### Bug Fixes
+
+* **seerr:** ask Overseerr only what it knows, so verifying a request no longer fails with HTTP 400 ([595c7e8](https://github.com/sharkhunterr/triage/commit/595c7e821ed939cc32ccdee87204f65feeac1ed7))
+
 ## [0.2.0](https://github.com/sharkhunterr/triage/compare/v0.1.0...v0.2.0) (2026-11-09)
 
 
