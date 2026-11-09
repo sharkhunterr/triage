@@ -3,6 +3,13 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.2.0](https://github.com/sharkhunterr/triage/compare/v0.1.0...v0.2.0) (2026-11-09)
+
+
+### Features
+
+* **sheet:** TMDB stills to check the movie match ([deebfa0](https://github.com/sharkhunterr/triage/commit/deebfa06fff7f46d46146f37baacb8db320dc798))
+
 ## 0.1.0 (2026-11-08)
 
 
