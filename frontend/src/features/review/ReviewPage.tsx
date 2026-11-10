@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Ban, Bot, CheckCheck, ChevronLeft, ChevronRight, FolderInput } from 'lucide-react'
+import { Ban, CheckCheck, ChevronLeft, ChevronRight, FolderInput } from 'lucide-react'
 import { Tabs } from 'radix-ui'
 import { type ReactNode, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
@@ -10,7 +10,6 @@ import type { DecisionSummary } from '../../api/decisions'
 import {
   Button,
   Card,
-  cx,
   Dialog,
   EmptyState,
   ErrorState,
@@ -20,17 +19,9 @@ import {
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
-import { categoryButton, tint } from '../categories/colors'
+import { categoryButton } from '../categories/colors'
 import { useDecisionAction } from '../decisions/DecisionActions'
-import {
-  ChoiceInfo,
-  ConfidenceMeter,
-  choiceConfidence,
-  Poster,
-  ReasonText,
-  StatusBadge,
-  useFromHere,
-} from '../decisions/parts'
+import { ChoiceInfo, ConfidenceMeter, Poster, ReasonText, StatusBadge, useFromHere } from '../decisions/parts'
 import { Reanalyze, ReviewAll } from './ReviewAll'
 
 type ReviewPageData = Schemas['ReviewPage']
@@ -119,11 +110,9 @@ const sameFolder = (a?: string | null, b?: string | null) =>
 export function ChoiceButtons({
   decision,
   checked = false,
-  compact = false,
 }: {
   decision: DecisionSummary
   checked?: boolean
-  compact?: boolean // slim chips and an icon to leave it (the check's rows)
 }) {
   const t = useT()
   const categories = useCategories()
@@ -138,59 +127,6 @@ export function ChoiceButtons({
       ? action.mutate({ id: decision.id, action: 'dismiss' })
       : action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })
   const leaveLabel = checked ? t('check.leave') : proposal ? t('decision.dismiss') : t('decision.leave')
-  if (compact)
-    return (
-      <div className="flex flex-wrap items-center gap-1.5">
-        {choices.map((category) => {
-          const excluded = decision.excluded.includes(category.key)
-          const ai = decision.ai
-          const aiPicked = ai && !ai.error && ai.category === category.key
-          return (
-            <button
-              key={category.id}
-              type="button"
-              disabled={action.isPending}
-              onClick={() =>
-                action.mutate({ id: decision.id, action: 'apply', body: { category_id: category.id } })
-              }
-              className={cx(
-                'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-opacity hover:opacity-85 focus-visible:outline-2 disabled:opacity-50',
-                proposed?.id === category.id ? 'cat-fill' : 'cat-tint',
-                excluded && 'opacity-60',
-              )}
-              style={tint(category.id)}
-            >
-              {category.name}
-              <span className="inline-flex items-center gap-0.5 font-normal tabular-nums opacity-80">
-                {excluded ? (
-                  t('choice.excluded')
-                ) : (
-                  <>
-                    {Math.round(choiceConfidence(decision, category.key) * 100)} %
-                    {aiPicked ? (
-                      <>
-                        <Bot className="ml-1 size-3" aria-label={t('choice.ai')} />
-                        {Math.round(Number(ai.confidence) * 100)} %
-                      </>
-                    ) : null}
-                  </>
-                )}
-              </span>
-            </button>
-          )
-        })}
-        <button
-          type="button"
-          disabled={action.isPending}
-          onClick={leave}
-          aria-label={leaveLabel}
-          title={leaveLabel}
-          className="grid size-8 place-items-center rounded-full border border-border text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-2 disabled:opacity-50"
-        >
-          <Ban className="size-4" aria-hidden />
-        </button>
-      </div>
-    )
   return (
     <>
       {choices.map((category) => (

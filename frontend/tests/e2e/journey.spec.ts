@@ -78,9 +78,16 @@ test('a check of a library shows its gaps, moves nothing, and keeps them out of 
   await expect(page.getByText('Spirited Away')).toBeVisible()
   // where it is, and where Triage would send it
   const gap = page.getByRole('listitem').filter({ hasText: 'Spirited Away' })
-  await expect(gap.getByText('Movies')).toBeVisible()
+  await expect(gap.getByText('Movies').first()).toBeVisible()
   await expect(gap.getByText('Animation').first()).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Leave it there' })).toBeVisible()
+  // the slider starts on Triage's choice; back on its own library, the movie stays
+  const slider = gap.getByRole('slider', { name: 'Library chosen' })
+  await expect(slider).toHaveAttribute('aria-valuetext', 'Animation')
+  await expect(gap.getByRole('button', { name: 'Send to Animation' })).toBeVisible()
+  await slider.press('Home')
+  if ((await slider.getAttribute('aria-valuetext')) === 'Animation') await slider.press('End')
+  await expect(slider).toHaveAttribute('aria-valuetext', 'Stay in Movies')
+  await expect(gap.getByRole('button', { name: 'Leave it there' })).toBeVisible()
   await expectAccessible(page)
   await page.getByRole('tab', { name: /^In place/ }).click()
   await expect(page.getByRole('tab', { name: /^In place/ })).toHaveAttribute('aria-selected', 'true')

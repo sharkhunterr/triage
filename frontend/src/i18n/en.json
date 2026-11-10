@@ -571,5 +571,8 @@
   "history.triage": "Triage",
   "history.byOwner": "Decided by you",
   "history.byTriage": "Decided by Triage",
-  "history.confidence": "Confidence {value}%"
+  "history.confidence": "Confidence {value}%",
+  "choice.slider": "Library chosen",
+  "choice.stayIn": "Stay in {name}",
+  "choice.send": "Send to {name}"
 }

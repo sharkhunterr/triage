@@ -21,7 +21,8 @@ import {
 } from '../../design-system'
 import { useT } from '../../i18n'
 import { TimelineRow, usePlaces } from '../decisions/Timeline'
-import { ApplyConfident, ChoiceButtons, Pager, PER_PAGE } from '../review/ReviewPage'
+import { ChoiceSlider } from '../review/ChoiceSlider'
+import { ApplyConfident, Pager, PER_PAGE } from '../review/ReviewPage'
 
 type Scan = Schemas['ScanOut']
 type ScanPageData = Schemas['ScanPage']
@@ -218,7 +219,7 @@ export function ScansPage() {
                 <TimelineRow decision={d} place={place} />
               ) : (
                 <TimelineRow decision={d} place={place} note={d.status === 'held'}>
-                  <ChoiceButtons decision={d} checked compact />
+                  <ChoiceSlider decision={d} />
                 </TimelineRow>
               )}
             </li>
