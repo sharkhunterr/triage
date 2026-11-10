@@ -9,7 +9,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from triage.adapters.types import Adapters, AiVerdict, RadarrMovie, ServiceError, TmdbDetails
+from triage.adapters.types import Adapters, AiVerdict, RadarrMovie, ServiceError, TmdbDetails, WikiFacts
 from triage.core import clock
 from triage.core.activity import FAILED, note, skip, step
 from triage.core.settings import AppSettings
@@ -20,7 +20,7 @@ from triage.domain.signals import gather_facts
 from triage.models import MetadataCache, MovieRef
 
 CACHE_TTL = timedelta(days=7)
-CACHE_VERSION = 3  # 2: translated titles, the country's own translation first; 3: images
+CACHE_VERSION = 4  # 2: translated titles, the country's own translation first; 3: images; 4: Wikidata id
 
 
 @dataclass
@@ -65,6 +65,7 @@ async def tmdb_details(
             overview=payload.get("overview"),
             title=payload.get("title"),
             images=tuple(payload.get("images") or ()),
+            wikidata_id=payload.get("wikidata_id"),
         )
     details = await adapters.tmdb.details(tmdb_id)
     payload = {k: list(v) if isinstance(v, tuple) else v for k, v in details.__dict__.items()}
@@ -77,6 +78,34 @@ async def tmdb_details(
         cached.fetched_at = clock.now()
     await db.flush()
     return details
+
+
+async def wiki_facts(
+    db: AsyncSession, adapters: Adapters, tmdb_id: int | None, details: TmdbDetails | None
+) -> WikiFacts | None:
+    """What Wikidata and Wikipedia say of the movie, cached with its TMDB facts. Optional: a failure
+    is no reason to hold the analysis (ServiceError is left to the caller, which carries on)."""
+    if adapters.wiki is None or details is None or not details.wikidata_id or not tmdb_id:
+        return None
+    cached = await db.get(MetadataCache, tmdb_id)
+    known = (cached.payload.get("wiki") if cached is not None else None) or {}
+    if known.get("id") == details.wikidata_id:
+        return WikiFacts(
+            types=tuple(known.get("types") or ()), extract=known.get("extract"), url=known.get("url")
+        )
+    wiki = await adapters.wiki.facts(details.wikidata_id)
+    if cached is not None:
+        cached.payload = {
+            **cached.payload,
+            "wiki": {
+                "id": details.wikidata_id,
+                "types": list(wiki.types),
+                "extract": wiki.extract,
+                "url": wiki.url,
+            },
+        }
+        await db.flush()
+    return wiki
 
 
 def _verdict(names: dict[str, str], key: str | None, confidence: float) -> str:
@@ -115,7 +144,16 @@ async def classify_movie(
             ref.local_title = details.title  # None: Radarr's title is the right one
         if details.title:
             note(title=details.title)
-    facts = gather_facts(movie, details)
+    wiki: WikiFacts | None = None
+    if adapters.wiki is not None:
+        with step("wiki") as reading:
+            try:
+                wiki = await wiki_facts(db, adapters, movie.tmdb_id, details)
+            except ServiceError as exc:
+                reading.state, reading.detail = FAILED, exc.message
+            else:
+                reading.detail = ", ".join(wiki.types[:3]) if wiki and wiki.types else "—"
+    facts = gather_facts(movie, details, wiki)
     sorting = settings.sorting
     names = {c.key: c.name for c in categories}
     with step("rules") as rules:
@@ -186,5 +224,6 @@ async def classify_movie(
         "margin": sorting.margin,
         "decisive": result.decisive,
         "overview": facts.overview,
+        "wikipedia": {"extract": facts.wikipedia, "url": facts.wikipedia_url} if facts.wikipedia else None,
     }
     return Classification(result.signals, scores, reasons, result.confidence, conclusive, top, ai, snapshot)

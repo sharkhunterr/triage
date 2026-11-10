@@ -91,8 +91,10 @@ async def test_tmdb_details_with_keywords_and_certifications():
     assert details.companies == ("Pixar",)
     assert details.certifications == ("G",)  # the country of the TMDB language (en-US by default)
     (request,) = rec.requests
-    assert request.url.params["append_to_response"] == "keywords,release_dates,translations,images"
+    appended = request.url.params["append_to_response"]
+    assert appended == "keywords,release_dates,translations,images,external_ids"
     assert request.url.params["include_image_language"] == "en,null"
+    assert details.wikidata_id == "Q171048"
     assert request.url.params["api_key"] == "v3key"
     # stills without text first, the best voted first among them
     assert details.images == ("/plain-top.jpg", "/plain-low.jpg", "/en-text.jpg", "/fr-text.jpg")

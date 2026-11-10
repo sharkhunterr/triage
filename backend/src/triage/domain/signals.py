@@ -1,4 +1,4 @@
-"""Metadata facts about a movie, gathered from Radarr and (when configured) TMDB.
+"""Metadata facts about a movie, gathered from Radarr, TMDB and Wikidata (when configured).
 
 These are *facts*: values the services report. The AI's view is kept apart (Constitution III).
 """
@@ -6,9 +6,9 @@ These are *facts*: values the services report. The AI's view is kept apart (Cons
 import unicodedata
 from dataclasses import dataclass, field
 
-from triage.adapters.types import RadarrMovie, TmdbDetails
+from triage.adapters.types import RadarrMovie, TmdbDetails, WikiFacts
 
-FIELDS = ("genre", "keyword", "company", "certification", "original_language")
+FIELDS = ("genre", "keyword", "company", "certification", "original_language", "wikidata")
 
 
 def normalize(value: str) -> str:
@@ -30,19 +30,23 @@ class MovieFacts:
     year: int | None
     overview: str | None
     facts: list[Fact] = field(default_factory=list)
+    wikipedia: str | None = None  # the opening of its Wikipedia article: for the AI, not for rules
+    wikipedia_url: str | None = None
 
     def values(self, field_name: str) -> list[Fact]:
         return [f for f in self.facts if f.field == field_name]
 
     @property
     def has_metadata(self) -> bool:
-        return any(f.field in ("genre", "keyword", "company") for f in self.facts)
+        return any(f.field in ("genre", "keyword", "company", "wikidata") for f in self.facts)
 
     def summary(self) -> dict[str, list[str]]:
         return {name: sorted({f.value for f in self.values(name)}) for name in FIELDS}
 
 
-def gather_facts(movie: RadarrMovie, details: TmdbDetails | None) -> MovieFacts:
+def gather_facts(
+    movie: RadarrMovie, details: TmdbDetails | None, wiki: WikiFacts | None = None
+) -> MovieFacts:
     facts: list[Fact] = []
     seen: set[tuple[str, str]] = set()
 
@@ -73,4 +77,13 @@ def gather_facts(movie: RadarrMovie, details: TmdbDetails | None) -> MovieFacts:
             add("certification", certification, "tmdb")
         add("original_language", details.original_language, "tmdb")
         overview = details.overview or overview  # TMDB's is in the configured language
-    return MovieFacts(title=movie.title, year=movie.year, overview=overview, facts=facts)
+    for kind in wiki.types if wiki is not None else ():
+        add("wikidata", kind, "wikidata")
+    return MovieFacts(
+        title=movie.title,
+        year=movie.year,
+        overview=overview,
+        facts=facts,
+        wikipedia=wiki.extract if wiki is not None else None,
+        wikipedia_url=wiki.url if wiki is not None else None,
+    )

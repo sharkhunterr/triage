@@ -804,6 +804,16 @@
                 "type": "null"
               }
             ]
+          },
+          "wikipedia": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WikipediaOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -1680,7 +1690,8 @@
               "keyword",
               "company",
               "certification",
-              "original_language"
+              "original_language",
+              "wikidata"
             ],
             "title": "Field",
             "type": "string"
@@ -1734,7 +1745,8 @@
               "keyword",
               "company",
               "certification",
-              "original_language"
+              "original_language",
+              "wikidata"
             ],
             "title": "Field",
             "type": "string"
@@ -2136,6 +2148,30 @@
           "secret"
         ],
         "title": "WebhookSecret",
+        "type": "object"
+      },
+      "WikipediaOut": {
+        "properties": {
+          "extract": {
+            "title": "Extract",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "extract"
+        ],
+        "title": "WikipediaOut",
         "type": "object"
       }
     }

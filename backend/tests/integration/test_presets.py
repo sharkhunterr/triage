@@ -18,7 +18,7 @@ async def test_apply_movies_animation_in_french(owner: AsyncClient):
     assert animation["root_folder_path"] is None and films["root_folder_path"] is None
     assert films["is_fallback"] and not animation["is_fallback"]
     fields = {r["field"] for r in animation["rules"]}
-    assert fields == {"genre", "keyword", "company", "certification"}
+    assert fields == {"genre", "keyword", "company", "certification", "wikidata"}
     assert any(r["value"] == "Studio Ghibli" for r in animation["rules"])
     assert animation["description"]
 

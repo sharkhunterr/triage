@@ -4,6 +4,7 @@ import {
   Ban,
   Bot,
   Database,
+  ExternalLink,
   Film,
   FolderOpen,
   Gavel,
@@ -451,12 +452,14 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
     return [...seen.values()]
   }
   // the matching is done on the raw value; the language is only translated for display
-  const rows: [string, string[], (v: string) => string][] = [
+  type Row = [string, string[], (v: string) => string]
+  const rows: Row[] = [
     ['genre', facts.genre ?? [], (v) => v],
     ['company', facts.company ?? [], (v) => v],
     ['certification', [...(facts.certification ?? [])].sort(), (v) => v],
     ['original_language', languages(facts.original_language ?? []), language],
     ['keyword', facts.keyword ?? [], (v) => v],
+    ...(facts.wikidata?.length ? [['wikidata', facts.wikidata, (v: string) => v] as Row] : []),
   ]
   const destination = (decision.target_category ?? decision.top_category)?.id
   const used = Object.values(cats).filter(
@@ -472,6 +475,23 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
       ) : (
         <p className="text-sm text-muted">{t('sheet.noOverview')}</p>
       )}
+      {decision.wikipedia ? (
+        <blockquote className="flex flex-col gap-1 border-l-2 border-border pl-3 text-sm leading-relaxed">
+          <p>{decision.wikipedia.extract}</p>
+          {decision.wikipedia.url ? (
+            <a
+              href={decision.wikipedia.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex w-fit items-center gap-1 text-xs font-medium text-accent hover:underline"
+            >
+              {t('sheet.wikipedia')} <ExternalLink className="size-3" aria-hidden />
+            </a>
+          ) : (
+            <span className="text-xs text-muted">{t('sheet.wikipedia')}</span>
+          )}
+        </blockquote>
+      ) : null}
       <MatchCheck radarrId={decision.movie.radarr_id} tmdbId={decision.movie.tmdb_id} />
       <div>
         <h3 className="flex items-center gap-2 font-semibold">
@@ -523,7 +543,9 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
           </div>
         ))}
       </dl>
-      <p className="border-t border-border pt-3 text-xs text-muted">{t('sheet.sources')}</p>
+      <p className="border-t border-border pt-3 text-xs text-muted">
+        {t(facts.wikidata?.length || decision.wikipedia ? 'sheet.sourcesWiki' : 'sheet.sources')}
+      </p>
     </Card>
   )
 }

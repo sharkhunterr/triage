@@ -31,6 +31,7 @@ LABELS = {
     "company": "Production companies",
     "certification": "Age ratings",
     "original_language": "Original language",
+    "wikidata": "Kind of work (Wikidata)",
 }
 # the reasoning is shown to the owner: it follows the TMDB language ("fr-FR" → French)
 LANGUAGES = {
@@ -100,6 +101,8 @@ def build_prompt(
             user_lines.append(f"{label}: {', '.join(summary[field][:30])}")
     if facts.overview:
         user_lines.append(f"Overview: {facts.overview[:1500]}")
+    if facts.wikipedia:
+        user_lines.append(f"Wikipedia: {facts.wikipedia}")
     ruled_out = _ruled_out(result, categories) if result is not None else []
     if ruled_out:
         user_lines += ["", *ruled_out]

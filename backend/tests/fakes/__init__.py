@@ -7,6 +7,7 @@ from tests.fakes.radarr import FakeRadarr
 from tests.fakes.seerr import FakeSeerr
 from tests.fakes.smtp import FakeMailer
 from tests.fakes.tmdb import FakeTmdb
+from tests.fakes.wiki import FakeWiki
 from triage.adapters.types import Adapters
 from triage.core.settings import AppSettings
 
@@ -18,8 +19,14 @@ class Fakes:
     ollama: FakeOllama | None = None
     seerr: FakeSeerr | None = None
     mailer: FakeMailer | None = field(default_factory=FakeMailer)
+    wiki: FakeWiki | None = None
 
     def factory(self, _settings: AppSettings) -> Adapters:
         return Adapters(
-            radarr=self.radarr, tmdb=self.tmdb, ollama=self.ollama, seerr=self.seerr, mailer=self.mailer
+            radarr=self.radarr,
+            tmdb=self.tmdb,
+            ollama=self.ollama,
+            seerr=self.seerr,
+            mailer=self.mailer,
+            wiki=self.wiki,
         )

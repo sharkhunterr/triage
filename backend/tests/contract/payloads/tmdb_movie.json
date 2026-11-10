@@ -139,5 +139,9 @@
         "vote_average": 7.0
       }
     ]
+  },
+  "external_ids": {
+    "imdb_id": "tt0114709",
+    "wikidata_id": "Q171048"
   }
 }

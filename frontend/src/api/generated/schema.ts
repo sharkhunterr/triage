@@ -1061,6 +1061,7 @@ export interface components {
             /** Threshold */
             threshold: number | null;
             top_category: components["schemas"]["CategoryRef"] | null;
+            wikipedia?: components["schemas"]["WikipediaOut"] | null;
         };
         /** DecisionPage */
         DecisionPage: {
@@ -1357,7 +1358,7 @@ export interface components {
              * Field
              * @enum {string}
              */
-            field: "genre" | "keyword" | "company" | "certification" | "original_language";
+            field: "genre" | "keyword" | "company" | "certification" | "original_language" | "wikidata";
             /**
              * Operator
              * @default is
@@ -1388,7 +1389,7 @@ export interface components {
              * Field
              * @enum {string}
              */
-            field: "genre" | "keyword" | "company" | "certification" | "original_language";
+            field: "genre" | "keyword" | "company" | "certification" | "original_language" | "wikidata";
             /** Id */
             id: number;
             /**
@@ -1526,6 +1527,13 @@ export interface components {
         WebhookSecret: {
             /** Secret */
             secret: string;
+        };
+        /** WikipediaOut */
+        WikipediaOut: {
+            /** Extract */
+            extract: string;
+            /** Url */
+            url?: string | null;
         };
     };
     responses: never;

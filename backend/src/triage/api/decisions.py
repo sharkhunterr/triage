@@ -72,10 +72,16 @@ class AuditOut(BaseModel):
     detail: str | None
 
 
+class WikipediaOut(BaseModel):
+    extract: str
+    url: str | None = None
+
+
 class DecisionDetail(DecisionSummary):
     signals: list[dict[str, Any]]
     facts: dict[str, list[str]]
     overview: str | None = None
+    wikipedia: WikipediaOut | None = None  # the opening of its article, when Wikidata was read
     threshold: float | None
     margin: int | None
     categories: list[dict[str, Any]]
@@ -219,6 +225,7 @@ async def detail(db: Db, decision: Decision) -> DecisionDetail:
         signals=decision.signals or [],
         facts=scores.get("facts", {}),
         overview=scores.get("overview") or await _cached_overview(db, ref),
+        wikipedia=WikipediaOut(**scores["wikipedia"]) if scores.get("wikipedia") else None,
         threshold=scores.get("threshold"),
         margin=scores.get("margin"),
         categories=[

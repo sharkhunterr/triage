@@ -79,6 +79,11 @@ class SortingSettings(BaseModel):
     link_validity_days: int = Field(7, ge=1, le=30)
 
 
+class WikiSettings(BaseModel):
+    # what kind of work each movie is (Wikidata) and its Wikipedia opening, for the rules and the AI
+    enabled: bool = False
+
+
 class AppSettings(BaseModel):
     # False until the owner finishes (or skips) the setup wizard; set back to False to reopen it.
     wizard_completed: bool = False
@@ -89,6 +94,7 @@ class AppSettings(BaseModel):
     seerr: SeerrSettings = Field(default_factory=SeerrSettings)
     smtp: SmtpSettings = Field(default_factory=SmtpSettings)
     sorting: SortingSettings = Field(default_factory=SortingSettings)
+    wiki: WikiSettings = Field(default_factory=WikiSettings)
 
     @field_validator("base_url")
     @classmethod

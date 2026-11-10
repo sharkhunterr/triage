@@ -18,7 +18,7 @@ from triage.models import Owner as OwnerRow
 
 router = APIRouter(tags=["categories"], dependencies=[Owner])
 
-FieldName = Literal["genre", "keyword", "company", "certification", "original_language"]
+FieldName = Literal["genre", "keyword", "company", "certification", "original_language", "wikidata"]
 Operator = Literal["is", "contains", "is_not"]
 
 

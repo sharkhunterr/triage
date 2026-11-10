@@ -7,7 +7,14 @@ import { Button, Dialog, Field, Input, Select, Switch, Textarea } from '../../de
 import { useT } from '../../i18n'
 import { RefreshFolders } from './RefreshFolders'
 
-const FIELDS: RuleInput['field'][] = ['genre', 'keyword', 'company', 'certification', 'original_language']
+const FIELDS: RuleInput['field'][] = [
+  'genre',
+  'keyword',
+  'company',
+  'certification',
+  'original_language',
+  'wikidata',
+]
 const OPERATORS: NonNullable<RuleInput['operator']>[] = ['is', 'contains', 'is_not']
 
 // Rows get a client-side key so React keeps each rule's inputs while rows are added or removed.

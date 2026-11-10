@@ -20,6 +20,7 @@ import {
   PageHeader,
   Select,
   Spinner,
+  Switch,
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
@@ -217,6 +218,18 @@ export function SettingsPage() {
             onChange={(v) => tmdb.set('language', v)}
           />
         </Section>
+
+        <Card className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">{t('settings.wiki')}</h2>
+            <p className="text-sm text-muted">{t('settings.wikiHint')}</p>
+          </div>
+          <Switch
+            label={t('settings.wikiEnabled')}
+            checked={view.wiki?.enabled ?? false}
+            onCheckedChange={(enabled) => persist({ wiki: { enabled } })}
+          />
+        </Card>
 
         <Section
           title={t('settings.ai')}

@@ -11,6 +11,7 @@ from triage.adapters.seerr import SeerrClient
 from triage.adapters.smtp import SmtpMailer
 from triage.adapters.tmdb import TmdbClient
 from triage.adapters.types import Adapters
+from triage.adapters.wiki import WikiClient
 from triage.core.settings import AppSettings
 
 AdapterFactory = Callable[[AppSettings], Adapters]
@@ -39,4 +40,5 @@ def build_adapters(settings: AppSettings, client: httpx.AsyncClient) -> Adapters
             if s.email_enabled
             else None
         ),
+        wiki=WikiClient(client, s.tmdb.language) if s.wiki.enabled and s.tmdb.api_key else None,
     )

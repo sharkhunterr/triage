@@ -28,6 +28,7 @@ export type SettingsView = {
     poll_interval_s: number
     link_validity_days: number
   }
+  wiki: { enabled: boolean }
 }
 
 export type Service = 'radarr' | 'tmdb' | 'ollama' | 'seerr' | 'smtp'

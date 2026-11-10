@@ -55,6 +55,14 @@ class TmdbDetails:
     overview: str | None = None
     title: str | None = None  # in the configured language, when TMDB has a translation
     images: tuple[str, ...] = ()  # backdrop file paths, stills without text first
+    wikidata_id: str | None = None  # "Q3286391": where Wikidata and Wikipedia describe the movie
+
+
+@dataclass(frozen=True)
+class WikiFacts:
+    types: tuple[str, ...] = ()  # Wikidata "instance of" and "genre", in English: "concert film"…
+    extract: str | None = None  # the opening of the Wikipedia article
+    url: str | None = None  # the article
 
 
 @dataclass(frozen=True)
@@ -103,6 +111,11 @@ class Tmdb(Protocol):
     async def details(self, tmdb_id: int) -> TmdbDetails: ...
 
 
+class Wiki(Protocol):
+    async def check(self) -> ServiceCheck: ...
+    async def facts(self, wikidata_id: str) -> WikiFacts: ...
+
+
 class Ollama(Protocol):
     async def check(self) -> ServiceCheck: ...
     async def models(self) -> list[str]: ...
@@ -130,3 +143,4 @@ class Adapters:
     ollama: Ollama | None = None
     seerr: Seerr | None = None
     mailer: Mailer | None = None
+    wiki: Wiki | None = None

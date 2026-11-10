@@ -70,6 +70,7 @@ def parse_details(data: dict[str, Any], language: str = "en-US") -> TmdbDetails:
         overview=_translated(data, lang, country, "overview") or data.get("overview") or None,
         title=_translated(data, lang, country, "title"),
         images=_images(data),
+        wikidata_id=(data.get("external_ids") or {}).get("wikidata_id") or None,
     )
 
 
@@ -128,7 +129,7 @@ class TmdbClient:
         data = await self._get(
             f"/movie/{tmdb_id}",
             {
-                "append_to_response": "keywords,release_dates,translations,images",
+                "append_to_response": "keywords,release_dates,translations,images,external_ids",
                 # images of the language, else English ones, and those without text ("null")
                 "include_image_language": ",".join(dict.fromkeys([lang, "en", "null"])),
             },
