@@ -1,3 +1,55 @@
+# v0.4.0
+
+## 🎬 Triage 0.4.0 — Shows and Concerts, Wikidata and Wikipedia, a sharper AI
+
+### ✨ Features
+
+- **Shows and Concerts presets** — each adds one category beside the ones you already have: Shows
+  (stand-up, one-man and one-woman shows, filmed plays, opera, ballet, circus) and Concerts (concert
+  films, tours and festivals). They are offered even when categories exist.
+- **Complete a preset** — when a preset gains rules, Categories offers *Complete « name »*: the
+  categories made from it get the new rules. Your own changes stay as they are.
+- **Wikidata and Wikipedia** (optional, Settings › Wikidata & Wikipedia, off by default) — Triage
+  reads the movie's Wikidata kind of work and genre (concert film, stand-up comedy, biographical
+  film…) and the opening of its Wikipedia article in the TMDB language. *Wikidata type* is a new rule
+  field and the presets use it. The AI reads the article. The facts are cached with TMDB's, and an
+  outage never holds an analysis.
+- **A tidier movie sheet** — the metadata come grouped by source: Radarr and TMDB (synopsis, filled
+  fields, what is missing), then Wikidata and Wikipedia (the opening, the type, a link). The sheet
+  also shows who asked for the movie in Overseerr / Jellyseerr and when, or else when Radarr added it.
+- **The dashboard's 30 days, three ways** — sorted (by Triage alone / by you), by category (in each
+  category's colour) or analysed (sure / in doubt). The choice is remembered.
+- **Refresh folders** — Settings › Radarr and the category editor read Radarr's root folders again,
+  after a library was added or renamed there.
+
+### 🐛 Fixes
+
+- **The AI is a real second opinion** — a movie with no genre or keyword no longer falls into the
+  default category when the AI clearly sees another one. It is proposed or held, never moved on the
+  AI alone. The AI no longer sees the points the rules gave, only what you ruled out, and judges what
+  the film actually is: a drama about a singer is no concert, and a one-woman show is a show.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` The AI is a real second opinion: the default category no longer outweighs it, the presets'
+  rules are richer, and the AI judges the film rather than the rules' points.
+
+#### New
+
+- `feat` A movie's sheet: who asked for it in Seerr and when.
+- `feat` Shows and Concerts presets, offered beside existing categories.
+- `feat` Refresh Radarr's root folders from Settings and the category editor.
+- `feat` The dashboard's 30-day chart by who sorted, by category, or analysed (sure / in doubt).
+- `feat` Wikidata type as a rule field, Wikipedia opening for the AI and on the sheet.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.4.0
+```
+
 # v0.3.2
 
 ## 🎬 Triage 0.3.2 — up-to-date screenshots, an icon for Unraid
