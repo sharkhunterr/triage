@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowDown,
   ArrowLeft,
@@ -9,12 +10,16 @@ import {
   FolderOpen,
   Gavel,
   History,
+  Lock,
+  LockOpen,
   Scale,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useIntl } from 'react-intl'
 import { Link, useLocation, useParams } from 'react-router'
+import { api } from '../../api/client'
 import { type DecisionDetail, useDecision } from '../../api/decisions'
-import { Badge, Card, cx, ErrorState, Spinner } from '../../design-system'
+import { Badge, Button, Card, cx, ErrorState, Spinner, useToast } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryDot, categoryColor, tint } from '../categories/colors'
 import { AnalyzeButton } from './AnalyzeButton'
@@ -25,6 +30,7 @@ import {
   ConfidenceMeter,
   isUndo,
   knowsArrival,
+  LockBadge,
   Poster,
   ReasonText,
   Requested,
@@ -76,6 +82,7 @@ export function DecisionPage() {
         <AnalyzeButton radarrId={decision.movie.radarr_id} />
       </div>
       <Header decision={decision} />
+      <LockNote decision={decision} />
       <DecisionActions decision={decision} />
       <Why decision={decision} name={name} cats={cats} />
       <MovieSheet decision={decision} cats={cats} />
@@ -110,6 +117,7 @@ function Header({ decision }: { decision: DecisionDetail }) {
             {undo ? <Badge>{t('status.undone')}</Badge> : <StatusBadge status={decision.status} />}
             <Badge>{t(`source.${decision.source}`)}</Badge>
             {decision.actor === 'owner' && <Badge tone="info">{t('decision.byOwner')}</Badge>}
+            <LockBadge lock={decision.movie.lock} />
             <RequestBadge check={decision.request_check} />
           </div>
           <p className="mt-1 text-sm text-muted">
@@ -183,6 +191,51 @@ function FolderLine({
       <span className="sr-only">{label}</span>
       <code className="min-w-0 break-words">{path ?? '—'}</code>
     </p>
+  )
+}
+
+// ------------------------------------------------------------------ lock
+
+/** Locked by a choice made by hand: what it means, and the way out. */
+function LockNote({ decision }: { decision: DecisionDetail }) {
+  const t = useT()
+  const intl = useIntl()
+  const toast = useToast()
+  const queryClient = useQueryClient()
+  const lock = decision.movie.lock
+  const unlock = useMutation({
+    mutationFn: () => api(`/movies/${decision.movie.radarr_id}/lock`, { method: 'DELETE' }),
+    onSuccess: () => {
+      toast(t('lock.unlocked'), 'success')
+      return queryClient.invalidateQueries()
+    },
+    onError: (error) => toast(error.message, 'danger'),
+  })
+  if (!lock) return null
+  return (
+    <Card className="flex flex-col gap-3 border-info/40 bg-info/5 sm:flex-row sm:items-center">
+      <Lock className="size-5 shrink-0 text-info" aria-hidden />
+      <div className="min-w-0 flex-1 text-sm">
+        <p className="font-medium">
+          {t('lock.heading', {
+            folder: lock.folder,
+            via: t(`lock.via.${lock.via}`),
+          })}
+        </p>
+        <p className="text-muted">
+          {lock.at ? `${intl.formatDate(lock.at, { dateStyle: 'medium', timeStyle: 'short' })} · ` : ''}
+          {t('lock.explain')}
+        </p>
+      </div>
+      <Button
+        size="sm"
+        icon={<LockOpen className="size-4" aria-hidden />}
+        loading={unlock.isPending}
+        onClick={() => unlock.mutate()}
+      >
+        {t('lock.unlock')}
+      </Button>
+    </Card>
   )
 }
 

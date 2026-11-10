@@ -178,6 +178,18 @@
               }
             ],
             "title": "Target"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "const": "sheet",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via"
           }
         },
         "required": [
@@ -396,6 +408,18 @@
               }
             ],
             "title": "Target"
+          },
+          "via": {
+            "anyOf": [
+              {
+                "const": "sheet",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Via"
           }
         },
         "title": "ChoiceBody",
@@ -1266,6 +1290,37 @@
         "title": "LocaleBody",
         "type": "object"
       },
+      "LockOut": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "folder": {
+            "title": "Folder",
+            "type": "string"
+          },
+          "via": {
+            "title": "Via",
+            "type": "string"
+          }
+        },
+        "required": [
+          "folder",
+          "via",
+          "at"
+        ],
+        "title": "LockOut",
+        "type": "object"
+      },
       "Me": {
         "properties": {
           "locale": {
@@ -1311,6 +1366,16 @@
               }
             ],
             "title": "Added At"
+          },
+          "lock": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LockOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "poster_url": {
             "anyOf": [
@@ -1836,6 +1901,11 @@
       },
       "ScanIn": {
         "properties": {
+          "respect_locks": {
+            "default": true,
+            "title": "Respect Locks",
+            "type": "boolean"
+          },
           "root_folder_path": {
             "title": "Root Folder Path",
             "type": "string"
@@ -1869,6 +1939,11 @@
             "title": "Id",
             "type": "integer"
           },
+          "respect_locks": {
+            "default": true,
+            "title": "Respect Locks",
+            "type": "boolean"
+          },
           "root_folder_path": {
             "title": "Root Folder Path",
             "type": "string"
@@ -1884,6 +1959,11 @@
           },
           "total": {
             "title": "Total",
+            "type": "integer"
+          },
+          "waiting": {
+            "default": 0,
+            "title": "Waiting",
             "type": "integer"
           }
         },
@@ -3165,6 +3245,42 @@
           }
         },
         "summary": "Analyze",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/movies/{radarr_id}/lock": {
+      "delete": {
+        "description": "Free a movie from its lock: checks may propose to move it again.",
+        "operationId": "unlock_api_v1_movies__radarr_id__lock_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "radarr_id",
+            "required": true,
+            "schema": {
+              "title": "Radarr Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unlock",
         "tags": [
           "review"
         ]

@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, CalendarPlus, Film, Undo2, UserRound } from 'lucide-react'
+import { ArrowRight, Bot, CalendarPlus, Film, Lock, Undo2, UserRound } from 'lucide-react'
 import { useIntl } from 'react-intl'
 import { Link, useLocation } from 'react-router'
 import type { DecisionSummary } from '../../api/decisions'
@@ -22,6 +22,20 @@ const STATUS_TONE: Record<string, Tone> = {
 export function StatusBadge({ status }: { status: string }) {
   const t = useT()
   return <Badge tone={STATUS_TONE[status] ?? 'neutral'}>{t(`status.${status}`)}</Badge>
+}
+
+/** The movie is locked in the library the owner chose by hand, and where that choice was made. */
+export function LockBadge({ lock }: { lock?: DecisionSummary['movie']['lock'] }) {
+  const t = useT()
+  if (!lock) return null
+  return (
+    <span title={t('lock.title', { folder: lock.folder })}>
+      <Badge tone="info">
+        <Lock className="size-3" aria-hidden />
+        {t('lock.badge')} · {t(`lock.via.${lock.via}`)}
+      </Badge>
+    </span>
+  )
 }
 
 export function Poster({
@@ -191,6 +205,7 @@ export function DecisionCard({ decision }: { decision: DecisionSummary }) {
               {decision.movie.year ? <span className="text-muted"> ({decision.movie.year})</span> : null}
             </p>
             {undo ? <Badge>{t('status.undone')}</Badge> : <StatusBadge status={decision.status} />}
+            <LockBadge lock={decision.movie.lock} />
           </div>
           <p className="mt-1 flex items-center gap-1 text-sm text-muted">
             {undo ? (

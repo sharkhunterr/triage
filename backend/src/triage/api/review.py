@@ -13,7 +13,7 @@ from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
 from triage.core.activity import note, step
 from triage.core.errors import Conflict, Gone, NotFound
 from triage.core.tokens import usable_link, use
-from triage.domain import actions, categories
+from triage.domain import actions, categories, locks
 from triage.domain import decisions as d
 from triage.domain.arrivals import upsert_movie
 from triage.domain.classify import classify_movie
@@ -32,6 +32,7 @@ public = APIRouter(tags=["review links"])
 class ChoiceBody(BaseModel):
     category_id: int | None = None
     target: str | None = None
+    via: Literal["sheet"] | None = None  # chosen on the movie's sheet (else: where the decision waits)
 
     @model_validator(mode="after")
     def _one(self) -> "ChoiceBody":
@@ -119,7 +120,7 @@ async def _decision(db: Db, decision_id: int) -> Decision:
 @router.post("/decisions/{decision_id}/apply", response_model=DecisionDetail)
 async def apply(decision_id: int, body: ChoiceBody, db: Db, state: State) -> DecisionDetail:
     decision = await _decision(db, decision_id)
-    await actions.choose(db, decision, body.choice)
+    await actions.choose(db, decision, body.choice, via=body.via)
     await db.commit()
     state.worker.wake()
     return await detail(db, decision)
@@ -201,7 +202,7 @@ async def link_confirm(
     if decision.status not in {d.HELD, d.PROPOSED}:
         return _gone(locale, settings.base_url)
     use(link, c)
-    await actions.choose(db, decision, choice)
+    await actions.choose(db, decision, choice, via=locks.EMAIL)
     await db.commit()
     state.worker.wake()
     ref = await db.get(MovieRef, decision.radarr_id)
@@ -253,7 +254,7 @@ async def apply_confident(body: ApplyConfidentBody, db: Db, settings: Settings, 
         if decision.target_category_id is None:
             continue
         try:
-            await actions.choose(db, decision, decision.target_category_id)
+            await actions.choose(db, decision, decision.target_category_id, lock=False)
         except NotFound:
             continue  # its category lost its library since: leave the proposal
         applied += 1
@@ -309,11 +310,24 @@ async def simulate(radarr_id: int, db: Db, settings: Settings, adapters: Adapter
     result = await classify_movie(db, settings, adapters, movie)
     decision = new_decision(movie.id, "simulation", result, movie.root_folder_path)
     decision.status = d.SIMULATED
+    ref = await db.get(MovieRef, movie.id)
+    if locks.holds(ref, movie.root_folder_path):
+        assert ref is not None
+        decision.reasons = [*decision.reasons, {"code": "locked", "via": ref.locked_via}]
     db.add(decision)
     await db.flush()
     record_decision(decision, result)
     await db.commit()
     return await detail(db, decision)
+
+
+@router.delete("/movies/{radarr_id}/lock", status_code=204)
+async def unlock(radarr_id: int, db: Db) -> None:
+    """Free a movie from its lock: checks may propose to move it again."""
+    if await db.get(MovieRef, radarr_id) is None:
+        raise NotFound("Unknown movie")
+    await locks.unlock(db, radarr_id)
+    await db.commit()
 
 
 @router.post("/decisions/{decision_id}/correct", response_model=DecisionDetail)
@@ -357,7 +371,7 @@ async def revert_many(body: RevertBody, db: Db, state: State) -> Reverted:
     listed = await summaries(db, moves)
     if not body.dry_run and moves:
         for decision in moves:
-            await actions.revert(db, decision)
+            await actions.revert(db, decision, lock=False)
         await db.commit()
         state.worker.wake()
     return Reverted(count=len(moves), items=listed)

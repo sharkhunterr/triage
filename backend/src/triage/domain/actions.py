@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from triage.core import clock
 from triage.core.errors import Conflict, NotFound
 from triage.core.settings import same_folder
-from triage.domain import audit
+from triage.domain import audit, locks
 from triage.domain import decisions as d
 from triage.domain.categories import to_def
 from triage.models import Category, Decision, MovieRef
@@ -19,10 +19,16 @@ INTAKE = "intake"
 UNDO = "undo"  # a correction that undoes a move (see revert)
 
 
-async def choose(db: AsyncSession, decision: Decision, choice: int | str) -> None:
-    """``choice`` is a category id, or ``"intake"`` to leave the movie where it is."""
+async def choose(
+    db: AsyncSession, decision: Decision, choice: int | str, *, lock: bool = True, via: str | None = None
+) -> None:
+    """``choice`` is a category id, or ``"intake"`` to leave the movie where it is.
+
+    A choice made by hand locks the movie in the library chosen (``via`` says where it was made);
+    proposals applied in bulk pass ``lock=False``."""
     if decision.status not in {d.HELD, d.PROPOSED, d.FAILED}:
         raise Conflict("This movie was already decided", code="already_decided")
+    via = via or locks.via_of(decision)
     if choice == INTAKE:
         if decision.status == d.FAILED:
             raise Conflict("Retry the move or pick a category", code="invalid_choice")
@@ -33,6 +39,8 @@ async def choose(db: AsyncSession, decision: Decision, choice: int | str) -> Non
             await d.transition(db, decision, d.DISMISSED)
             action = "dismiss"
         decision.actor = "owner"
+        if lock:
+            await locks.lock(db, decision.radarr_id, decision.from_root_folder, via)
         await audit.record(
             db, actor="owner", action=action, radarr_id=decision.radarr_id, decision_id=decision.id
         )
@@ -49,6 +57,8 @@ async def choose(db: AsyncSession, decision: Decision, choice: int | str) -> Non
     decision.target_root_folder = category.root_folder_path
     decision.actor = "owner"
     decision.error = None
+    if lock:
+        await locks.lock(db, decision.radarr_id, category.root_folder_path, via)
     await d.transition(db, decision, d.MOVING)
     await queue.enqueue(db, "move", {"decision_id": decision.id})
 
@@ -64,7 +74,8 @@ async def correct(
     db: AsyncSession, decision: Decision, choice: int | str, intake_folders: list[str]
 ) -> Decision:
     """Move a movie Triage moved somewhere else (FR-021). The movie is marked corrected: Triage
-    will only ever propose for it from now on. Returns the correction decision."""
+    will only ever propose for it from now on, and it is locked in its new library (put back in the
+    intake folder, it is to be sorted again: no lock). Returns the correction decision."""
     if decision.status != d.MOVED:
         raise Conflict("Only a moved movie can be corrected", code="not_moved")
     snapshot = list(decision.categories_snapshot or [])
@@ -83,12 +94,18 @@ async def correct(
         if not any(c.get("id") == category.id for c in snapshot):
             snapshot.append(to_def(category).to_dict())
 
+    if category_id is None:
+        await locks.unlock(db, decision.radarr_id)
+    else:
+        await locks.lock(db, decision.radarr_id, target, locks.SHEET)
     return await _move_again(db, decision, target, category_id, snapshot)
 
 
-async def revert(db: AsyncSession, decision: Decision) -> Decision:
+async def revert(db: AsyncSession, decision: Decision, *, lock: bool = True) -> Decision:
     """Undo a move: the movie goes back to the very folder it was moved from (the intake folder,
-    or the library a scan found it in). Like any correction, Triage only proposes for it afterwards."""
+    or the library a scan found it in). Like any correction, Triage only proposes for it afterwards.
+    Undone from its sheet, the movie is locked back in its library; undone in bulk, the choice is
+    simply gone (no lock either way)."""
     if decision.status != d.MOVED:
         raise Conflict("Only a moved movie can be undone", code="not_moved")
     if not decision.from_root_folder:
@@ -105,6 +122,10 @@ async def revert(db: AsyncSession, decision: Decision) -> Decision:
     if origin is not None and not any(c.get("id") == origin.id for c in snapshot):
         snapshot.append(to_def(origin).to_dict())
     category_id = origin.id if origin is not None else None
+    if lock and category_id is not None:
+        await locks.lock(db, decision.radarr_id, decision.from_root_folder, locks.SHEET)
+    else:
+        await locks.unlock(db, decision.radarr_id)
     return await _move_again(
         db, decision, decision.from_root_folder, category_id, snapshot, reasons=[{"code": UNDO}]
     )

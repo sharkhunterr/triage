@@ -70,6 +70,7 @@ test('a check of a library shows its gaps, moves nothing, and keeps them out of 
 }) => {
   await signIn(page)
   await go(page, 'Check')
+  await expect(page.getByRole('switch', { name: /Respect locks/ })).toBeChecked()
   await page.getByLabel('Folder to scan').selectOption('/movies/Films')
   await page.getByRole('button', { name: 'Start the scan' }).click()
   await expect(page.getByText(/^Finished/)).toBeVisible({ timeout: 20_000 })
@@ -132,6 +133,21 @@ test('history shows the moves and a decision explains itself', async ({ page }) 
   await expectAccessible(page)
   await page.getByRole('button', { name: 'Analyze' }).click()
   await expect(page.getByText("Analyzed with today's rules")).toBeVisible()
+})
+
+test('a movie decided by hand is locked, and the lock can be removed', async ({ page }) => {
+  await signIn(page)
+  await go(page, 'History')
+  const roger = page.locator('article').filter({ hasText: 'Who Framed Roger Rabbit' }).first()
+  // locked once the move is done: the list is read again until then
+  await expect(async () => {
+    await page.reload()
+    await expect(roger.getByText(/Locked · review/)).toBeVisible({ timeout: 2_000 })
+  }).toPass({ timeout: 20_000 })
+  await roger.click()
+  await page.getByRole('button', { name: 'Unlock' }).click()
+  await expect(page.getByText(/Lock removed/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Unlock' })).toHaveCount(0)
 })
 
 test('the dashboard chart: sorted, by category, analysed', async ({ page }) => {

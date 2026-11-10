@@ -96,7 +96,7 @@ async def test_review_queue_and_apply_from_the_app(owner: AsyncClient, env: Env)
     await env.state.worker.tick(poll=True)
     (item,) = (await owner.get("/api/v1/review")).json()
     assert item["status"] == "held"
-    assert (await owner.get("/api/v1/review/count")).json() == {"review": 1}
+    assert (await owner.get("/api/v1/review/count")).json() == {"review": 1, "check": 0}
 
     animation = next(c for c in (await owner.get("/api/v1/categories")).json() if c["key"] == "animation")
     applied = await owner.post(f"/api/v1/decisions/{item['id']}/apply", json={"category_id": animation["id"]})
@@ -104,7 +104,7 @@ async def test_review_queue_and_apply_from_the_app(owner: AsyncClient, env: Env)
     await env.state.worker.tick()
     (decision,) = await decisions(env)
     assert decision.status == "moved"
-    assert (await owner.get("/api/v1/review/count")).json() == {"review": 0}
+    assert (await owner.get("/api/v1/review/count")).json() == {"review": 0, "check": 0}
 
 
 async def test_apply_refuses_finished_decisions(owner: AsyncClient, env: Env):

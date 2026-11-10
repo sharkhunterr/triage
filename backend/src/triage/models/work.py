@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from triage.models.base import Base
@@ -17,6 +17,7 @@ class Scan(Base):
     state: Mapped[str] = mapped_column(String(16), default="running")
     total: Mapped[int] = mapped_column(Integer, default=0)
     done: Mapped[int] = mapped_column(Integer, default=0)
+    respect_locks: Mapped[bool] = mapped_column(Boolean, default=True)  # locked movies stay in place
     started_at: Mapped[datetime]
     finished_at: Mapped[datetime | None]
 

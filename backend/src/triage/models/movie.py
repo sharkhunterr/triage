@@ -21,6 +21,11 @@ class MovieRef(Base):
     poster_url: Mapped[str | None] = mapped_column(String(500))
     root_folder_path: Mapped[str | None] = mapped_column(String(500))
     corrected: Mapped[bool] = mapped_column(Boolean, default=False)
+    # the library the owner chose by hand, and where they chose it (sheet, review, email, check_gap,
+    # check_doubt): a check that respects locks leaves the movie there
+    locked_folder: Mapped[str | None] = mapped_column(String(500))
+    locked_via: Mapped[str | None] = mapped_column(String(16))
+    locked_at: Mapped[datetime | None]
     updated_at: Mapped[datetime]
     added_at: Mapped[datetime | None]  # when Radarr added it
     # the Seerr request (Overseerr / Jellyseerr), when there is one: who asked for it and when

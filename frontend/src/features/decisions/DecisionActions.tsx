@@ -8,7 +8,8 @@ import { useT } from '../../i18n'
 import { categoryButton } from '../categories/colors'
 import { ChoiceInfo } from './parts'
 
-type Target = { category_id: number } | { target: 'intake' }
+// chosen on the movie's sheet: the lock says so
+type Target = ({ category_id: number } | { target: 'intake' }) & { via?: 'sheet' }
 
 export function useDecisionAction() {
   const queryClient = useQueryClient()
@@ -61,7 +62,7 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
               action.mutate({
                 id: decision.id,
                 action: 'apply',
-                body: { category_id: decision.target_category?.id ?? 0 },
+                body: { category_id: decision.target_category?.id ?? 0, via: 'sheet' },
               })
             }
           >
@@ -81,7 +82,7 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
                   action.mutate({
                     id: decision.id,
                     action: correctable ? 'correct' : 'apply',
-                    body: { category_id: c.id },
+                    body: { category_id: c.id, via: 'sheet' },
                   })
                 }
               >
@@ -103,7 +104,9 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
             variant="ghost"
             icon={<Ban className="size-4" aria-hidden />}
             loading={action.isPending}
-            onClick={() => action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })}
+            onClick={() =>
+              action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake', via: 'sheet' } })
+            }
           >
             {t('decision.leave')}
           </Button>

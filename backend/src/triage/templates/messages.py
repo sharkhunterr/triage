@@ -37,6 +37,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "reason.ai_only": "Only the AI has an opinion: Triage never moves a movie on its word alone.",
         "reason.category_without_folder": "The chosen category has no library yet.",
         "reason.corrected_before": "You corrected this movie before: Triage only proposes.",
+        "reason.locked": "You chose this library by hand: the movie is locked in it.",
         "reason.unknown": "Held for review.",
     },
     "fr": {
@@ -72,6 +73,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "reason.ai_only": "Seule l'IA a un avis : Triage ne déplace jamais un film sur sa seule parole.",
         "reason.category_without_folder": "La catégorie choisie n'a pas encore de bibliothèque.",
         "reason.corrected_before": "Vous avez déjà corrigé ce film : Triage se contente de proposer.",
+        "reason.locked": "Vous avez choisi cette bibliothèque à la main : le film y est verrouillé.",
         "reason.unknown": "Mis de côté pour vous.",
     },
 }

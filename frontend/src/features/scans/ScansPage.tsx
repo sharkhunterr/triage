@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FolderSearch, Square } from 'lucide-react'
+import { FolderSearch, Lock, LockOpen, Square } from 'lucide-react'
 import { Tabs } from 'radix-ui'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { useIntl } from 'react-intl'
@@ -16,6 +16,7 @@ import {
   PageHeader,
   Select,
   Spinner,
+  Switch,
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
@@ -64,9 +65,10 @@ function StartCheck({ running }: { running?: Scan }) {
   const [, setParams] = useSearchParams()
   const folders = useRootFolders()
   const [folder, setFolder] = useState('')
+  const [respectLocks, setRespectLocks] = useState(true)
   const start = useMutation({
     mutationFn: (root_folder_path: string) =>
-      api<Scan>('/scans', { method: 'POST', body: { root_folder_path } }),
+      api<Scan>('/scans', { method: 'POST', body: { root_folder_path, respect_locks: respectLocks } }),
     onSuccess: (scan) => {
       setParams({ scan: String(scan.id) })
       return queryClient.invalidateQueries({ queryKey: ['scans'] })
@@ -84,45 +86,53 @@ function StartCheck({ running }: { running?: Scan }) {
   }
   return (
     <Card className="mb-4">
-      <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="flex-1">
-          <Field label={t('scans.folder')} hint={t('scans.folderHint')}>
-            {(id, desc) => (
-              <Select
-                id={id}
-                aria-describedby={desc}
-                value={folder || library}
-                onChange={(e) => setFolder(e.target.value)}
-              >
-                {folders.data?.map((f) => (
-                  <option key={f.path} value={f.path}>
-                    {f.path}
-                    {f.is_intake ? ` — ${t('scans.intake')}` : ''}
-                  </option>
-                ))}
-              </Select>
-            )}
-          </Field>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <Field label={t('scans.folder')} hint={t('scans.folderHint')}>
+              {(id, desc) => (
+                <Select
+                  id={id}
+                  aria-describedby={desc}
+                  value={folder || library}
+                  onChange={(e) => setFolder(e.target.value)}
+                >
+                  {folders.data?.map((f) => (
+                    <option key={f.path} value={f.path}>
+                      {f.path}
+                      {f.is_intake ? ` — ${t('scans.intake')}` : ''}
+                    </option>
+                  ))}
+                </Select>
+              )}
+            </Field>
+          </div>
+          {running ? (
+            <Button
+              icon={<Square className="size-4" aria-hidden />}
+              loading={cancel.isPending}
+              onClick={() => cancel.mutate(running.id)}
+            >
+              {t('scans.cancel')}
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              variant="primary"
+              icon={<FolderSearch className="size-4" aria-hidden />}
+              loading={start.isPending}
+              disabled={!folders.data?.length}
+            >
+              {t('scans.start')}
+            </Button>
+          )}
         </div>
-        {running ? (
-          <Button
-            icon={<Square className="size-4" aria-hidden />}
-            loading={cancel.isPending}
-            onClick={() => cancel.mutate(running.id)}
-          >
-            {t('scans.cancel')}
-          </Button>
-        ) : (
-          <Button
-            type="submit"
-            variant="primary"
-            icon={<FolderSearch className="size-4" aria-hidden />}
-            loading={start.isPending}
-            disabled={!folders.data?.length}
-          >
-            {t('scans.start')}
-          </Button>
-        )}
+        <Switch
+          checked={respectLocks}
+          onCheckedChange={setRespectLocks}
+          label={t('check.respectLocks')}
+          description={t(respectLocks ? 'check.respectLocksHint' : 'check.ignoreLocksHint')}
+        />
       </form>
     </Card>
   )
@@ -140,6 +150,8 @@ export function ScansPage() {
   const [perPage, setPerPage] = useState(storedPerPage)
   const scan = scans.data?.find((s) => s.id === asked) ?? scans.data?.[0]
   const running = scans.data?.find((s) => s.state === 'running')
+  // the other checks' gaps and doubts: the Check tab's badge counts them too
+  const elsewhere = scans.data?.filter((s) => s.id !== scan?.id && s.waiting > 0) ?? []
   const results = useScanPage(scan, tab, page, perPage)
   const current = results.data
 
@@ -229,6 +241,14 @@ export function ScansPage() {
               {t(`scans.state.${scan.state}`)} · {t('scans.progress', { done: scan.done, total: scan.total })}
               {current?.applied ? ` · ${t('check.applied', { count: current.applied })}` : ''}
             </p>
+            <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted">
+              {scan.respect_locks ? (
+                <Lock className="size-3" aria-hidden />
+              ) : (
+                <LockOpen className="size-3" aria-hidden />
+              )}
+              {t(scan.respect_locks ? 'check.locksRespected' : 'check.locksIgnored')}
+            </p>
           </div>
           {(scans.data?.length ?? 0) > 1 && (
             <Select
@@ -243,6 +263,7 @@ export function ScansPage() {
                     folder: s.root_folder_path,
                     date: intl.formatDate(s.started_at, { dateStyle: 'short', timeStyle: 'short' }),
                   })}
+                  {s.waiting ? ` · ${t('check.waiting', { count: s.waiting })}` : ''}
                 </option>
               ))}
             </Select>
@@ -262,6 +283,28 @@ export function ScansPage() {
               className="h-full rounded-full bg-accent transition-all"
               style={{ width: `${scan.total ? Math.round((scan.done / scan.total) * 100) : 0}%` }}
             />
+          </div>
+        )}
+        {elsewhere.length > 0 && (
+          <div className="mt-3 border-t border-border pt-3 text-sm">
+            <p className="text-muted">{t('check.elsewhere')}</p>
+            <ul className="mt-1.5 flex flex-wrap gap-2">
+              {elsewhere.map((s) => (
+                <li key={s.id}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="border border-border"
+                    onClick={() => go({ scan: s.id })}
+                  >
+                    <code>{s.root_folder_path}</code>
+                    <span className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-accent-contrast">
+                      {s.waiting}
+                    </span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </Card>

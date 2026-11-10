@@ -12,11 +12,18 @@ from triage.api.deps import AdaptersDep, Db, Owner, Settings
 from triage.core import clock
 from triage.core.errors import NotFound
 from triage.domain import decisions as d
+from triage.domain import locks
 from triage.domain.categories import active
 from triage.domain.classify import tmdb_details
 from triage.models import AuditEvent, Category, Decision, MetadataCache, MovieRef
 
 router = APIRouter(tags=["decisions"], dependencies=[Owner])
+
+
+class LockOut(BaseModel):
+    folder: str
+    via: str  # sheet | review | email | check_gap | check_doubt
+    at: datetime | None
 
 
 class MovieOut(BaseModel):
@@ -29,6 +36,7 @@ class MovieOut(BaseModel):
     added_at: datetime | None = None  # when Radarr added it
     requested_by: str | None = None  # who asked for it in Seerr, when known
     requested_at: datetime | None = None
+    lock: LockOut | None = None  # the library the owner chose by hand, while the movie is in it
 
 
 class CategoryRef(BaseModel):
@@ -170,6 +178,9 @@ def _movie(ref: MovieRef | None, radarr_id: int) -> MovieOut:
         added_at=ref.added_at,
         requested_by=ref.requested_by,
         requested_at=ref.requested_at,
+        lock=LockOut(folder=ref.locked_folder, via=ref.locked_via or locks.SHEET, at=ref.locked_at)
+        if ref.locked_folder and locks.holds(ref, ref.root_folder_path)
+        else None,
     )
 
 

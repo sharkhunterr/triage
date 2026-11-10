@@ -370,6 +370,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/movies/{radarr_id}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlock
+         * @description Free a movie from its lock: checks may propose to move it again.
+         */
+        delete: operations["unlock_api_v1_movies__radarr_id__lock_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/movies/{radarr_id}/media": {
         parameters: {
             query?: never;
@@ -858,6 +878,8 @@ export interface components {
             id: number;
             /** Target */
             target?: string | null;
+            /** Via */
+            via?: "sheet" | null;
         };
         /** BulkResult */
         BulkResult: {
@@ -932,6 +954,8 @@ export interface components {
             category_id?: number | null;
             /** Target */
             target?: string | null;
+            /** Via */
+            via?: "sheet" | null;
         };
         /** Completed */
         Completed: {
@@ -1211,6 +1235,15 @@ export interface components {
              */
             locale: "en" | "fr";
         };
+        /** LockOut */
+        LockOut: {
+            /** At */
+            at: string | null;
+            /** Folder */
+            folder: string;
+            /** Via */
+            via: string;
+        };
         /** Me */
         Me: {
             /** Locale */
@@ -1230,6 +1263,7 @@ export interface components {
         MovieOut: {
             /** Added At */
             added_at?: string | null;
+            lock?: components["schemas"]["LockOut"] | null;
             /** Poster Url */
             poster_url: string | null;
             /** Radarr Id */
@@ -1449,6 +1483,11 @@ export interface components {
         };
         /** ScanIn */
         ScanIn: {
+            /**
+             * Respect Locks
+             * @default true
+             */
+            respect_locks: boolean;
             /** Root Folder Path */
             root_folder_path: string;
         };
@@ -1460,6 +1499,11 @@ export interface components {
             finished_at: string | null;
             /** Id */
             id: number;
+            /**
+             * Respect Locks
+             * @default true
+             */
+            respect_locks: boolean;
             /** Root Folder Path */
             root_folder_path: string;
             /**
@@ -1471,6 +1515,11 @@ export interface components {
             state: string;
             /** Total */
             total: number;
+            /**
+             * Waiting
+             * @default 0
+             */
+            waiting: number;
         };
         /**
          * ScanPage
@@ -2233,6 +2282,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DecisionDetail"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlock_api_v1_movies__radarr_id__lock_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                radarr_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -22,6 +22,7 @@ router = APIRouter(tags=["scans"], dependencies=[Owner])
 
 class ScanIn(BaseModel):
     root_folder_path: str
+    respect_locks: bool = True  # movies the owner locked in this library stay in place
 
 
 class ScanOut(BaseModel):
@@ -33,6 +34,25 @@ class ScanOut(BaseModel):
     done: int
     started_at: datetime
     finished_at: datetime | None
+    respect_locks: bool = True
+    waiting: int = 0  # gaps and doubts still to settle
+
+
+async def _out(db: Db, scans: list[Scan]) -> list[ScanOut]:
+    waiting = dict(
+        (
+            await db.execute(
+                select(Decision.scan_id, func.count())
+                .where(Decision.scan_id.in_([s.id for s in scans]), Decision.status.in_([d.HELD, d.PROPOSED]))
+                .group_by(Decision.scan_id)
+            )
+        )
+        .tuples()
+        .all()
+    )
+    return [
+        ScanOut.model_validate(s).model_copy(update={"waiting": int(waiting.get(s.id, 0))}) for s in scans
+    ]
 
 
 class InvalidFolder(TriageError):
@@ -57,7 +77,9 @@ async def start_scan(body: ScanIn, db: Db, adapters: AdaptersDep, state: State) 
         select(Decision).where(Decision.scan_id.in_(earlier), Decision.status.in_([d.HELD, d.PROPOSED]))
     ):
         await d.transition(db, stale, d.SUPERSEDED)
-    scan = Scan(root_folder_path=folder, state=RUNNING, started_at=clock.now())
+    scan = Scan(
+        root_folder_path=folder, state=RUNNING, respect_locks=body.respect_locks, started_at=clock.now()
+    )
     db.add(scan)
     await db.flush()
     await queue.enqueue(db, "scan_start", {"scan_id": scan.id})
@@ -67,8 +89,8 @@ async def start_scan(body: ScanIn, db: Db, adapters: AdaptersDep, state: State) 
 
 
 @router.get("/scans", response_model=list[ScanOut])
-async def list_scans(db: Db) -> list[Scan]:
-    return list(await db.scalars(select(Scan).order_by(Scan.id.desc()).limit(20)))
+async def list_scans(db: Db) -> list[ScanOut]:
+    return await _out(db, list(await db.scalars(select(Scan).order_by(Scan.id.desc()).limit(20))))
 
 
 async def _scan(db: Db, scan_id: int) -> Scan:
@@ -79,8 +101,9 @@ async def _scan(db: Db, scan_id: int) -> Scan:
 
 
 @router.get("/scans/{scan_id}", response_model=ScanOut)
-async def get_scan(scan_id: int, db: Db) -> Scan:
-    return await _scan(db, scan_id)
+async def get_scan(scan_id: int, db: Db) -> ScanOut:
+    (out,) = await _out(db, [await _scan(db, scan_id)])
+    return out
 
 
 @router.get("/scans/{scan_id}/results", response_model=list[DecisionSummary])

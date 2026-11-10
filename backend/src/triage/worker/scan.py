@@ -7,6 +7,7 @@ from triage.core.activity import note, step
 from triage.core.logging import radarr_id_var
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import decisions as d
+from triage.domain import locks
 from triage.domain.arrivals import upsert_movie
 from triage.domain.classify import classify_movie
 from triage.models import Decision, Scan, WorkItem
@@ -55,12 +56,16 @@ async def scan_movie_job(ctx: JobContext, item: WorkItem) -> None:
         select(Decision.id).where(Decision.radarr_id == radarr_id, Decision.status.in_(list(d.OPEN))).limit(1)
     )
     if movie is not None and pending is None and same_folder(movie.root_folder_path, scan.root_folder_path):
-        await upsert_movie(ctx.db, movie)
+        ref = await upsert_movie(ctx.db, movie)
         result = await classify_movie(ctx.db, ctx.settings, ctx.adapters, movie)
         decision = new_decision(movie.id, "scan", result, normalize_folder(scan.root_folder_path))
         decision.scan_id = scan.id
+        if scan.respect_locks and locks.holds(ref, scan.root_folder_path):
+            # the owner chose this library by hand: in place, whatever today's rules say
+            decision.status = d.IN_PLACE
+            decision.reasons = [*decision.reasons, {"code": "locked", "via": ref.locked_via}]
         # its best choice is where it already is: in place, sure or not — a check looks for gaps
-        if same_folder(result.target_folder, scan.root_folder_path):
+        elif same_folder(result.target_folder, scan.root_folder_path):
             decision.status = d.IN_PLACE
         elif result.conclusive:
             decision.status = d.PROPOSED
