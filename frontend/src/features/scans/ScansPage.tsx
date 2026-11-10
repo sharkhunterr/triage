@@ -218,7 +218,7 @@ export function ScansPage() {
                 <TimelineRow decision={d} place={place} />
               ) : (
                 <TimelineRow decision={d} place={place} note={d.status === 'held'}>
-                  <ChoiceButtons decision={d} checked />
+                  <ChoiceButtons decision={d} checked compact />
                 </TimelineRow>
               )}
             </li>
