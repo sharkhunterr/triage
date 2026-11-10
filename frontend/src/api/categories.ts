@@ -22,7 +22,12 @@ export const useRootFolders = () =>
 
 function useInvalidate() {
   const client = useQueryClient()
-  return () => client.invalidateQueries({ queryKey: ['categories'] })
+  // a preset tells what the categories made from it lack: it follows them
+  return () =>
+    Promise.all([
+      client.invalidateQueries({ queryKey: ['categories'] }),
+      client.invalidateQueries({ queryKey: ['presets'] }),
+    ])
 }
 
 export function useSaveCategory() {
@@ -48,6 +53,14 @@ export function useReorderCategories() {
   const invalidate = useInvalidate()
   return useMutation({
     mutationFn: (ids: number[]) => api('/categories/reorder', { method: 'POST', body: { ids } }),
+    onSuccess: invalidate,
+  })
+}
+
+export function useCompletePreset() {
+  const invalidate = useInvalidate()
+  return useMutation({
+    mutationFn: (key: string) => api<Schemas['Completed']>(`/presets/${key}/complete`, { method: 'POST' }),
     onSuccess: invalidate,
   })
 }

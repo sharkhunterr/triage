@@ -15,10 +15,12 @@ def test_the_ai_sees_each_category_with_its_folder_and_rules():
     assert "written in French" in french
 
 
-def test_the_ai_sees_what_the_rules_found_for_this_movie():
+def test_the_ai_sees_what_is_ruled_out_but_not_the_points():
+    """A second opinion, not an echo: the exclusions are the owner's hard rules, the tally is not shown."""
     movie = facts(genres=["Animation", "Thriller"])
     result = score(movie, [ANIMATION_NO_HORROR, FILMS], threshold=0.8, margin=20)
     _, user = build_prompt(movie, [ANIMATION_NO_HORROR, FILMS], result)
-    assert "What the rules found" in user
-    assert "animation: ruled out (genre is Thriller)" in user
-    assert "films: 100 points" in user
+    assert "- animation (genre is Thriller)" in user
+    assert "points" not in user
+    _, clear = build_prompt(facts(genres=["Crime"]), [ANIMATION_NO_HORROR, FILMS], result=None)
+    assert "Ruled out" not in clear

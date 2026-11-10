@@ -2,8 +2,10 @@ import { ArrowDown, ArrowUp, FolderOpen, Pencil, Plus, Sparkles, Trash2 } from '
 import { useState } from 'react'
 import {
   type Category,
+  type Preset,
   useApplyPreset,
   useCategories,
+  useCompletePreset,
   useDeleteCategory,
   usePresets,
   useReorderCategories,
@@ -25,46 +27,74 @@ import { CategoryEditor } from './CategoryEditor'
 import { CategoryDot } from './colors'
 
 /** Ready-made categories: the starters on an empty page; beside existing categories, the add-ons
- * (Shows, Concerts…) whose categories are not there yet. */
+ * (Shows, Concerts…) whose categories are not there yet, and the presets that gained rules since
+ * their categories were made — to complete them. */
 export function PresetCard({ existing }: { existing?: string[] }) {
   const t = useT()
   const presets = usePresets()
   const apply = useApplyPreset()
+  const complete = useCompletePreset()
   const toast = useToast()
   const have = new Set((existing ?? []).map((name) => name.toLowerCase()))
+  const made = (preset: Preset) => preset.categories.every((c) => have.has(c.name.toLowerCase()))
   const shown = (presets.data ?? []).filter((preset) =>
     existing === undefined
       ? !preset.addon
-      : preset.addon && !preset.categories.every((c) => have.has(c.name.toLowerCase())),
+      : (preset.addon && !made(preset)) || (preset.missing_rules ?? 0) > 0,
   )
   if (!shown.length) return null
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      {shown.map((preset) => (
-        <Card key={preset.key} className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-5 text-accent" aria-hidden />
-            <h2 className="font-semibold">{preset.name}</h2>
-          </div>
-          <p className="text-sm text-muted">{preset.description}</p>
-          <ul className="flex flex-wrap gap-2">
-            {preset.categories.map((c) => (
-              <li key={c.name}>
-                <Badge tone={c.is_fallback ? 'neutral' : 'accent'}>{c.name}</Badge>
-              </li>
-            ))}
-          </ul>
-          <Button
-            variant="primary"
-            loading={apply.isPending}
-            onClick={() =>
-              apply.mutate(preset.key, { onSuccess: () => toast(t('categories.presetApplied'), 'success') })
-            }
-          >
-            {preset.addon ? t('categories.addPreset', { name: preset.name }) : t('categories.applyPreset')}
-          </Button>
-        </Card>
-      ))}
+      {shown.map((preset) => {
+        const completing = existing !== undefined && made(preset)
+        return (
+          <Card key={preset.key} className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="size-5 text-accent" aria-hidden />
+              <h2 className="font-semibold">{preset.name}</h2>
+            </div>
+            <p className="text-sm text-muted">
+              {completing
+                ? t('categories.presetMissing', { count: preset.missing_rules ?? 0 })
+                : preset.description}
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {preset.categories.map((c) => (
+                <li key={c.name}>
+                  <Badge tone={c.is_fallback ? 'neutral' : 'accent'}>{c.name}</Badge>
+                </li>
+              ))}
+            </ul>
+            {completing ? (
+              <Button
+                loading={complete.isPending}
+                onClick={() =>
+                  complete.mutate(preset.key, {
+                    onSuccess: (done) =>
+                      toast(t('categories.presetCompleted', { count: done.added }), 'success'),
+                  })
+                }
+              >
+                {t('categories.completePreset', { name: preset.name })}
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                loading={apply.isPending}
+                onClick={() =>
+                  apply.mutate(preset.key, {
+                    onSuccess: () => toast(t('categories.presetApplied'), 'success'),
+                  })
+                }
+              >
+                {preset.addon
+                  ? t('categories.addPreset', { name: preset.name })
+                  : t('categories.applyPreset')}
+              </Button>
+            )}
+          </Card>
+        )
+      })}
     </div>
   )
 }

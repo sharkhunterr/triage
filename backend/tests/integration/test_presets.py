@@ -45,3 +45,23 @@ async def test_shows_and_concerts_add_one_category_each(owner: AsyncClient):
     assert [c["name"] for c in categories if c["is_fallback"]] == ["Films"]
     shows = next(c for c in categories if c["name"] == "Spectacles")
     assert any(r["value"] == "comedy special" and r["decisive"] for r in shows["rules"])
+
+
+async def test_complete_adds_the_rules_a_preset_gained_and_nothing_else(owner: AsyncClient):
+    """A category made from an older preset gets the rules added since; the owner's own changes stay."""
+    await owner.put("/api/v1/auth/me/locale", json={"locale": "fr"})
+    await owner.post("/api/v1/presets/shows/apply")
+    (shows,) = (await owner.get("/api/v1/categories")).json()
+    kept = [r for r in shows["rules"] if "woman" not in r["value"]]
+    body = {**shows, "description": "Mes spectacles", "rules": kept}
+    assert (await owner.put(f"/api/v1/categories/{shows['id']}", json=body)).status_code == 200
+    presets = {p["key"]: p for p in (await owner.get("/api/v1/presets")).json()}
+    assert presets["shows"]["missing_rules"] == 2
+    assert presets["concerts"]["missing_rules"] == 0  # not made yet: nothing to complete
+
+    assert (await owner.post("/api/v1/presets/shows/complete")).json() == {"added": 2}
+    (after,) = (await owner.get("/api/v1/categories")).json()
+    assert after["description"] == "Mes spectacles"
+    assert any(r["value"] == "one-woman show" and r["decisive"] for r in after["rules"])
+    assert len(after["rules"]) == len(shows["rules"])
+    assert (await owner.post("/api/v1/presets/shows/complete")).json() == {"added": 0}

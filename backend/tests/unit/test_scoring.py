@@ -61,6 +61,24 @@ def test_no_animation_signal_goes_to_the_fallback():
     assert result.signals[-1]["kind"] == "fallback"
 
 
+def test_the_ai_pointing_elsewhere_drops_the_fallback_default():
+    """No rule matched: the fallback's 100 points were a default — an AI sure of another category is
+    not drowned by them, but alone it stays below the threshold: proposed or held, never moved."""
+    ai = AiVerdict(category="animation", confidence=0.95, reasoning="A stop-motion feature")
+    result = run(facts(genres=["Crime"]), ai=ai, ai_weight=60)
+    assert result.scores == {"animation": 57.0, "films": 0.0}
+    assert (result.top, result.conclusive) == ("animation", False)
+    assert not any(s["kind"] == "fallback" for s in result.signals)
+    assert {"code": "ai_only", "category": "animation"} in result.reasons
+
+
+def test_the_ai_agreeing_with_the_fallback_keeps_its_default():
+    ai = AiVerdict(category="films", confidence=0.9, reasoning="A crime drama")
+    result = run(facts(genres=["Crime"]), ai=ai, ai_weight=60)
+    assert result.scores["films"] == 100 + 54
+    assert result.conclusive
+
+
 def test_a_single_weak_signal_is_held():
     result = run(facts(genres=["Animation", "Drama"]))
     assert result.top == "animation"

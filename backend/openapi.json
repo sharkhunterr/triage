@@ -401,6 +401,19 @@
         "title": "ChoiceBody",
         "type": "object"
       },
+      "Completed": {
+        "properties": {
+          "added": {
+            "title": "Added",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "added"
+        ],
+        "title": "Completed",
+        "type": "object"
+      },
       "Counts": {
         "properties": {
           "failed": {
@@ -1425,6 +1438,11 @@
           "key": {
             "title": "Key",
             "type": "string"
+          },
+          "missing_rules": {
+            "default": 0,
+            "title": "Missing Rules",
+            "type": "integer"
           },
           "name": {
             "title": "Name",
@@ -3245,6 +3263,49 @@
           }
         },
         "summary": "Apply Preset",
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/presets/{key}/complete": {
+      "post": {
+        "description": "Adds to the categories already made from a preset the rules it gained since \u2014 nothing else of\ntheirs changes (name, library, description, the owner's own rules).",
+        "operationId": "complete_preset_api_v1_presets__key__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Completed"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete Preset",
         "tags": [
           "categories"
         ]

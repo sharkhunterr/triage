@@ -202,6 +202,7 @@ function Why({
   const facts = signals.filter((s) => s.kind === 'fact')
   const fallback = signals.find((s) => s.kind === 'fallback')
   const decisive = facts.find((s) => s.decisive && !s.ignored)
+  const aiOnly = (decision.reasons as { code: string; category?: string }[]).find((r) => r.code === 'ai_only')
   const ranked = Object.entries(decision.scores).sort(([, a], [, b]) => b - a)
   const max = Math.max(1, ...ranked.map(([, v]) => v))
   const settled = ['moved', 'moving', 'in_place', 'corrected'].includes(decision.status)
@@ -223,6 +224,7 @@ function Why({
         value: String(decisive.value),
       }),
     )
+  else if (aiOnly) headline.push(t('why.aiOnly', { category: name(aiOnly.category) }))
   else if (fallback) headline.push(t('why.fallback', { category: name(fallback.category_key) }))
   else if (ranked[0] && ranked[0][1] > 0)
     headline.push(

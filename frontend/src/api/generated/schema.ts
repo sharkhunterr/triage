@@ -480,6 +480,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/presets/{key}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Preset
+         * @description Adds to the categories already made from a preset the rules it gained since — nothing else of
+         *     theirs changes (name, library, description, the owner's own rules).
+         */
+        post: operations["complete_preset_api_v1_presets__key__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/radarr/root-folders": {
         parameters: {
             query?: never;
@@ -892,6 +913,11 @@ export interface components {
             /** Target */
             target?: string | null;
         };
+        /** Completed */
+        Completed: {
+            /** Added */
+            added: number;
+        };
         /** Counts */
         Counts: {
             /** Failed */
@@ -1224,6 +1250,11 @@ export interface components {
             description: string;
             /** Key */
             key: string;
+            /**
+             * Missing Rules
+             * @default 0
+             */
+            missing_rules: number;
             /** Name */
             name: string;
         };
@@ -2295,6 +2326,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_preset_api_v1_presets__key__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Completed"];
                 };
             };
             /** @description Validation Error */

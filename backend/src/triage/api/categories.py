@@ -11,7 +11,8 @@ from triage.core import clock
 from triage.core.errors import Conflict, NotFound, TriageError
 from triage.core.settings import AppSettings, normalize_folder, same_folder
 from triage.domain import categories as domain
-from triage.domain.presets import PRESETS
+from triage.domain.presets import PRESETS, Preset, PresetRule
+from triage.domain.signals import normalize
 from triage.models import Category, Rule
 from triage.models import Owner as OwnerRow
 
@@ -90,6 +91,12 @@ class PresetOut(BaseModel):
     description: str
     categories: list[PresetCategoryOut]
     addon: bool = False  # adds one category beside those already there
+    # rules of the preset that the categories already made from it lack (matched by name)
+    missing_rules: int = 0
+
+
+class Completed(BaseModel):
+    added: int  # rules added to the categories already made from the preset
 
 
 class InvalidFolder(TriageError):
@@ -225,15 +232,37 @@ async def _locale(db: Db) -> str:
     return owner.locale if owner else "en"
 
 
+def _same_rule(rule: Rule, preset: PresetRule) -> bool:
+    return (rule.field, rule.operator, normalize(rule.value)) == (
+        preset.field,
+        preset.operator,
+        normalize(preset.value),
+    )
+
+
+def _missing(preset: Preset, categories: list[Category]) -> list[tuple[Category, PresetRule]]:
+    """The preset's rules each category made from it lacks — matched by name, in either language."""
+    by_name = {c.name.casefold(): c for c in categories}
+    missing: list[tuple[Category, PresetRule]] = []
+    for spec in preset.categories:
+        category = next((by_name[n.casefold()] for n in spec.names.values() if n.casefold() in by_name), None)
+        if category is None:
+            continue
+        missing += [(category, r) for r in spec.rules if not any(_same_rule(x, r) for x in category.rules)]
+    return missing
+
+
 @router.get("/presets", response_model=list[PresetOut])
 async def list_presets(db: Db) -> list[PresetOut]:
     locale = await _locale(db)
+    categories = await domain.active(db)
     return [
         PresetOut(
             key=p.key,
             name=p.names[locale],
             description=p.descriptions[locale],
             addon=p.addon,
+            missing_rules=len(_missing(p, categories)),
             categories=[
                 PresetCategoryOut(
                     name=c.names[locale],
@@ -297,3 +326,30 @@ async def apply_preset(key: str, db: Db, state: State) -> list[Category]:
     for category in created:
         await db.refresh(category)
     return created
+
+
+@router.post("/presets/{key}/complete", response_model=Completed)
+async def complete_preset(key: str, db: Db, state: State) -> Completed:
+    """Adds to the categories already made from a preset the rules it gained since — nothing else of
+    theirs changes (name, library, description, the owner's own rules)."""
+    preset = PRESETS.get(key)
+    if preset is None:
+        raise NotFound("Unknown preset")
+    missing = _missing(preset, await domain.active(db))
+    for category, r in missing:
+        category.rules.append(
+            Rule(
+                field=r.field,
+                operator=r.operator,
+                value=r.value,
+                weight=r.weight,
+                decisive=r.decisive,
+                excludes=r.excludes,
+            )
+        )
+    for category in {id(c): c for c, _ in missing}.values():
+        category.version += 1
+    if missing and await domain.reclassify_config_holds(db):
+        state.worker.wake()
+    await db.commit()
+    return Completed(added=len(missing))

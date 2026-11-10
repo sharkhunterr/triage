@@ -168,6 +168,7 @@
   "reason.category_without_folder": "The chosen category has no library yet.",
   "reason.corrected_before": "You corrected this movie before: Triage only proposes.",
   "reason.unknown": "Held for review.",
+  "reason.ai_only": "Only the AI has an opinion: Triage never moves a movie on its word alone.",
   "audit.move": "Moved",
   "audit.correct": "Corrected",
   "audit.leave": "Left in intake",
@@ -378,6 +379,7 @@
   "why.excluded": "{category} is ruled out: {field} is {value}.",
   "why.decisive": "Decisive rule: {field} {value} → {category}.",
   "why.fallback": "No other category had a signal, so {category} by default.",
+  "why.aiOnly": "No rule applies: only the AI suggests {category}.",
   "why.scores": "{top} scores {topScore} points, {second} {secondScore}.",
   "why.waiting": "Why it waits for you",
   "why.points": "{count, plural, one {# point} other {# points}}",
@@ -520,5 +522,8 @@
   "movie.requestedBy": "Requested by {who}",
   "movie.addedOn": "Added on {when}",
   "categories.addons": "Ready-made categories to add",
-  "categories.addPreset": "Add « {name} »"
+  "categories.addPreset": "Add « {name} »",
+  "categories.presetCompleted": "{count, plural, =0 {Already complete} one {# rule added} other {# rules added}}",
+  "categories.completePreset": "Complete « {name} »",
+  "categories.presetMissing": "{count, plural, one {# new rule} other {# new rules}} since you added it. Completing adds them and changes nothing else."
 }

@@ -1,5 +1,6 @@
 """What the local AI is told: the owner's categories in their own words with their folders and
-rules, then the movie's facts and what the rules already found.
+rules, then the movie's facts and the categories its rules rule out. Not the points the rules gave:
+the AI is a second opinion on what the movie is, and a tally to agree with only anchors it.
 
 The answer is constrained by a JSON schema (adapters.ollama); the prompt only explains the task.
 """
@@ -15,7 +16,9 @@ The rules are the owner's own criteria:
 - "Signals" point toward a category; the number is how much they count, and a "decisive" one settles it.
 - "Never when" rules are exclusions: never choose a category ruled out by one of them.
 - The fallback category is used when nothing else fits.
-Use the rules as guidance and your knowledge of the movie (overview, style, audience) for the rest.
+Metadata tags are often missing or misleading: a keyword alone does not make a category (a drama
+about a singer is tagged "concert", it is not a concert film). Judge what the movie actually is from
+its title, overview and your own knowledge of it, and use the rules as hints.
 If you cannot decide with reasonable certainty, answer "unsure".
 Give a confidence between 0 and 1 and one or two sentences of reasoning, written in {language}.
 
@@ -67,26 +70,16 @@ def _category(category: CategoryDef) -> str:
     return "\n".join(lines)
 
 
-def _findings(result: ScoreResult, categories: list[CategoryDef]) -> list[str]:
-    lines = ["What the rules found:"]
+def _ruled_out(result: ScoreResult, categories: list[CategoryDef]) -> list[str]:
+    lines: list[str] = []
     for category in categories:
         excluded = [
             s for s in result.signals if s["kind"] == "exclusion" and s["category_key"] == category.key
         ]
         if excluded:
             why = "; ".join(f"{s['field']} is {s['value']}" for s in excluded)
-            lines.append(f"- {category.key}: ruled out ({why})")
-            continue
-        matched = [
-            f"{s['field']} {s['value']}"
-            for s in result.signals
-            if s["kind"] == "fact" and s["category_key"] == category.key
-        ]
-        if any(s["kind"] == "fallback" and s["category_key"] == category.key for s in result.signals):
-            matched.append("fallback")
-        points = round(result.scores.get(category.key, 0))
-        lines.append(f"- {category.key}: {points} points" + (f" ({', '.join(matched)})" if matched else ""))
-    return lines
+            lines.append(f"- {category.key} ({why})")
+    return ["Ruled out by the owner's rules (never choose them):", *lines] if lines else []
 
 
 def build_prompt(
@@ -107,6 +100,7 @@ def build_prompt(
             user_lines.append(f"{label}: {', '.join(summary[field][:30])}")
     if facts.overview:
         user_lines.append(f"Overview: {facts.overview[:1500]}")
-    if result is not None:
-        user_lines += ["", *_findings(result, categories)]
+    ruled_out = _ruled_out(result, categories) if result is not None else []
+    if ruled_out:
+        user_lines += ["", *ruled_out]
     return system, "\n".join(user_lines)

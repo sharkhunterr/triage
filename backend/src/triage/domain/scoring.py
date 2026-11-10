@@ -157,7 +157,18 @@ def score(
                 decisive_hits.append(category.key)
 
     fallback = next((c for c in categories if c.is_fallback), None)
-    if fallback is not None and not any(scores[c.key] > 0 for c in categories if not c.is_fallback):
+    # The fallback's base is a default, not evidence: when the AI points elsewhere (and nothing rules
+    # its choice out), the movie is not "nothing else fits" any more — the AI's pick competes alone.
+    ai_elsewhere = (
+        ai is not None
+        and fallback is not None
+        and ai.category in scores
+        and ai.category != fallback.key
+        and ai.category not in excluded
+        and not decisive_hits
+    )
+    unmatched = not any(scores[c.key] > 0 for c in categories if not c.is_fallback)
+    if fallback is not None and unmatched and not ai_elsewhere:
         scores[fallback.key] += FALLBACK_BASE
         signals.append(
             {"kind": "fallback", "category_key": fallback.key, "weight": FALLBACK_BASE, "value": None}
@@ -197,6 +208,8 @@ def score(
     second_score = scores[second] if second else 0.0
     confidence = round(top_score / (top_score + second_score + PRIOR), 3)
     conclusive = True
+    if ai_elsewhere and unmatched and top == (ai.category if ai else None):
+        reasons.append({"code": "ai_only", "category": top})
     if confidence < threshold:
         conclusive = False
         reasons.append({"code": "low_confidence", "confidence": confidence, "threshold": threshold})

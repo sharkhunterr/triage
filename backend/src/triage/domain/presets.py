@@ -104,6 +104,7 @@ MOVIES_ANIMATION = Preset(
 
 # Shows and concerts: TMDB tags them by keywords (they share no genre of their own). A strong keyword is
 # enough to move the movie; a weaker one (an opera, a ballet: often in films too) leaves it to review.
+# A story genre rules them out: a drama about a singer has "concert" among its keywords, not a concert.
 SHOWS = Preset(
     key="shows",
     names={"en": "Shows", "fr": "Spectacles"},
@@ -131,19 +132,31 @@ SHOWS = Preset(
                 ),
             },
             rules=(
-                PresetRule("keyword", "contains", "stand-up comedy", 60),
                 PresetRule("keyword", "contains", "comedy special", 90, decisive=True),
                 PresetRule("keyword", "contains", "stand-up special", 90, decisive=True),
                 PresetRule("keyword", "contains", "one-man show", 90, decisive=True),
                 PresetRule("keyword", "contains", "one man show", 90, decisive=True),
+                PresetRule("keyword", "contains", "one-woman show", 90, decisive=True),
+                PresetRule("keyword", "contains", "one woman show", 90, decisive=True),
+                PresetRule("keyword", "contains", "spectacle humoristique", 90, decisive=True),
+                PresetRule("keyword", "contains", "filmed stand-up", 90, decisive=True),
                 PresetRule("keyword", "contains", "filmed theater", 90, decisive=True),
                 PresetRule("keyword", "contains", "filmed play", 90, decisive=True),
+                PresetRule("keyword", "contains", "stand-up", 60),
+                PresetRule("keyword", "contains", "humoriste", 50),
+                PresetRule("keyword", "contains", "comedy show", 50),
+                PresetRule("keyword", "contains", "sketch comedy", 40),
                 PresetRule("keyword", "contains", "stage play", 50),
                 PresetRule("keyword", "contains", "live performance", 30),
+                PresetRule("keyword", "is", "humor", 20),
                 PresetRule("keyword", "is", "opera", 40),
                 PresetRule("keyword", "is", "ballet", 40),
                 PresetRule("keyword", "contains", "circus", 30),
                 PresetRule("keyword", "contains", "magic show", 50),
+                # a story (about a comedian, a magician…), not a show on stage
+                PresetRule("genre", "is", "Crime", 1, excludes=True),
+                PresetRule("genre", "is", "Thriller", 1, excludes=True),
+                PresetRule("genre", "is", "Horror", 1, excludes=True),
             ),
         ),
     ),
@@ -181,6 +194,8 @@ CONCERTS = Preset(
                 # a story about musicians, not a concert
                 PresetRule("keyword", "contains", "biography", 1, excludes=True),
                 PresetRule("keyword", "contains", "biopic", 1, excludes=True),
+                PresetRule("genre", "is", "Drama", 1, excludes=True),
+                PresetRule("genre", "is", "Romance", 1, excludes=True),
             ),
         ),
     ),
