@@ -149,7 +149,15 @@ export function TestButton({
       >
         {t('settings.test')}
       </Button>
-      <CheckResult check={test.data} />
+      {test.isPending ? (
+        <p role="status" className="text-sm text-muted">
+          {t('settings.testing')}
+        </p>
+      ) : test.isError ? (
+        <CheckResult check={{ ok: false, detail: test.error.message, latency_ms: 0 }} />
+      ) : (
+        <CheckResult check={test.data} />
+      )}
     </div>
   )
 }

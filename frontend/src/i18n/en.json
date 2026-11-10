@@ -191,6 +191,7 @@
   "review.appliedCount": "{count, plural, =0 {Nothing applied} one {# movie is being moved} other {# movies are being moved}}",
   "settings.subtitle": "Connections, sorting thresholds and notifications.",
   "settings.test": "Test",
+  "settings.testing": "Testing…",
   "settings.notConfigured": "Not configured",
   "settings.secretSet": "Saved — type to replace",
   "settings.secretUnset": "Not set",

@@ -15,17 +15,40 @@ SERVICE = "Email"
 TIMEOUT = 20
 
 
+ATTEMPT = 4  # seconds an address gets before the next one is tried
+
+
+def _interleaved(infos: list[tuple]) -> list[tuple]:  # type: ignore[type-arg]
+    """IPv6 and IPv4 addresses taken in turn (RFC 8305), so a broken family is not tried twice in a row."""
+    v6 = [i for i in infos if i[0] == socket.AF_INET6]
+    v4 = [i for i in infos if i[0] != socket.AF_INET6]
+    mixed = [i for pair in zip(v6, v4, strict=False) for i in pair]
+    return mixed + v6[len(v4) :] + v4[len(v6) :]
+
+
 async def _connected_socket(host: str, port: int) -> socket.socket:
-    """A TCP connection raced over the host's IPv6 and IPv4 addresses (RFC 8305): an address that stalls —
-    a half-working IPv6 route is common at home — no longer costs the whole timeout."""
+    """A TCP connection to the first of the host's addresses that answers. An address that stalls — a
+    half-working IPv6 route is common at home — costs a few seconds, not the whole timeout. Plain socket
+    calls: uvloop, the server's loop, has no happy eyeballs option."""
     loop = asyncio.get_running_loop()
-    transport, _ = await asyncio.wait_for(
-        loop.create_connection(asyncio.Protocol, host, port, happy_eyeballs_delay=0.25), TIMEOUT
-    )
-    try:
-        return transport.get_extra_info("socket").dup()  # type: ignore[no-any-return]
-    finally:
-        transport.abort()
+    deadline = loop.time() + TIMEOUT
+    infos = await asyncio.wait_for(loop.getaddrinfo(host, port, type=socket.SOCK_STREAM), TIMEOUT)
+    addresses = _interleaved(infos)
+    error: Exception = TimeoutError()
+    for n, (family, kind, proto, _, address) in enumerate(addresses):
+        left = deadline - loop.time()
+        if left <= 0:
+            break
+        sock = socket.socket(family, kind, proto)
+        sock.setblocking(False)
+        try:
+            last = n == len(addresses) - 1
+            await asyncio.wait_for(loop.sock_connect(sock, address), left if last else min(ATTEMPT, left))
+            return sock
+        except (OSError, TimeoutError) as exc:
+            sock.close()
+            error = exc
+    raise error
 
 
 class SmtpMailer:
@@ -46,6 +69,10 @@ class SmtpMailer:
         except TimeoutError as exc:
             raise aiosmtplib.SMTPConnectTimeoutError(
                 f"Timed out connecting to {self._host} on port {self._port}"
+            ) from exc
+        except OSError as exc:
+            raise aiosmtplib.SMTPConnectError(
+                f"Error connecting to {self._host} on port {self._port}: {exc}"
             ) from exc
         smtp = aiosmtplib.SMTP(
             hostname=self._host,

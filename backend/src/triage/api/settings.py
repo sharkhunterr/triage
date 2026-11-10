@@ -1,5 +1,6 @@
 """Settings, connection tests, and pickers (contracts/http-api.md — Settings & connections)."""
 
+import logging
 from typing import Any, Literal
 
 from fastapi import APIRouter, Body
@@ -12,6 +13,7 @@ from triage.core.settings import AppSettings, merge_update, public_view, same_fo
 from triage.worker import queue
 
 router = APIRouter(tags=["settings"], dependencies=[Owner])
+log = logging.getLogger(__name__)
 
 Service = Literal["radarr", "tmdb", "ollama", "seerr", "smtp"]
 
@@ -102,7 +104,11 @@ async def test_service(
     }[service]
     if adapter is None:
         return CheckOut(ok=False, detail="not_configured", latency_ms=0)
-    check = await adapter.check()
+    try:
+        check = await adapter.check()
+    except Exception as exc:  # a test always answers: the page shows why it failed
+        log.exception("testing %s failed", service)
+        return CheckOut(ok=False, detail=f"{exc.__class__.__name__}: {exc}", latency_ms=0)
     return CheckOut(ok=check.ok, detail=check.detail, latency_ms=check.latency_ms)
 
 
