@@ -3,6 +3,24 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.4.0](https://github.com/sharkhunterr/triage/compare/v0.3.2...v0.4.0) (2026-11-10)
+
+
+### Features
+
+* **categories:** Shows and Concerts presets, offered beside existing categories ([30746da](https://github.com/sharkhunterr/triage/commit/30746dad1e4d709d5ab42e75b7ef7e3f717cc57d))
+* **dashboard:** 30-day chart by who sorted, by category, or analysed — sure or in doubt ([bbeb215](https://github.com/sharkhunterr/triage/commit/bbeb215cdb7a3ca622fd167201daf06d38ff51e6))
+* **folders:** refresh Radarr's root folders from Settings and the category editor ([794bf11](https://github.com/sharkhunterr/triage/commit/794bf1154e6ba5d5fe13b68f234102b47f6ce9fb))
+* **sheet:** metadata grouped by source — Radarr and TMDB, Wikidata and Wikipedia; presets know television specials and rockumentaries ([4d7078c](https://github.com/sharkhunterr/triage/commit/4d7078c5e4f50470f8d6e047cb793eefafb12b69))
+* **sheet:** the Wikipedia opening as plain text above the Wikidata type, like TMDB's synopsis ([003166e](https://github.com/sharkhunterr/triage/commit/003166e51355cf0fb968609226cbcf1f711d3cbf))
+* **sheet:** who asked for the movie in Seerr and when, else when Radarr added it ([14245cc](https://github.com/sharkhunterr/triage/commit/14245cc6032fb5e617deb885354f0f67dbbff365))
+* **wiki:** Wikidata type as a rule field, Wikipedia opening for the AI and on the sheet ([a1fea1f](https://github.com/sharkhunterr/triage/commit/a1fea1f566ab8386bd3fa3fe73c2a28d8c09520f))
+
+
+### Bug Fixes
+
+* **classify:** the AI is a real second opinion — no fallback default over it, richer Shows/Concerts rules, complete a preset ([c5adbd6](https://github.com/sharkhunterr/triage/commit/c5adbd614955ba4f757f7748676b71c3d2bae375))
+
 ### [0.3.2](https://github.com/sharkhunterr/triage/compare/v0.3.1...v0.3.2) (2026-11-09)
 
 ### [0.3.1](https://github.com/sharkhunterr/triage/compare/v0.3.0...v0.3.1) (2026-11-09)
