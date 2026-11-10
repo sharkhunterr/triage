@@ -13,36 +13,56 @@ import {
   Sun,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
-import { api } from '../api/client'
+import { api, type Schemas } from '../api/client'
 import { cx } from '../design-system'
 import { ActivityIndicator } from '../features/activity/ActivityIndicator'
 import { type Locale, useLocale, useT } from '../i18n'
 import { useTheme } from './theme'
 
-type Counts = { review: number }
+type Counts = Schemas['ReviewCount']
 
 const NAV = [
   { to: '/', key: 'nav.dashboard', short: 'nav.home', icon: LayoutDashboard, mobile: true },
-  { to: '/review', key: 'nav.review', icon: Inbox, mobile: true, badge: true },
+  { to: '/review', key: 'nav.review', icon: Inbox, mobile: true, badge: 'review' },
   { to: '/activity', key: 'nav.activity', icon: ListTree, mobile: true },
   { to: '/history', key: 'nav.history', icon: History, mobile: true },
-  { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: true },
+  { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: true, badge: 'check' },
   { to: '/categories', key: 'nav.categories', icon: Shapes, mobile: true },
   { to: '/status', key: 'nav.status', icon: Activity, mobile: false },
   { to: '/settings', key: 'nav.settings', icon: Settings, mobile: true },
 ] as const
 
-function useReviewCount() {
+/** What waits for the owner: the review queue, and the gaps and doubts the checks left. */
+function useWaitingCounts() {
   return useQuery({
     queryKey: ['review-count'],
     queryFn: () => api<Counts>('/review/count'),
     refetchInterval: 30_000,
-  }).data?.review
+  }).data
+}
+
+/** How many movies wait behind a tab: the review queue, or the checks' gaps and doubts. */
+function Badge({ kind, count, compact }: { kind: 'review' | 'check'; count: number; compact: boolean }) {
+  const t = useT()
+  if (!count) return null
+  return (
+    <span
+      className={cx(
+        'rounded-full bg-accent px-1.5 text-[10px] font-semibold text-accent-contrast',
+        compact ? 'absolute top-1 right-[calc(50%-1.4rem)]' : 'ml-auto',
+      )}
+    >
+      <span aria-hidden>{count}</span>
+      <span className="sr-only">
+        {t(kind === 'review' ? 'nav.reviewCount' : 'nav.checkCount', { count })}
+      </span>
+    </span>
+  )
 }
 
 export function Layout() {
   const t = useT()
-  const reviewCount = useReviewCount()
+  const waiting = useWaitingCounts()
   const { locale, setLocale } = useLocale()
   const { theme, setTheme } = useTheme()
   const queryClient = useQueryClient()
@@ -71,16 +91,8 @@ export function Layout() {
       <span className={compact ? 'max-w-full truncate' : undefined}>
         {t(compact && 'short' in item ? item.short : item.key)}
       </span>
-      {'badge' in item && reviewCount ? (
-        <span
-          className={cx(
-            'rounded-full bg-accent px-1.5 text-[10px] font-semibold text-accent-contrast',
-            compact ? 'absolute top-1 right-[calc(50%-1.4rem)]' : 'ml-auto',
-          )}
-        >
-          <span aria-hidden>{reviewCount}</span>
-          <span className="sr-only">{t('nav.reviewCount', { count: reviewCount })}</span>
-        </span>
+      {'badge' in item ? (
+        <Badge kind={item.badge} count={waiting?.[item.badge] ?? 0} compact={compact} />
       ) : null}
     </NavLink>
   )

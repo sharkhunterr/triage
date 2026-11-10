@@ -142,7 +142,7 @@ async def test_a_checks_results_stay_on_its_page_not_in_the_review_queue(owner: 
     assert [d["movie"]["title"] for d in review["items"]] == ["Toy Story"]
     assert (review["held"], review["proposed"]) == (0, 1)
     assert [d["movie"]["title"] for d in (await owner.get("/api/v1/review")).json()] == ["Toy Story"]
-    assert (await owner.get("/api/v1/review/count")).json() == {"review": 1}
+    assert (await owner.get("/api/v1/review/count")).json() == {"review": 1, "check": 2}
     counts = (await owner.get("/api/v1/dashboard")).json()["counts"]
     assert (counts["held"], counts["proposed"]) == (0, 1)
 
@@ -174,4 +174,4 @@ async def test_checking_a_folder_again_replaces_what_was_left_undecided(owner: A
     page = (await owner.get(f"/api/v1/scans/{second['id']}/page")).json()
     assert [d["movie"]["title"] for d in page["items"]] == ["Spirited Away"]
     # another folder's check keeps its results
-    assert (await owner.get(f"/api/v1/scans/{other["id"]}/page")).json()["held"] == 1  # "Elsewhere"
+    assert (await owner.get(f"/api/v1/scans/{other['id']}/page")).json()["held"] == 1  # "Elsewhere"

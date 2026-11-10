@@ -17,6 +17,7 @@
   "nav.dashboard": "Tableau de bord",
   "nav.review": "À trancher",
   "nav.reviewCount": "{count} films à trancher",
+  "nav.checkCount": "{count, plural, one {# écart ou doute à régler} other {# écarts ou doutes à régler}}",
   "nav.history": "Historique",
   "nav.scans": "Contrôle",
   "nav.categories": "Catégories",

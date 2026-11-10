@@ -1579,6 +1579,11 @@
       },
       "ReviewCount": {
         "properties": {
+          "check": {
+            "default": 0,
+            "title": "Check",
+            "type": "integer"
+          },
           "review": {
             "title": "Review",
             "type": "integer"

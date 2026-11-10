@@ -271,3 +271,34 @@ def test_the_preset_keeps_live_action_cartoon_adaptations_with_the_films():
     assert any(s["kind"] == "exclusion" and s["category_key"] == "animation" for s in result.signals)
     cartoon = gather_facts(movie, details, WikiFacts(types=("animated film",), extract=None, url=None))
     assert score(cartoon, preset, threshold=0.8, margin=20).top == "animation"
+
+
+def test_a_cartoon_with_a_ballet_scene_is_no_show():
+    """Despicable Me: TMDB tags "ballet" (the girls' recital) — Shows must not pull it below the threshold."""
+    from triage.domain.presets import MOVIES_ANIMATION, SHOWS
+
+    specs = [*MOVIES_ANIMATION.categories, *SHOWS.categories]
+    preset = [
+        CategoryDef(
+            id=i + 1,
+            key=key,
+            name=key,
+            description="",
+            root_folder_path=f"/media/{key}",
+            is_fallback=spec.is_fallback,
+            version=1,
+            rules=tuple(
+                RuleDef(n, r.field, r.operator, r.value, r.weight, r.decisive, r.excludes)
+                for n, r in enumerate(spec.rules)
+            ),
+        )
+        for i, (key, spec) in enumerate(zip(("animation", "films", "shows"), specs, strict=True))
+    ]
+    despicable = facts(
+        genres=["Animation", "Family", "Comedy"],
+        keywords=["3d animation", "ballet", "supervillain"],
+        companies=["Illumination"],
+    )
+    result = score(despicable, preset, threshold=0.8, margin=20)
+    assert result.top == "animation" and result.conclusive
+    assert result.scores["shows"] == 0

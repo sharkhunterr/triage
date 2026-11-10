@@ -138,6 +138,7 @@ class Dashboard(BaseModel):
 
 class ReviewCount(BaseModel):
     review: int
+    check: int = 0  # gaps and doubts the checks left to settle
 
 
 def _category(snapshot: list[dict[str, Any]], category_id: int | None) -> CategoryRef | None:
@@ -430,7 +431,7 @@ async def movie_media(radarr_id: int, db: Db, settings: Settings, adapters: Adap
 
 @router.get("/review/count", response_model=ReviewCount)
 async def review_count(db: Db) -> ReviewCount:
-    count = await db.scalar(
-        select(func.count()).where(Decision.status.in_([d.HELD, d.PROPOSED]), NOT_SCANNED)
-    )
-    return ReviewCount(review=int(count or 0))
+    waiting = Decision.status.in_([d.HELD, d.PROPOSED])
+    count = await db.scalar(select(func.count()).where(waiting, NOT_SCANNED))
+    checked = await db.scalar(select(func.count()).where(waiting, Decision.scan_id.is_not(None)))
+    return ReviewCount(review=int(count or 0), check=int(checked or 0))

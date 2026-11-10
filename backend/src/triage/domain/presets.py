@@ -173,6 +173,8 @@ SHOWS = Preset(
                 PresetRule("genre", "is", "Thriller", 1, excludes=True),
                 PresetRule("genre", "is", "Horror", 1, excludes=True),
                 PresetRule("wikidata", "contains", "biographical", 1, excludes=True),
+                # a cartoon is never a show on stage, even with a ballet scene (Despicable Me)
+                PresetRule("genre", "is", "Animation", 1, excludes=True),
             ),
         ),
     ),
@@ -218,6 +220,8 @@ CONCERTS = Preset(
                 PresetRule("wikidata", "contains", "biographical", 1, excludes=True),
                 PresetRule("wikidata", "contains", "musical film", 1, excludes=True),
                 PresetRule("wikidata", "contains", "drama", 1, excludes=True),
+                # nor a cartoon about singers (Sing, Trolls)
+                PresetRule("genre", "is", "Animation", 1, excludes=True),
             ),
         ),
     ),

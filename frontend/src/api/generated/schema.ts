@@ -1328,6 +1328,11 @@ export interface components {
         };
         /** ReviewCount */
         ReviewCount: {
+            /**
+             * Check
+             * @default 0
+             */
+            check: number;
             /** Review */
             review: number;
         };

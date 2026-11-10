@@ -17,6 +17,7 @@
   "nav.dashboard": "Dashboard",
   "nav.review": "Review",
   "nav.reviewCount": "{count} movies to review",
+  "nav.checkCount": "{count, plural, one {# gap or doubt to settle} other {# gaps or doubts to settle}}",
   "nav.history": "History",
   "nav.scans": "Check",
   "nav.categories": "Categories",
