@@ -49,7 +49,7 @@ const useReviewPage = (tab: Tab, page: number, perPage: number) =>
   })
 
 /** The pages of a tab, and how many movies a page shows. */
-function Pager({
+export function Pager({
   page,
   pages,
   perPage,
@@ -102,14 +102,21 @@ function Pager({
   )
 }
 
-function ReviewCard({ decision }: { decision: DecisionSummary }) {
+const sameFolder = (a?: string | null, b?: string | null) =>
+  Boolean(a && b && a.replace(/\/+$/, '') === b.replace(/\/+$/, ''))
+
+/** A movie waiting for the owner: its reasons and one button per library. `checked`: a check's result —
+ * it says where the movie is now, offers the other libraries, and "leave it where it is". */
+export function ReviewCard({ decision, checked = false }: { decision: DecisionSummary; checked?: boolean }) {
   const t = useT()
   const categories = useCategories()
   const action = useDecisionAction()
   const here = useFromHere()
   const proposal = decision.status === 'proposed'
   const proposed = decision.target_category ?? decision.top_category
-  const choices = (categories.data ?? []).filter((c) => c.root_folder_path)
+  const choices = (categories.data ?? []).filter(
+    (c) => c.root_folder_path && !(checked && sameFolder(c.root_folder_path, decision.from_root_folder)),
+  )
 
   return (
     <Card className="flex flex-col gap-3">
@@ -124,6 +131,11 @@ function ReviewCard({ decision }: { decision: DecisionSummary }) {
             <StatusBadge status={decision.status} />
             <ConfidenceMeter value={decision.confidence} />
           </div>
+          {checked && decision.from_root_folder ? (
+            <p className="mt-1 truncate text-xs text-muted">
+              {t('check.now', { folder: decision.from_root_folder })}
+            </p>
+          ) : null}
           {proposal && proposed ? (
             <p className="mt-1 text-sm">{t('review.wouldMove', { category: proposed.name })}</p>
           ) : (
@@ -164,20 +176,25 @@ function ReviewCard({ decision }: { decision: DecisionSummary }) {
               : action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })
           }
         >
-          {proposal ? t('decision.dismiss') : t('decision.leave')}
+          {checked ? t('check.leave') : proposal ? t('decision.dismiss') : t('decision.leave')}
         </Button>
       </div>
     </Card>
   )
 }
 
-export function ApplyConfident({ count }: { count: number }) {
+/** Applies every sure proposal — of the review queue, or of one check when `scanId` is given. */
+export function ApplyConfident({ count, scanId }: { count: number; scanId?: number }) {
   const t = useT()
   const toast = useToast()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const apply = useMutation({
-    mutationFn: () => api<{ applied: number }>('/decisions/apply-confident', { method: 'POST', body: {} }),
+    mutationFn: () =>
+      api<{ applied: number }>('/decisions/apply-confident', {
+        method: 'POST',
+        body: scanId === undefined ? {} : { scan_id: scanId },
+      }),
     onSuccess: (result) => {
       toast(t('review.appliedCount', { count: result.applied }), 'success')
       setOpen(false)

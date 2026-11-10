@@ -255,6 +255,8 @@ async def detail(db: Db, decision: Decision) -> DecisionDetail:
 
 
 VISIBLE = Decision.status != d.SIMULATED
+# a scan's results have their own page (Check): the review queue is for what arrives
+NOT_SCANNED = Decision.scan_id.is_(None)
 # A move back to where the movie came from (an undo, "back to the intake folder"): no category.
 PUT_BACK = and_(Decision.source == "correction", Decision.target_category_id.is_(None))
 SORTED = and_(Decision.status == d.MOVED, not_(PUT_BACK))
@@ -264,6 +266,12 @@ SORTED = and_(Decision.status == d.MOVED, not_(PUT_BACK))
 async def dashboard(db: Db, settings: Settings) -> Dashboard:
     rows = await db.execute(select(Decision.status, func.count()).where(VISIBLE).group_by(Decision.status))
     by_status = {status: int(n) for status, n in rows.all()}
+    waiting = await db.execute(
+        select(Decision.status, func.count())
+        .where(Decision.status.in_([d.HELD, d.PROPOSED]), NOT_SCANNED)
+        .group_by(Decision.status)
+    )
+    by_status.update({d.HELD: 0, d.PROPOSED: 0} | {status: int(n) for status, n in waiting.all()})
     sorted_ = await db.scalar(select(func.count()).where(SORTED))
     week = await db.scalar(
         select(func.count()).where(SORTED, Decision.decided_at >= clock.now() - timedelta(days=7))
@@ -277,7 +285,7 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
         )
     )
     confident = await db.scalar(
-        select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0)
+        select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0, NOT_SCANNED)
     )
     # the last 30 days, day by day: what was sorted (by whom, into which category) and what was analysed
     today = now.date()
@@ -422,5 +430,7 @@ async def movie_media(radarr_id: int, db: Db, settings: Settings, adapters: Adap
 
 @router.get("/review/count", response_model=ReviewCount)
 async def review_count(db: Db) -> ReviewCount:
-    count = await db.scalar(select(func.count()).where(Decision.status.in_([d.HELD, d.PROPOSED])))
+    count = await db.scalar(
+        select(func.count()).where(Decision.status.in_([d.HELD, d.PROPOSED]), NOT_SCANNED)
+    )
     return ReviewCount(review=int(count or 0))

@@ -624,6 +624,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/scans/{scan_id}/page": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scan Page
+         * @description A check's results a page at a time, like the review queue: the gaps first.
+         */
+        get: operations["scan_page_api_v1_scans__scan_id__page_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/scans/{scan_id}/results": {
         parameters: {
             query?: never;
@@ -1444,6 +1464,30 @@ export interface components {
             started_at: string;
             /** State */
             state: string;
+            /** Total */
+            total: number;
+        };
+        /**
+         * ScanPage
+         * @description One page of a check's tab, and how many movies each tab holds.
+         */
+        ScanPage: {
+            /** Applied */
+            applied: number;
+            /** Confident */
+            confident: number;
+            /** Gaps */
+            gaps: number;
+            /** Held */
+            held: number;
+            /** In Place */
+            in_place: number;
+            /** Items */
+            items: components["schemas"]["DecisionSummary"][];
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
             /** Total */
             total: number;
         };
@@ -2573,6 +2617,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScanOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scan_page_api_v1_scans__scan_id__page_get: {
+        parameters: {
+            query?: {
+                tab?: "gaps" | "held" | "in_place";
+                page?: number;
+                per_page?: number;
+            };
+            header?: never;
+            path: {
+                scan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScanPage"];
                 };
             };
             /** @description Validation Error */

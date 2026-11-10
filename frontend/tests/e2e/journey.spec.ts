@@ -65,16 +65,23 @@ test('categories from the preset, libraries picked', async ({ page }) => {
   await expectAccessible(page)
 })
 
-test('a scan of a library proposes moving the misplaced movie, and moves nothing', async ({ page }) => {
+test('a check of a library shows its gaps, moves nothing, and keeps them out of the review', async ({
+  page,
+}) => {
   await signIn(page)
-  await page.goto('/scans')
+  await go(page, 'Check')
   await page.getByLabel('Folder to scan').selectOption('/movies/Films')
   await page.getByRole('button', { name: 'Start the scan' }).click()
-  await expect(page.getByText('Finished')).toBeVisible({ timeout: 20_000 })
-  await expect(page.getByRole('heading', { name: /To move/ })).toBeVisible()
+  await expect(page.getByText(/^Finished/)).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByRole('tab', { name: /^Gaps \(1\)/ })).toBeVisible()
   await expect(page.getByText('Spirited Away')).toBeVisible()
-  await expect(page.getByRole('heading', { name: /Already in place/ })).toBeVisible()
+  await expect(page.getByText('Now in /movies/Films')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Leave it there' })).toBeVisible()
   await expectAccessible(page)
+  await page.getByRole('tab', { name: /^In place/ }).click()
+  await expect(page.getByRole('tab', { name: /^In place/ })).toHaveAttribute('aria-selected', 'true')
+  await go(page, 'Review')
+  await expect(page.getByText('Spirited Away')).toHaveCount(0)
 })
 
 test('decide all, and analyze with a choice of scope', async ({ page }) => {

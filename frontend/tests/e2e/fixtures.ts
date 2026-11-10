@@ -38,7 +38,7 @@ export async function expectAccessible(page: Page) {
 }
 
 export async function go(page: Page, label: string) {
-  // The sidebar on desktop, the bottom tab bar on mobile; Scans and Status are reached from links there.
+  // The sidebar on desktop, the bottom tab bar on mobile; Status is reached from links there.
   await page
     .getByRole('navigation', { name: 'Main navigation' })
     .getByRole('link', { name: label })

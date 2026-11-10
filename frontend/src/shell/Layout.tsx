@@ -26,7 +26,7 @@ const NAV = [
   { to: '/review', key: 'nav.review', icon: Inbox, mobile: true, badge: true },
   { to: '/activity', key: 'nav.activity', icon: ListTree, mobile: true },
   { to: '/history', key: 'nav.history', icon: History, mobile: true },
-  { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: false },
+  { to: '/scans', key: 'nav.scans', icon: FolderSearch, mobile: true },
   { to: '/categories', key: 'nav.categories', icon: Shapes, mobile: true },
   { to: '/status', key: 'nav.status', icon: Activity, mobile: false },
   { to: '/settings', key: 'nav.settings', icon: Settings, mobile: true },

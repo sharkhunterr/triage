@@ -15,6 +15,7 @@ ALLOWED = [
     (d.FAILED, d.MOVING),
     (d.MOVED, d.CORRECTED),
     (d.HELD, d.SUPERSEDED),
+    (d.HELD, d.DISMISSED),  # a scan's doubt, left where it is
 ]
 FORBIDDEN = [
     (d.SIMULATED, d.MOVING),

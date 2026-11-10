@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 
-from triage.api.decisions import DecisionDetail, DecisionSummary, detail, summaries
+from triage.api.decisions import NOT_SCANNED, DecisionDetail, DecisionSummary, detail, summaries
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
 from triage.core.activity import note, step
 from triage.core.errors import Conflict, Gone, NotFound
@@ -48,7 +48,7 @@ class ChoiceBody(BaseModel):
 async def review_queue(db: Db) -> list[DecisionSummary]:
     rows = await db.scalars(
         select(Decision)
-        .where(Decision.status.in_([d.HELD, d.PROPOSED]))
+        .where(Decision.status.in_([d.HELD, d.PROPOSED]), NOT_SCANNED)
         .order_by(Decision.created_at, Decision.id)
     )
     return await summaries(db, list(rows))
@@ -78,7 +78,7 @@ async def review_page(
         (
             await db.execute(
                 select(Decision.status, func.count())
-                .where(Decision.status.in_([d.HELD, d.PROPOSED]))
+                .where(Decision.status.in_([d.HELD, d.PROPOSED]), NOT_SCANNED)
                 .group_by(Decision.status)
             )
         )
@@ -86,14 +86,14 @@ async def review_page(
         .all()
     )
     confident = await db.scalar(
-        select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0)
+        select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0, NOT_SCANNED)
     )
     status = d.HELD if tab == "held" else d.PROPOSED
     total = int(counts.get(status, 0))
     page = min(page, max(1, -(-total // per_page)))  # past the end (the last movies just decided): the last
     rows = await db.scalars(
         select(Decision)
-        .where(Decision.status == status)
+        .where(Decision.status == status, NOT_SCANNED)
         .order_by(Decision.created_at, Decision.id)
         .offset((page - 1) * per_page)
         .limit(per_page)
@@ -246,8 +246,8 @@ async def apply_confident(body: ApplyConfidentBody, db: Db, settings: Settings, 
     query = select(Decision).where(
         Decision.status == d.PROPOSED, Decision.confidence >= settings.sorting.threshold
     )
-    if body.scan_id is not None:
-        query = query.where(Decision.scan_id == body.scan_id)
+    # one scan's proposals, or the review queue's (never every scan's at once)
+    query = query.where(Decision.scan_id == body.scan_id if body.scan_id is not None else NOT_SCANNED)
     applied = 0
     for decision in await db.scalars(query.order_by(Decision.id)):
         if decision.target_category_id is None:
