@@ -249,12 +249,20 @@ export function ScansPage() {
           )}
         </div>
         {scan.state === 'running' && (
-          <progress
-            className="mt-3 h-2 w-full accent-[var(--accent)]"
-            max={Math.max(scan.total, 1)}
-            value={scan.done}
+          // drawn with the theme's colors: a native <progress> takes the device's (green on Android, dark)
+          <div
+            className="mt-3 h-2.5 overflow-hidden rounded-full bg-surface-2"
+            role="progressbar"
+            aria-valuenow={scan.done}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(scan.total, 1)}
             aria-label={t('scans.progressLabel')}
-          />
+          >
+            <div
+              className="h-full rounded-full bg-accent transition-all"
+              style={{ width: `${scan.total ? Math.round((scan.done / scan.total) * 100) : 0}%` }}
+            />
+          </div>
         )}
       </Card>
 
