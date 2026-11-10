@@ -455,43 +455,38 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
   type Row = [string, string[], (v: string) => string]
   const rows: Row[] = [
     ['genre', facts.genre ?? [], (v) => v],
+    ['keyword', facts.keyword ?? [], (v) => v],
     ['company', facts.company ?? [], (v) => v],
     ['certification', [...(facts.certification ?? [])].sort(), (v) => v],
     ['original_language', languages(facts.original_language ?? []), language],
-    ['keyword', facts.keyword ?? [], (v) => v],
-    ...(facts.wikidata?.length ? [['wikidata', facts.wikidata, (v: string) => v] as Row] : []),
   ]
+  const filled = rows.filter(([, values]) => values.length > 0)
+  const missing = rows
+    .filter(([, values]) => values.length === 0)
+    .map(([field]) => t(`field.${field}`).toLocaleLowerCase())
+  const wikidata = facts.wikidata ?? []
   const destination = (decision.target_category ?? decision.top_category)?.id
   const used = Object.values(cats).filter(
     (c) => c.id === destination || signals.some((s) => s.category_key === c.key),
+  )
+  const chips = (field: string, values: string[], display: (v: string) => string = (v) => v) => (
+    <ul className="flex flex-wrap gap-1.5">
+      {values.map((v) => (
+        <li key={v}>
+          <FactChip
+            label={display(v)}
+            matches={signals.filter((s) => s.field === field && norm(s.value) === norm(v))}
+            cats={cats}
+          />
+        </li>
+      ))}
+    </ul>
   )
   return (
     <Card className="flex flex-col gap-4">
       <h2 className="flex items-center gap-2 text-lg font-semibold">
         <Film className="size-5" aria-hidden /> {t('sheet.title')}
       </h2>
-      {decision.overview ? (
-        <p className="text-sm leading-relaxed">{decision.overview}</p>
-      ) : (
-        <p className="text-sm text-muted">{t('sheet.noOverview')}</p>
-      )}
-      {decision.wikipedia ? (
-        <blockquote className="flex flex-col gap-1 border-l-2 border-border pl-3 text-sm leading-relaxed">
-          <p>{decision.wikipedia.extract}</p>
-          {decision.wikipedia.url ? (
-            <a
-              href={decision.wikipedia.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex w-fit items-center gap-1 text-xs font-medium text-accent hover:underline"
-            >
-              {t('sheet.wikipedia')} <ExternalLink className="size-3" aria-hidden />
-            </a>
-          ) : (
-            <span className="text-xs text-muted">{t('sheet.wikipedia')}</span>
-          )}
-        </blockquote>
-      ) : null}
       <MatchCheck radarrId={decision.movie.radarr_id} tmdbId={decision.movie.tmdb_id} />
       <div>
         <h3 className="flex items-center gap-2 font-semibold">
@@ -517,40 +512,86 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
           <p className="text-muted">{t('sheet.legend')}</p>
         </div>
       )}
-      <dl className="grid gap-4 sm:grid-cols-2">
-        {rows.map(([field, values, display]) => (
-          <div key={field} className={field === 'keyword' ? 'sm:col-span-2' : undefined}>
-            <dt className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">
-              {t(`field.${field}`)}
-            </dt>
-            <dd>
-              {values.length === 0 ? (
-                <span className="text-sm text-muted">—</span>
-              ) : (
-                <ul className="flex flex-wrap gap-1.5">
-                  {values.map((v) => (
-                    <li key={v}>
-                      <FactChip
-                        label={display(v)}
-                        matches={signals.filter((s) => s.field === field && norm(s.value) === norm(v))}
-                        cats={cats}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-      <p className="border-t border-border pt-3 text-xs text-muted">
-        {t(facts.wikidata?.length || decision.wikipedia ? 'sheet.sourcesWiki' : 'sheet.sources')}
-      </p>
+      <Source title={t('sheet.fromTmdb')}>
+        {decision.overview ? (
+          <p className="text-sm leading-relaxed">{decision.overview}</p>
+        ) : (
+          <p className="text-sm text-muted">{t('sheet.noOverview')}</p>
+        )}
+        {filled.length ? (
+          <dl className="grid gap-3 sm:grid-cols-2">
+            {filled.map(([field, values, display]) => (
+              <div key={field} className={field === 'keyword' ? 'sm:col-span-2' : undefined}>
+                <dt className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">
+                  {t(`field.${field}`)}
+                </dt>
+                <dd>{chips(field, values, display)}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        {missing.length ? (
+          <p className="text-xs text-muted">{t('sheet.missing', { fields: missing.join(', ') })}</p>
+        ) : null}
+      </Source>
+      {wikidata.length || decision.wikipedia ? (
+        <Source
+          title={t('sheet.fromWiki')}
+          link={
+            decision.wikipedia?.url
+              ? { href: decision.wikipedia.url, label: t('sheet.wikipedia') }
+              : undefined
+          }
+        >
+          {wikidata.length ? (
+            <div>
+              <p className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">
+                {t('field.wikidata')}
+              </p>
+              {chips('wikidata', wikidata)}
+            </div>
+          ) : null}
+          {decision.wikipedia ? (
+            <blockquote className="border-l-2 border-border pl-3 text-sm leading-relaxed">
+              {decision.wikipedia.extract}
+            </blockquote>
+          ) : null}
+        </Source>
+      ) : null}
     </Card>
   )
 }
 
-/** A metadata value, in the color of the category whose rule it triggered (red when it excludes one). */
+/** One source of the movie's metadata in its own box, its name above, a link to it on the right. */
+function Source({
+  title,
+  link,
+  children,
+}: {
+  title: string
+  link?: { href: string; label: string }
+  children: ReactNode
+}) {
+  return (
+    <section className="flex flex-col gap-3 rounded-xl border border-border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h4 className="text-sm font-semibold">{title}</h4>
+        {link ? (
+          <a
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+          >
+            {link.label} <ExternalLink className="size-3" aria-hidden />
+          </a>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function FactChip({ label, matches, cats }: { label: string; matches: Signal[]; cats: Cats }) {
   const t = useT()
   const exclusion = matches.find((s) => s.kind === 'exclusion')

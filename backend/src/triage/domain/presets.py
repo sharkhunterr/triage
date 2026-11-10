@@ -161,6 +161,8 @@ SHOWS = Preset(
                 PresetRule("wikidata", "contains", "filmed play", 90, decisive=True),
                 PresetRule("wikidata", "contains", "opera film", 40),
                 PresetRule("wikidata", "contains", "ballet film", 40),
+                # Netflix stand-up specials are often only "television special" on Wikidata
+                PresetRule("wikidata", "contains", "television special", 50),
                 # a story (about a comedian, a magician…), not a show on stage
                 PresetRule("genre", "is", "Crime", 1, excludes=True),
                 PresetRule("genre", "is", "Thriller", 1, excludes=True),
@@ -202,6 +204,7 @@ CONCERTS = Preset(
                 PresetRule("genre", "is", "Music", 20),
                 PresetRule("wikidata", "contains", "concert film", 90, decisive=True),
                 PresetRule("wikidata", "contains", "music documentary", 40),
+                PresetRule("wikidata", "contains", "rockumentary", 50),
                 # a story about musicians, not a concert
                 PresetRule("keyword", "contains", "biography", 1, excludes=True),
                 PresetRule("keyword", "contains", "biopic", 1, excludes=True),
