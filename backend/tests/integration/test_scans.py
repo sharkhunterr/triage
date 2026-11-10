@@ -174,4 +174,20 @@ async def test_checking_a_folder_again_replaces_what_was_left_undecided(owner: A
     page = (await owner.get(f"/api/v1/scans/{second['id']}/page")).json()
     assert [d["movie"]["title"] for d in page["items"]] == ["Spirited Away"]
     # another folder's check keeps its results
-    assert (await owner.get(f"/api/v1/scans/{other['id']}/page")).json()["held"] == 1  # "Elsewhere"
+    assert (await owner.get(f"/api/v1/scans/{other['id']}/page")).json()["in_place"] == 1  # "Elsewhere"
+
+
+async def test_a_movie_whose_best_choice_is_its_own_library_is_in_place_even_unsure(
+    owner: AsyncClient, env: Env
+):
+    """Animation alone (75 %, under the threshold), already in the Animation library: no doubt to settle."""
+    await seed_categories(env)
+    assert env.fakes.radarr is not None and env.fakes.tmdb is not None
+    env.fakes.radarr.add(
+        14, "Perfect Blue", folder=ANIMATION_FOLDER, genres=["Animation", "Thriller"], tmdb_id=10494
+    )
+    env.fakes.tmdb.set(10494, genres=["Animation", "Thriller"], companies=["Madhouse"])
+    scan = await run_scan(owner, env, ANIMATION_FOLDER)
+    page = (await owner.get(f"/api/v1/scans/{scan['id']}/page")).json()
+    assert (page["gaps"], page["held"], page["in_place"]) == (0, 0, 1)
+    assert (await owner.get("/api/v1/review/count")).json()["check"] == 0

@@ -59,7 +59,8 @@ async def scan_movie_job(ctx: JobContext, item: WorkItem) -> None:
         result = await classify_movie(ctx.db, ctx.settings, ctx.adapters, movie)
         decision = new_decision(movie.id, "scan", result, normalize_folder(scan.root_folder_path))
         decision.scan_id = scan.id
-        if result.conclusive and same_folder(result.target_folder, scan.root_folder_path):
+        # its best choice is where it already is: in place, sure or not — a check looks for gaps
+        if same_folder(result.target_folder, scan.root_folder_path):
             decision.status = d.IN_PLACE
         elif result.conclusive:
             decision.status = d.PROPOSED
