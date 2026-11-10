@@ -543,6 +543,9 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
               : undefined
           }
         >
+          {decision.wikipedia ? (
+            <p className="text-sm leading-relaxed">{decision.wikipedia.extract}</p>
+          ) : null}
           {wikidata.length ? (
             <div>
               <p className="mb-1 text-xs font-medium tracking-wide text-muted uppercase">
@@ -550,11 +553,6 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
               </p>
               {chips('wikidata', wikidata)}
             </div>
-          ) : null}
-          {decision.wikipedia ? (
-            <blockquote className="border-l-2 border-border pl-3 text-sm leading-relaxed">
-              {decision.wikipedia.extract}
-            </blockquote>
           ) : null}
         </Source>
       ) : null}
