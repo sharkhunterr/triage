@@ -154,6 +154,8 @@ test('settings and status pages', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Mode' })).toBeVisible()
   await page.getByRole('button', { name: 'Test' }).first().click()
   await expect(page.getByText('Radarr (demo)')).toBeVisible()
+  await page.getByRole('button', { name: 'Refresh folders' }).click()
+  await expect(page.getByText('Radarr folders refreshed: 3 folders')).toBeVisible()
   await expectAccessible(page)
   await page.goto('/status')
   await expect(page.getByText('Radarr (demo)')).toBeVisible()

@@ -23,6 +23,7 @@ import {
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
+import { RefreshFolders } from '../categories/RefreshFolders'
 import { ModeSwitch } from './ModeSwitch'
 import { SecretInput, TestButton, TmdbLanguage, useSection } from './parts'
 
@@ -187,6 +188,9 @@ export function SettingsPage() {
                 {!folder.accessible && <Badge tone="warning">{t('categories.inaccessible')}</Badge>}
               </label>
             ))}
+            <div>
+              <RefreshFolders />
+            </div>
           </fieldset>
         </Section>
 

@@ -5,6 +5,7 @@ import { useSaveCategory } from '../../api/categories'
 import { ApiError } from '../../api/client'
 import { Button, Dialog, Field, Input, Select, Switch, Textarea } from '../../design-system'
 import { useT } from '../../i18n'
+import { RefreshFolders } from './RefreshFolders'
 
 const FIELDS: RuleInput['field'][] = ['genre', 'keyword', 'company', 'certification', 'original_language']
 const OPERATORS: NonNullable<RuleInput['operator']>[] = ['is', 'contains', 'is_not']
@@ -116,6 +117,9 @@ export function CategoryEditor({
             </Select>
           )}
         </Field>
+        <div className="-mt-2">
+          <RefreshFolders />
+        </div>
         <Field label={t('categories.description')} hint={t('categories.descriptionHint')}>
           {(id, desc) => (
             <Textarea
