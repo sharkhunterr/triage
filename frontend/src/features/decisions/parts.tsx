@@ -24,16 +24,14 @@ export function StatusBadge({ status }: { status: string }) {
   return <Badge tone={STATUS_TONE[status] ?? 'neutral'}>{t(`status.${status}`)}</Badge>
 }
 
-/** The movie is locked in the library the owner chose by hand, and where that choice was made. */
+/** The movie is locked in the library the owner chose by hand: a small padlock, the details in its tooltip. */
 export function LockBadge({ lock }: { lock?: DecisionSummary['movie']['lock'] }) {
   const t = useT()
   if (!lock) return null
+  const label = t('lock.heading', { folder: lock.folder, via: t(`lock.via.${lock.via}`) })
   return (
-    <span title={t('lock.title', { folder: lock.folder })}>
-      <Badge tone="info">
-        <Lock className="size-3" aria-hidden />
-        {t('lock.badge')} · {t(`lock.via.${lock.via}`)}
-      </Badge>
+    <span role="img" aria-label={label} title={label} className="inline-flex text-info">
+      <Lock className="size-3.5" aria-hidden />
     </span>
   )
 }

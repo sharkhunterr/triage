@@ -145,9 +145,10 @@ test('a movie decided by hand is locked, and the lock can be removed', async ({ 
   // locked once the move is done: the list is read again until then
   await expect(async () => {
     await page.reload()
-    await expect(roger.getByRole('img', { name: /locked in/ })).toBeVisible({ timeout: 2_000 })
+    await expect(roger.getByRole('img', { name: /Locked in/ })).toBeVisible({ timeout: 2_000 })
   }).toPass({ timeout: 20_000 })
   await roger.click()
+  await page.getByRole('button', { name: /Locked in/ }).click()
   await page.getByRole('button', { name: 'Unlock' }).click()
   await expect(page.getByText(/Lock removed/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Unlock' })).toHaveCount(0)

@@ -7,7 +7,6 @@ import {
   CircleSlash,
   Film,
   FolderOpen,
-  Lock,
   type LucideIcon,
   MapPin,
   PenLine,
@@ -23,7 +22,7 @@ import { useCategories } from '../../api/categories'
 import type { DecisionSummary } from '../../api/decisions'
 import { useT } from '../../i18n'
 import { CategoryDot, categoryColor, tint } from '../categories/colors'
-import { isUndo, ReasonText, useFromHere } from './parts'
+import { isUndo, LockBadge, ReasonText, useFromHere } from './parts'
 
 type Place = { id: number | null; name: string }
 export type Places = (folder: string | null | undefined) => Place | null
@@ -191,13 +190,7 @@ export function TimelineRow({
             )}
             <span className="truncate">{t(owner ? 'history.you' : 'history.triage')}</span>
           </span>
-          {decision.movie.lock ? (
-            <Lock
-              role="img"
-              className="size-3 shrink-0 text-info"
-              aria-label={t('lock.title', { folder: decision.movie.lock.folder })}
-            />
-          ) : null}
+          <LockBadge lock={decision.movie.lock} />
         </p>
         <p className="flex min-w-0 items-center gap-1.5 text-xs">
           {stays ? (
