@@ -3,6 +3,14 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+### [0.4.1](https://github.com/sharkhunterr/triage/compare/v0.4.0...v0.4.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **email:** the review email shows each choice like the review page, and the SMTP test no longer times out on a stalled address ([336010e](https://github.com/sharkhunterr/triage/commit/336010e11cb9328daa1142fa15d0b1d2f9abe713))
+* **settings:** the email test works on the server's loop and every test shows it is running or why it failed ([0de0984](https://github.com/sharkhunterr/triage/commit/0de0984dec4b0f59f1004dca0fdfd5a876ba59cd))
+
 ## [0.4.0](https://github.com/sharkhunterr/triage/compare/v0.3.2...v0.4.0) (2026-11-10)
 
 
