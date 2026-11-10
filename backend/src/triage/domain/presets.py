@@ -63,11 +63,13 @@ MOVIES_ANIMATION = Preset(
             descriptions={
                 "en": (
                     "Animated feature films: cartoons, anime, stop-motion and computer animation, "
-                    "mostly made for children and families."
+                    "mostly made for children and families. Not live-action films mixing actors with "
+                    "animation, nor live-action adaptations of a cartoon."
                 ),
                 "fr": (
                     "Films d'animation : dessins animés, anime, stop-motion et images de synthèse, "
-                    "surtout destinés aux enfants et aux familles."
+                    "surtout destinés aux enfants et aux familles. Pas les films avec acteurs mêlés "
+                    "d'animation, ni les adaptations d'un dessin animé en prises de vues réelles."
                 ),
             },
             rules=(
@@ -82,6 +84,8 @@ MOVIES_ANIMATION = Preset(
                 PresetRule("wikidata", "contains", "animated", 40),
                 PresetRule("wikidata", "contains", "anime", 40),
                 PresetRule("wikidata", "contains", "adult animat", 1, excludes=True),
+                # "live-action/animated film" (The Flintstones, Space Jam): actors on screen, not a cartoon
+                PresetRule("wikidata", "contains", "live-action", 1, excludes=True),
                 # horror and thrillers are never cartoons for the family, even when animated
                 PresetRule("genre", "is", "Horror", 1, excludes=True),
                 PresetRule("genre", "is", "Thriller", 1, excludes=True),
@@ -99,6 +103,7 @@ MOVIES_ANIMATION = Preset(
             is_fallback=True,
             rules=(
                 PresetRule("keyword", "contains", "live action", 40),
+                PresetRule("wikidata", "contains", "live-action", 40),
                 # The Lion King (2019), Aladdin (2019)…: TMDB still lists "Animation" as a genre
                 PresetRule("keyword", "is", "live action remake", 100, decisive=True),
             ),

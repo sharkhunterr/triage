@@ -236,3 +236,38 @@ def test_the_preset_sends_adult_animation_to_the_films():
     )
     result = score(remake, preset, threshold=0.8, margin=20)
     assert (result.top, result.decisive) == ("films", "films")
+
+
+def test_the_preset_keeps_live_action_cartoon_adaptations_with_the_films():
+    """The Flintstones (1994): Hanna-Barbera, "based on cartoon" — and Wikidata says live-action/animated."""
+    from triage.adapters.types import WikiFacts
+    from triage.domain.presets import MOVIES_ANIMATION
+
+    preset = [
+        CategoryDef(
+            id=i + 1,
+            key=key,
+            name=key,
+            description="",
+            root_folder_path=f"/media/{key}",
+            is_fallback=spec.is_fallback,
+            version=1,
+            rules=tuple(
+                RuleDef(n, r.field, r.operator, r.value, r.weight, r.decisive, r.excludes)
+                for n, r in enumerate(spec.rules)
+            ),
+        )
+        for i, (key, spec) in enumerate(zip(("animation", "films"), MOVIES_ANIMATION.categories, strict=True))
+    ]
+    movie = RadarrMovie(id=1, tmdb_id=1, title="The Flintstones", year=1994, root_folder_path="/intake")
+    details = TmdbDetails(
+        genres=("Comedy", "Family", "Fantasy"),
+        keywords=("based on cartoon", "prehistory"),
+        companies=("Amblin Entertainment", "Hanna-Barbera Cartoons", "Universal Pictures"),
+    )
+    wiki = WikiFacts(types=("comedy film", "live-action/animated film"), extract=None, url=None)
+    result = score(gather_facts(movie, details, wiki), preset, threshold=0.8, margin=20)
+    assert result.top == "films"
+    assert any(s["kind"] == "exclusion" and s["category_key"] == "animation" for s in result.signals)
+    cartoon = gather_facts(movie, details, WikiFacts(types=("animated film",), extract=None, url=None))
+    assert score(cartoon, preset, threshold=0.8, margin=20).top == "animation"
