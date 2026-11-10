@@ -20,8 +20,8 @@ import {
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
-import { DecisionCard } from '../decisions/parts'
-import { ApplyConfident, Pager, PER_PAGE, ReviewCard } from '../review/ReviewPage'
+import { TimelineRow, usePlaces } from '../decisions/Timeline'
+import { ApplyConfident, ChoiceButtons, Pager, PER_PAGE } from '../review/ReviewPage'
 
 type Scan = Schemas['ScanOut']
 type ScanPageData = Schemas['ScanPage']
@@ -153,6 +153,7 @@ export function ScansPage() {
   // the other checks' gaps and doubts: the Check tab's badge counts them too
   const elsewhere = scans.data?.filter((s) => s.id !== scan?.id && s.waiting > 0) ?? []
   const results = useScanPage(scan, tab, page, perPage)
+  const place = usePlaces()
   const current = results.data
 
   const go = (next: { scan?: number; tab?: Tab; page?: number }) => {
@@ -207,10 +208,19 @@ export function ScansPage() {
       empty
     ) : (
       <>
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-busy={results.isFetching || undefined}>
+        <ul
+          className="mx-auto max-w-3xl divide-y divide-border overflow-hidden rounded-card border border-border bg-surface"
+          aria-busy={results.isFetching || undefined}
+        >
           {items.map((d) => (
             <li key={d.id}>
-              {compact ? <DecisionCard decision={d} /> : <ReviewCard decision={d} checked />}
+              {compact ? (
+                <TimelineRow decision={d} place={place} />
+              ) : (
+                <TimelineRow decision={d} place={place} note={d.status === 'held'}>
+                  <ChoiceButtons decision={d} checked />
+                </TimelineRow>
+              )}
             </li>
           ))}
         </ul>

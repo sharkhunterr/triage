@@ -76,7 +76,10 @@ test('a check of a library shows its gaps, moves nothing, and keeps them out of 
   await expect(page.getByText(/^Finished/)).toBeVisible({ timeout: 20_000 })
   await expect(page.getByRole('tab', { name: /^Gaps \(1\)/ })).toBeVisible()
   await expect(page.getByText('Spirited Away')).toBeVisible()
-  await expect(page.getByText('Now in /movies/Films')).toBeVisible()
+  // where it is, and where Triage would send it
+  const gap = page.getByRole('listitem').filter({ hasText: 'Spirited Away' })
+  await expect(gap.getByText('Movies')).toBeVisible()
+  await expect(gap.getByText('Animation').first()).toBeVisible()
   await expect(page.getByRole('button', { name: 'Leave it there' })).toBeVisible()
   await expectAccessible(page)
   await page.getByRole('tab', { name: /^In place/ }).click()

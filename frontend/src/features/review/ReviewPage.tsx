@@ -105,18 +105,64 @@ export function Pager({
 const sameFolder = (a?: string | null, b?: string | null) =>
   Boolean(a && b && a.replace(/\/+$/, '') === b.replace(/\/+$/, ''))
 
-/** A movie waiting for the owner: its reasons and one button per library. `checked`: a check's result —
- * it says where the movie is now, offers the other libraries, and "leave it where it is". */
-export function ReviewCard({ decision, checked = false }: { decision: DecisionSummary; checked?: boolean }) {
+/** The choices on a waiting movie: a button per library (the suggested one filled), and leave it.
+ * In a check (`checked`), the library the movie is already in is not offered. */
+export function ChoiceButtons({
+  decision,
+  checked = false,
+}: {
+  decision: DecisionSummary
+  checked?: boolean
+}) {
   const t = useT()
   const categories = useCategories()
   const action = useDecisionAction()
-  const here = useFromHere()
   const proposal = decision.status === 'proposed'
   const proposed = decision.target_category ?? decision.top_category
   const choices = (categories.data ?? []).filter(
     (c) => c.root_folder_path && !(checked && sameFolder(c.root_folder_path, decision.from_root_folder)),
   )
+  return (
+    <>
+      {choices.map((category) => (
+        <Button
+          key={category.id}
+          size="sm"
+          {...categoryButton(category.id, proposed?.id === category.id)}
+          icon={<FolderInput className="size-4" aria-hidden />}
+          loading={action.isPending}
+          onClick={() =>
+            action.mutate({ id: decision.id, action: 'apply', body: { category_id: category.id } })
+          }
+        >
+          {category.name}
+          <ChoiceInfo decision={decision} categoryKey={category.key} />
+        </Button>
+      ))}
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={<Ban className="size-4" aria-hidden />}
+        loading={action.isPending}
+        onClick={() =>
+          proposal
+            ? action.mutate({ id: decision.id, action: 'dismiss' })
+            : action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })
+        }
+      >
+        {checked ? t('check.leave') : proposal ? t('decision.dismiss') : t('decision.leave')}
+      </Button>
+    </>
+  )
+}
+
+/** A movie waiting for the owner: its reasons and one button per library. `checked`: a check's result —
+ * it says where the movie is now, offers the other libraries, and "leave it where it is". */
+export function ReviewCard({ decision, checked = false }: { decision: DecisionSummary; checked?: boolean }) {
+  const t = useT()
+  const here = useFromHere()
+  const proposal = decision.status === 'proposed'
+  const proposed = decision.target_category ?? decision.top_category
 
   return (
     <Card className="flex flex-col gap-3">
@@ -150,34 +196,7 @@ export function ReviewCard({ decision, checked = false }: { decision: DecisionSu
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
-        {choices.map((category) => (
-          <Button
-            key={category.id}
-            size="sm"
-            {...categoryButton(category.id, proposed?.id === category.id)}
-            icon={<FolderInput className="size-4" aria-hidden />}
-            loading={action.isPending}
-            onClick={() =>
-              action.mutate({ id: decision.id, action: 'apply', body: { category_id: category.id } })
-            }
-          >
-            {category.name}
-            <ChoiceInfo decision={decision} categoryKey={category.key} />
-          </Button>
-        ))}
-        <Button
-          size="sm"
-          variant="ghost"
-          icon={<Ban className="size-4" aria-hidden />}
-          loading={action.isPending}
-          onClick={() =>
-            proposal
-              ? action.mutate({ id: decision.id, action: 'dismiss' })
-              : action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })
-          }
-        >
-          {checked ? t('check.leave') : proposal ? t('decision.dismiss') : t('decision.leave')}
-        </Button>
+        <ChoiceButtons decision={decision} checked={checked} />
       </div>
     </Card>
   )
