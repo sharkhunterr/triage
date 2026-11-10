@@ -104,6 +104,9 @@ class DayOut(BaseModel):
     day: date
     moved: int  # movies sorted into a library that day
     auto: int  # of which by Triage itself (the rest: by the owner)
+    analyzed: int = 0  # movies analysed that day
+    unsure: int = 0  # of which not sure enough to be sorted on their own
+    categories: dict[str, int] = {}  # movies sorted that day, per category key
 
 
 class LibraryOut(BaseModel):
@@ -269,23 +272,40 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
     confident = await db.scalar(
         select(func.count()).where(Decision.status == d.PROPOSED, Decision.confidence > 0)
     )
-    # the last 30 days, day by day: what was sorted, and how much of it Triage did alone
+    # the last 30 days, day by day: what was sorted (by whom, into which category) and what was analysed
     today = now.date()
-    per_day = {day: [0, 0] for day in (today - timedelta(days=n) for n in range(29, -1, -1))}
-    for decided_at, actor in (
+    since = datetime.combine(today - timedelta(days=29), datetime.min.time(), tzinfo=now.tzinfo)
+    per_day = {
+        day: DayOut(day=day, moved=0, auto=0)
+        for day in (today - timedelta(days=n) for n in range(29, -1, -1))
+    }
+    keys = dict((await db.execute(select(Category.id, Category.key))).tuples().all())
+    library = func.coalesce(Decision.target_category_id, Decision.top_category_id)
+    for decided_at, actor, category_id in (
         await db.execute(
-            select(Decision.decided_at, Decision.actor).where(
-                SORTED,
-                Decision.decided_at
-                >= datetime.combine(today - timedelta(days=29), datetime.min.time(), tzinfo=now.tzinfo),
-            )
+            select(Decision.decided_at, Decision.actor, library).where(SORTED, Decision.decided_at >= since)
         )
     ).all():
         bucket = per_day.get(decided_at.date()) if decided_at else None
         if bucket is not None:
-            bucket[0] += 1
-            bucket[1] += int(actor == "triage")
-    library = func.coalesce(Decision.target_category_id, Decision.top_category_id)
+            bucket.moved += 1
+            bucket.auto += int(actor == "triage")
+            key = keys.get(category_id)
+            if key:
+                bucket.categories[key] = bucket.categories.get(key, 0) + 1
+    for created_at, conclusive, confidence, scores in (
+        await db.execute(
+            select(Decision.created_at, Decision.conclusive, Decision.confidence, Decision.scores).where(
+                VISIBLE, Decision.source != "correction", Decision.created_at >= since
+            )
+        )
+    ).all():
+        bucket = per_day.get(created_at.date())
+        if bucket is not None:
+            bucket.analyzed += 1
+            if conclusive is None:  # analysed before it was kept: the confidence against its threshold
+                conclusive = confidence >= (scores or {}).get("threshold", 1)
+            bucket.unsure += int(not conclusive)
     filled = dict(
         (await db.execute(select(library, func.count()).where(SORTED).group_by(library))).tuples().all()
     )
@@ -308,7 +328,7 @@ async def dashboard(db: Db, settings: Settings) -> Dashboard:
         mode=settings.sorting.mode,
         previous_week=int(previous or 0),
         confident=int(confident or 0),
-        days=[DayOut(day=day, moved=moved, auto=auto) for day, (moved, auto) in per_day.items()],
+        days=list(per_day.values()),
         libraries=libraries,
         counts=Counts(
             moved=int(sorted_ or 0),

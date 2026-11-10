@@ -127,6 +127,18 @@ test('history shows the moves and a decision explains itself', async ({ page }) 
   await expect(page.getByText("Analyzed with today's rules")).toBeVisible()
 })
 
+test('the dashboard chart: sorted, by category, analysed', async ({ page }) => {
+  await signIn(page)
+  await page.goto('/')
+  const chart = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Last 30 days' }) })
+  await chart.getByRole('button', { name: 'By category' }).click()
+  await expect(chart.getByText(/movies? sorted into \d+ categor/)).toBeVisible()
+  await chart.getByRole('button', { name: 'Analysed' }).click()
+  await expect(chart.getByText(/analysed · \d+ % sure/)).toBeVisible()
+  await expect(chart.getByRole('listitem').filter({ hasText: /^ ?In doubt$/ })).toBeVisible()
+  await expectAccessible(page)
+})
+
 test('undo moves: the list first, then every movie goes back', async ({ page }) => {
   await signIn(page)
   await go(page, 'History')

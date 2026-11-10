@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Float, ForeignKey, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from triage.models.base import Base
@@ -28,6 +28,8 @@ class Decision(Base):
     reasons: Mapped[list[Any]]
     top_category_id: Mapped[int | None] = mapped_column(ForeignKey("category.id"))
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    # sure enough to sort the movie on its own; None for analyses made before it was kept
+    conclusive: Mapped[bool | None] = mapped_column(Boolean)
     categories_snapshot: Mapped[list[Any]]
     status: Mapped[str] = mapped_column(String(16), index=True)
     actor: Mapped[str] = mapped_column(String(8), default="triage")  # triage | owner

@@ -5,6 +5,7 @@ from tests.conftest import Env
 from tests.helpers import (
     ANIMATION_FOLDER,
     FILMS_FOLDER,
+    add_ambiguous,
     add_heat,
     add_toy_story,
     arrivals,
@@ -167,10 +168,18 @@ async def test_the_dashboard_tells_the_days_the_libraries_and_the_trend(owner: A
     await automatic(env)
     add_toy_story(env)
     add_heat(env)
+    add_ambiguous(env)
     await env.state.worker.tick(poll=True)
     dashboard = (await owner.get("/api/v1/dashboard")).json()
     assert len(dashboard["days"]) == 30
-    assert dashboard["days"][-1] == {"day": env.clock.current.date().isoformat(), "moved": 2, "auto": 2}
+    assert dashboard["days"][-1] == {
+        "day": env.clock.current.date().isoformat(),
+        "moved": 2,
+        "auto": 2,
+        "analyzed": 3,
+        "unsure": 1,
+        "categories": {"animation": 1, "films": 1},
+    }
     assert sum(day["moved"] for day in dashboard["days"]) == 2
     filled = {lib["key"]: lib["count"] for lib in dashboard["libraries"]}
     assert filled["animation"] == 1 and sum(filled.values()) == 2

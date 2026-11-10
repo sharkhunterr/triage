@@ -13,7 +13,7 @@ import {
   TrendingUp,
   TriangleAlert,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router'
 import { api, type Schemas } from '../../api/client'
@@ -164,53 +164,156 @@ function Trend({ now, before }: { now: number; before: number }) {
   )
 }
 
-/** The last 30 days, a bar a day: what Triage sorted alone, and what the owner decided. */
-function Month({ days }: { days: Dashboard['days'] }) {
+type View = 'sorted' | 'categories' | 'analyzed'
+const VIEWS: View[] = ['sorted', 'categories', 'analyzed']
+const VIEW_KEY = 'triage.dashboard.month'
+
+type Day = Dashboard['days'][number]
+type Series = { key: string; label: string; color: string; value: (day: Day) => number }
+
+function savedView(): View {
+  try {
+    const saved = localStorage.getItem(VIEW_KEY)
+    return VIEWS.includes(saved as View) ? (saved as View) : 'sorted'
+  } catch {
+    return 'sorted'
+  }
+}
+
+/** The stacks a view draws, bottom first, and its line of summary. */
+function useSeries(view: View, data: Dashboard): { series: Series[]; summary: string } {
   const t = useT()
-  const total = days.reduce((sum, day) => sum + day.moved, 0)
-  const auto = days.reduce((sum, day) => sum + day.auto, 0)
+  const { days } = data
+  const sum = (value: (day: Day) => number) => days.reduce((total, day) => total + value(day), 0)
+  if (view === 'analyzed') {
+    const total = sum((day) => day.analyzed ?? 0)
+    const unsure = sum((day) => day.unsure ?? 0)
+    return {
+      series: [
+        {
+          key: 'sure',
+          label: t('dashboard.sure'),
+          color: 'var(--success)',
+          value: (day) => (day.analyzed ?? 0) - (day.unsure ?? 0),
+        },
+        {
+          key: 'unsure',
+          label: t('dashboard.unsure'),
+          color: 'var(--warning)',
+          value: (day) => day.unsure ?? 0,
+        },
+      ],
+      summary: t('dashboard.analyzedSummary', {
+        total,
+        share: total ? Math.round(((total - unsure) / total) * 100) : 0,
+      }),
+    }
+  }
+  if (view === 'categories') {
+    const series = data.libraries
+      .map((lib) => ({
+        key: lib.key,
+        label: lib.name,
+        color: categoryColor(lib.id),
+        value: (day: Day) => day.categories?.[lib.key] ?? 0,
+      }))
+      .filter((s) => sum(s.value) > 0)
+    return {
+      series,
+      summary: t('dashboard.categoriesSummary', { total: sum((day) => day.moved), count: series.length }),
+    }
+  }
+  const total = sum((day) => day.moved)
+  const auto = sum((day) => day.auto)
+  return {
+    series: [
+      { key: 'auto', label: t('dashboard.byTriage'), color: 'var(--accent)', value: (day) => day.auto },
+      {
+        key: 'owner',
+        label: t('dashboard.byYou'),
+        color: 'color-mix(in srgb, var(--accent) 35%, transparent)',
+        value: (day) => day.moved - day.auto,
+      },
+    ],
+    summary: t('dashboard.monthSummary', { total, share: total ? Math.round((auto / total) * 100) : 0 }),
+  }
+}
+
+/** The last 30 days, a bar a day — what was sorted (by Triage alone or by the owner), into which
+ * category, or what was analysed (sure or in doubt): one chart, the view picked above it. */
+function Month({ data }: { data: Dashboard }) {
+  const t = useT()
   const intl = useIntl()
-  const peak = Math.max(1, ...days.map((day) => day.moved))
+  const [view, setView] = useState<View>(savedView)
+  const pick = (next: View) => {
+    setView(next)
+    try {
+      localStorage.setItem(VIEW_KEY, next)
+    } catch {
+      // a private window: the view is simply not remembered
+    }
+  }
+  const { days } = data
+  const { series, summary } = useSeries(view, data)
+  const totals = days.map((day) => series.reduce((sum, s) => sum + s.value(day), 0))
+  const peak = Math.max(1, ...totals)
   const label = (day: string) =>
     day ? intl.formatDate(`${day}T12:00:00Z`, { day: 'numeric', month: 'short', timeZone: 'UTC' }) : ''
+  const tip = (day: Day) =>
+    [
+      label(day.day),
+      ...series.map((s) => t('dashboard.seriesValue', { label: s.label, count: s.value(day) })),
+    ].join(' · ')
   return (
     <Card className="flex flex-col gap-4 lg:col-span-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-semibold">{t('dashboard.month')}</h2>
-        <p className="text-sm text-muted">
-          {t('dashboard.monthSummary', { total, share: total ? Math.round((auto / total) * 100) : 0 })}
-        </p>
+        <p className="text-sm text-muted">{summary}</p>
       </div>
-      {total === 0 ? (
-        <p className="py-8 text-center text-sm text-muted">{t('dashboard.monthEmpty')}</p>
+      <fieldset className="flex w-full gap-1 rounded-lg bg-surface-2 p-1 sm:w-auto sm:self-start">
+        <legend className="sr-only">{t('dashboard.view')}</legend>
+        {VIEWS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={view === value}
+            onClick={() => pick(value)}
+            className={cx(
+              'h-9 flex-1 rounded-md px-3 text-sm font-medium transition-colors sm:flex-none',
+              view === value ? 'bg-surface text-text shadow-sm' : 'text-muted hover:text-text',
+            )}
+          >
+            {t(`dashboard.view.${value}`)}
+          </button>
+        ))}
+      </fieldset>
+      {totals.every((total) => total === 0) ? (
+        <p className="py-8 text-center text-sm text-muted">
+          {t(view === 'analyzed' ? 'dashboard.analyzedEmpty' : 'dashboard.monthEmpty')}
+        </p>
       ) : (
         <>
           <ol className="flex h-36 items-end gap-[3px]" aria-label={t('dashboard.month')}>
-            {days.map((day) => (
+            {days.map((day, index) => (
               <li
                 key={day.day}
                 className="group relative flex h-full flex-1 flex-col justify-end"
-                title={t('dashboard.dayTip', { day: label(day.day), moved: day.moved, auto: day.auto })}
+                title={tip(day)}
               >
-                <span className="sr-only">
-                  {t('dashboard.dayTip', { day: label(day.day), moved: day.moved, auto: day.auto })}
-                </span>
-                <span
-                  aria-hidden
-                  className="w-full rounded-t-[3px] bg-accent/35 transition-colors group-hover:bg-accent/50"
-                  style={{ height: `${((day.moved - day.auto) / peak) * 100}%` }}
-                />
-                <span
-                  aria-hidden
-                  className={cx(
-                    'w-full bg-accent transition-colors group-hover:brightness-110',
-                    day.moved === day.auto && 'rounded-t-[3px]',
-                  )}
-                  style={{ height: `${(day.auto / peak) * 100}%` }}
-                />
-                {day.moved === 0 ? (
+                <span className="sr-only">{tip(day)}</span>
+                {totals[index] ? (
+                  <span
+                    aria-hidden
+                    className="flex w-full flex-col-reverse overflow-hidden rounded-t-[3px] transition group-hover:brightness-110"
+                    style={{ height: `${((totals[index] ?? 0) / peak) * 100}%` }}
+                  >
+                    {series.map((s) => (
+                      <span key={s.key} style={{ flexGrow: s.value(day), background: s.color }} />
+                    ))}
+                  </span>
+                ) : (
                   <span aria-hidden className="h-[2px] w-full rounded-full bg-border" />
-                ) : null}
+                )}
               </li>
             ))}
           </ol>
@@ -218,13 +321,12 @@ function Month({ days }: { days: Dashboard['days'] }) {
             <span>{label(days[0]?.day ?? '')}</span>
             <span>{label(days[days.length - 1]?.day ?? '')}</span>
           </div>
-          <ul className="flex flex-wrap gap-4 text-xs text-muted">
-            <li className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-sm bg-accent" aria-hidden /> {t('dashboard.byTriage')}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <span className="size-2.5 rounded-sm bg-accent/35" aria-hidden /> {t('dashboard.byYou')}
-            </li>
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
+            {series.map((s) => (
+              <li key={s.key} className="flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm" style={{ background: s.color }} aria-hidden /> {s.label}
+              </li>
+            ))}
           </ul>
         </>
       )}
@@ -447,7 +549,7 @@ export function DashboardPage() {
           />
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Month days={data.days} />
+          <Month data={data} />
           <Libraries libraries={data.libraries} />
           <Latest latest={data.latest} />
           <Services />

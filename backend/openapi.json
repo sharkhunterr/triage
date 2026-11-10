@@ -534,9 +534,22 @@
       },
       "DayOut": {
         "properties": {
+          "analyzed": {
+            "default": 0,
+            "title": "Analyzed",
+            "type": "integer"
+          },
           "auto": {
             "title": "Auto",
             "type": "integer"
+          },
+          "categories": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "default": {},
+            "title": "Categories",
+            "type": "object"
           },
           "day": {
             "format": "date",
@@ -545,6 +558,11 @@
           },
           "moved": {
             "title": "Moved",
+            "type": "integer"
+          },
+          "unsure": {
+            "default": 0,
+            "title": "Unsure",
             "type": "integer"
           }
         },

@@ -25,6 +25,7 @@ def new_decision(radarr_id: int, source: str, result: Classification, from_folde
         reasons=result.reasons,
         top_category_id=result.top.id if result.top else None,
         confidence=result.confidence,
+        conclusive=result.conclusive,
         categories_snapshot=result.snapshot,
         status=d.HELD,
         actor="triage",

@@ -940,8 +940,20 @@ export interface components {
         };
         /** DayOut */
         DayOut: {
+            /**
+             * Analyzed
+             * @default 0
+             */
+            analyzed: number;
             /** Auto */
             auto: number;
+            /**
+             * Categories
+             * @default {}
+             */
+            categories: {
+                [key: string]: number;
+            };
             /**
              * Day
              * Format: date
@@ -949,6 +961,11 @@ export interface components {
             day: string;
             /** Moved */
             moved: number;
+            /**
+             * Unsure
+             * @default 0
+             */
+            unsure: number;
         };
         /** DecisionDetail */
         DecisionDetail: {
