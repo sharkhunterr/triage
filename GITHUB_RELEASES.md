@@ -1,3 +1,29 @@
+# v0.4.1
+
+## 🎬 Triage 0.4.1 — a clearer review email, a working email test
+
+### 🐛 Fixes
+
+- **The review email reads like the review page** — each button wears its category's colour, the
+  category Triage leans to is filled, and each choice shows its percentage (and the AI's when it
+  picked it). Posters keep their shape, and every reason is written out in full.
+- **Testing the email works** — *Test* in Settings › Email no longer fails silently: the connection
+  tries the mail server's addresses in turn, so one that stalls no longer costs the whole timeout.
+  Every *Test* button shows that it is running, and why it failed.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` The review email shows each choice like the review page, and testing the email no longer
+  times out or fails without a word.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.4.1
+```
+
 # v0.4.0
 
 ## 🎬 Triage 0.4.0 — Shows and Concerts, Wikidata and Wikipedia, a sharper AI
