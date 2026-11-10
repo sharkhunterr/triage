@@ -138,11 +138,11 @@ test('history shows the moves and a decision explains itself', async ({ page }) 
 test('a movie decided by hand is locked, and the lock can be removed', async ({ page }) => {
   await signIn(page)
   await go(page, 'History')
-  const roger = page.locator('article').filter({ hasText: 'Who Framed Roger Rabbit' }).first()
+  const roger = page.getByRole('listitem').filter({ hasText: 'Who Framed Roger Rabbit' }).first()
   // locked once the move is done: the list is read again until then
   await expect(async () => {
     await page.reload()
-    await expect(roger.getByText(/Locked · review/)).toBeVisible({ timeout: 2_000 })
+    await expect(roger.getByRole('img', { name: /locked in/ })).toBeVisible({ timeout: 2_000 })
   }).toPass({ timeout: 20_000 })
   await roger.click()
   await page.getByRole('button', { name: 'Unlock' }).click()

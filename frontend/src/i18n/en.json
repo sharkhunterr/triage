@@ -572,5 +572,6 @@
   "history.you": "You",
   "history.triage": "Triage",
   "history.byOwner": "Decided by you",
-  "history.byTriage": "Decided by Triage"
+  "history.byTriage": "Decided by Triage",
+  "history.confidence": "Confidence {value}%"
 }

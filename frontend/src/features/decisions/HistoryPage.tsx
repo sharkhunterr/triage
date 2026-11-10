@@ -1,22 +1,31 @@
-import { ArrowRight, Bot, FolderOpen, Search, UserRound } from 'lucide-react'
+import {
+  ArrowRight,
+  ArrowRightLeft,
+  Bot,
+  CircleCheck,
+  CircleHelp,
+  CircleSlash,
+  Film,
+  FolderOpen,
+  Lock,
+  type LucideIcon,
+  MapPin,
+  PenLine,
+  Search,
+  Sparkles,
+  TriangleAlert,
+  Undo2,
+  UserRound,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Link, useSearchParams } from 'react-router'
 import { useCategories } from '../../api/categories'
 import { type DecisionFilters, type DecisionSummary, useDecisionPages } from '../../api/decisions'
-import {
-  Badge,
-  Button,
-  EmptyState,
-  ErrorState,
-  Input,
-  PageHeader,
-  Select,
-  Spinner,
-} from '../../design-system'
+import { Button, EmptyState, ErrorState, Input, PageHeader, Select, Spinner } from '../../design-system'
 import { useT } from '../../i18n'
 import { CategoryDot, categoryColor, tint } from '../categories/colors'
-import { ConfidenceMeter, isUndo, LockBadge, Poster, StatusBadge, useFromHere } from './parts'
+import { isUndo, useFromHere } from './parts'
 import { UndoMoves } from './UndoMoves'
 
 type Place = { id: number | null; name: string }
@@ -55,7 +64,53 @@ function PlaceChip({ place, strong = false }: { place: Place; strong?: boolean }
   )
 }
 
-/** One decision of the history: where the movie went from and to, who decided, and how sure. */
+const STATUS_ICON: Record<string, [LucideIcon, string]> = {
+  moved: [CircleCheck, 'text-success'],
+  in_place: [MapPin, 'text-success'],
+  moving: [ArrowRightLeft, 'text-info'],
+  proposed: [Sparkles, 'text-accent'],
+  held: [CircleHelp, 'text-warning'],
+  failed: [TriangleAlert, 'text-danger'],
+  corrected: [PenLine, 'text-muted'],
+}
+
+/** How sure Triage was, as a ring in the category's color. */
+function Ring({ value, color }: { value: number; color: string }) {
+  const t = useT()
+  const percent = Math.round(value * 100)
+  const r = 15
+  const length = 2 * Math.PI * r
+  return (
+    <div
+      className="relative size-11 shrink-0"
+      role="img"
+      aria-label={t('history.confidence', { value: percent })}
+    >
+      <svg viewBox="0 0 40 40" className="size-full -rotate-90" aria-hidden>
+        <circle cx="20" cy="20" r={r} fill="none" stroke="var(--surface-2)" strokeWidth="4" />
+        <circle
+          cx="20"
+          cy="20"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={length}
+          strokeDashoffset={length * (1 - Math.min(1, Math.max(0, value)))}
+        />
+      </svg>
+      <span
+        className="absolute inset-0 grid place-items-center text-[11px] font-semibold tabular-nums"
+        aria-hidden
+      >
+        {percent}
+      </span>
+    </div>
+  )
+}
+
+/** One decision of the history: a row of the day's timeline. */
 function HistoryItem({
   decision,
   place,
@@ -74,69 +129,106 @@ function HistoryItem({
     : place(decision.target_root_folder)
   const stays = !from || !to || (from.id ?? from.name) === (to.id ?? to.name)
   const owner = decision.actor === 'owner'
+  const [Icon, tone] = undo
+    ? [Undo2, 'text-muted']
+    : (STATUS_ICON[decision.status] ?? [CircleSlash, 'text-muted'])
+  const when = decision.decided_at ?? decision.created_at
   return (
     <Link
       to={`/decisions/${decision.id}`}
       state={here}
-      className="group block min-w-0 rounded-card focus-visible:outline-2"
+      className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-surface-2/60 focus-visible:outline-2 focus-visible:-outline-offset-2 sm:px-4"
     >
-      <article
-        className="relative flex gap-3 overflow-hidden rounded-card border border-border bg-surface p-3 pl-4 transition-[box-shadow,border-color] group-hover:border-[color-mix(in_srgb,var(--c)_50%,var(--border))] group-hover:shadow-md"
-        style={tint(to?.id)}
-      >
+      <div className="relative shrink-0">
+        {decision.movie.poster_url ? (
+          <img
+            src={decision.movie.poster_url}
+            alt=""
+            loading="lazy"
+            className="h-[4.5rem] w-12 rounded-lg object-cover shadow-sm ring-1 ring-border"
+          />
+        ) : (
+          <div
+            className="grid h-[4.5rem] w-12 place-items-center rounded-lg bg-surface-2 ring-1 ring-border"
+            aria-hidden
+          >
+            <Film className="size-4 text-muted" />
+          </div>
+        )}
         <span
-          aria-hidden
-          className="absolute inset-y-0 left-0 w-1"
-          style={{ background: categoryColor(to?.id) }}
-        />
-        <Poster url={decision.movie.poster_url} title={decision.movie.title} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex items-start gap-2">
-            <p className="line-clamp-2 min-w-0 flex-1 leading-snug font-medium">
-              {decision.movie.title}
-              {decision.movie.year ? (
-                <span className="font-normal text-muted"> ({decision.movie.year})</span>
-              ) : null}
-            </p>
-            <time
-              dateTime={decision.decided_at ?? decision.created_at}
-              className="shrink-0 pt-0.5 text-xs text-muted tabular-nums"
-            >
-              {intl.formatTime(decision.decided_at ?? decision.created_at, { timeStyle: 'short' })}
-            </time>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {undo ? <Badge>{t('status.undone')}</Badge> : <StatusBadge status={decision.status} />}
-            <LockBadge lock={decision.movie.lock} />
-          </div>
-          <div className="flex min-w-0 items-center gap-1.5 text-xs">
-            {stays ? (
-              (to ?? from) && <PlaceChip place={(to ?? from) as Place} strong />
+          className={`absolute -right-1.5 -bottom-1.5 grid size-6 place-items-center rounded-full bg-surface ring-2 ring-surface ${tone}`}
+        >
+          <Icon className="size-4" aria-hidden />
+        </span>
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="line-clamp-2 leading-snug font-medium">
+          {decision.movie.title}
+          {decision.movie.year ? (
+            <span className="font-normal text-muted"> · {decision.movie.year}</span>
+          ) : null}
+        </p>
+        <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+          <span className={`shrink-0 font-medium ${tone}`}>
+            {undo ? t('status.undone') : t(`status.${decision.status}`)}
+          </span>
+          <span aria-hidden>·</span>
+          <time dateTime={when} className="shrink-0 tabular-nums">
+            {intl.formatTime(when, { timeStyle: 'short' })}
+          </time>
+          <span aria-hidden>·</span>
+          <span
+            className="inline-flex min-w-0 items-center gap-1"
+            title={t(owner ? 'history.byOwner' : 'history.byTriage')}
+          >
+            {owner ? (
+              <UserRound className="size-3 shrink-0" aria-hidden />
             ) : (
-              <>
-                <PlaceChip place={from as Place} />
-                <ArrowRight className="size-3.5 shrink-0 text-muted" aria-label={t('history.to')} />
-                <PlaceChip place={to as Place} strong />
-              </>
+              <Bot className="size-3 shrink-0" aria-hidden />
             )}
-          </div>
-          <div className="mt-auto flex items-center justify-between gap-3 pt-0.5">
-            <ConfidenceMeter value={decision.confidence} />
-            <span
-              className="inline-flex items-center gap-1 text-xs text-muted"
-              title={t(owner ? 'history.byOwner' : 'history.byTriage')}
-            >
-              {owner ? (
-                <UserRound className="size-3.5" aria-hidden />
-              ) : (
-                <Bot className="size-3.5" aria-hidden />
-              )}
-              {t(owner ? 'history.you' : 'history.triage')}
-            </span>
-          </div>
-        </div>
-      </article>
+            <span className="truncate">{t(owner ? 'history.you' : 'history.triage')}</span>
+          </span>
+          {decision.movie.lock ? (
+            <Lock
+              role="img"
+              className="size-3 shrink-0 text-info"
+              aria-label={t('lock.title', { folder: decision.movie.lock.folder })}
+            />
+          ) : null}
+        </p>
+        <p className="flex min-w-0 items-center gap-1.5 text-xs">
+          {stays ? (
+            (to ?? from) && <PlaceChip place={(to ?? from) as Place} strong />
+          ) : (
+            <>
+              <PlaceChip place={from as Place} />
+              <ArrowRight className="size-3 shrink-0 text-muted" aria-label={t('history.to')} />
+              <PlaceChip place={to as Place} strong />
+            </>
+          )}
+        </p>
+      </div>
+      <Ring value={decision.confidence} color={categoryColor(to?.id)} />
     </Link>
+  )
+}
+
+/** The day's movies per library, as one thin bar in the categories' colors. */
+function DayStrip({ items, place }: { items: DecisionSummary[]; place: ReturnType<typeof usePlaces> }) {
+  const counts = new Map<number | null, number>()
+  for (const d of items) {
+    const id = d.target_category?.id ?? d.top_category?.id ?? place(d.target_root_folder)?.id ?? null
+    counts.set(id, (counts.get(id) ?? 0) + 1)
+  }
+  return (
+    <div className="flex h-1.5 w-20 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+      {[...counts].map(([id, count]) => (
+        <span
+          key={String(id)}
+          style={{ width: `${(count / items.length) * 100}%`, background: categoryColor(id) }}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -266,7 +358,7 @@ export function HistoryPage() {
       {pages.isSuccess && items.length === 0 && (
         <EmptyState title={t('history.emptyTitle')} description={t('history.emptyText')} />
       )}
-      <div className="flex flex-col gap-5">
+      <div className="mx-auto flex max-w-3xl flex-col gap-5">
         {byDay(items).map(({ key, at, items: day }) => (
           <section key={key} aria-labelledby={`day-${key}`}>
             <h2
@@ -277,13 +369,14 @@ export function HistoryPage() {
               <span className="rounded-full bg-surface-2 px-2 text-xs font-medium text-muted tabular-nums">
                 {day.length}
               </span>
+              <span className="ml-auto">
+                <DayStrip items={day} place={place} />
+              </span>
             </h2>
-            <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <ul className="divide-y divide-border overflow-hidden rounded-card border border-border bg-surface">
               {day.map((decision) => (
-                <li key={decision.id} className="flex">
-                  <div className="w-full">
-                    <HistoryItem decision={decision} place={place} />
-                  </div>
+                <li key={decision.id}>
+                  <HistoryItem decision={decision} place={place} />
                 </li>
               ))}
             </ul>
