@@ -1,13 +1,16 @@
 """HTML for the review email and the one-click link pages. Everything is escaped."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from html import escape
 from typing import Any
 
+from triage.domain.scoring import PRIOR
 from triage.templates.messages import reason_text, text
 
 ACCENT = "#5b4bdb"
+# the web interface's category colors (light theme), picked by category id the same way
+CATEGORY_COLORS = ("#6d28d9", "#0f766e", "#b45309", "#1d4ed8", "#be185d", "#15803d")
 
 
 @dataclass
@@ -17,16 +20,67 @@ class HeldMovie:
     poster_url: str | None
     reasons: list[dict[str, Any]]
     token: str
+    suggested: str | None = None  # the key of the category the rules lean to
+    scores: dict[str, float] = field(default_factory=dict)
+    excluded: set[str] = field(default_factory=set)
+    ai: dict[str, Any] | None = None
 
 
 @dataclass
 class Choice:
     key: str
     name: str
+    id: int = 0
+
+
+def category_color(category_id: int) -> str:
+    return CATEGORY_COLORS[(category_id - 1) % len(CATEGORY_COLORS)]
 
 
 def _label(movie: HeldMovie) -> str:
     return f"{movie.title} ({movie.year})" if movie.year else movie.title
+
+
+def _confidence(movie: HeldMovie, key: str) -> float:
+    """What the rules give this category against the best other one — the review page's figure."""
+    own = movie.scores.get(key, 0.0)
+    if key in movie.excluded or own <= 0:
+        return 0.0
+    best = max([0.0, *(v for k, v in movie.scores.items() if k != key)])
+    return own / (own + best + PRIOR)
+
+
+def _worth(locale: str, movie: HeldMovie, key: str) -> str:
+    """« · 76 % · IA 100 % », or « · exclu »."""
+    if key in movie.excluded:
+        return f" · {text(locale, 'email.excluded')}"
+    worth = f" · {round(_confidence(movie, key) * 100)} %"
+    ai = movie.ai or {}
+    if not ai.get("error") and ai.get("category") == key and ai.get("confidence") is not None:
+        worth += f" · {text(locale, 'email.ai')} {round(float(ai['confidence']) * 100)} %"
+    return worth
+
+
+def _button(label: str, url: str, color: str, filled: bool) -> str:
+    style = (
+        f"background:{color};color:#ffffff;border:1px solid {color}"
+        if filled
+        else f"background:#ffffff;color:{color};border:1px solid {color}"
+    )
+    return (
+        f'<a href="{escape(url)}" style="display:inline-block;margin:6px 6px 0 0;padding:8px 12px;'
+        f'border-radius:8px;{style};text-decoration:none;font-size:14px;line-height:18px">{label}</a>'
+    )
+
+
+def _poster(movie: HeldMovie) -> str:
+    # fixed 2:3 box, as TMDB posters are: no client can stretch it
+    if not movie.poster_url:
+        return '<div style="width:80px;height:120px;border-radius:8px;background:#eef0f6"></div>'
+    return (
+        f'<img src="{escape(movie.poster_url)}" alt="" width="80" height="120" '
+        'style="display:block;width:80px;height:120px;object-fit:cover;border-radius:8px;border:0">'
+    )
 
 
 def review_email(
@@ -39,41 +93,48 @@ def review_email(
     blocks = []
     for movie in movies:
         reasons = [reason_text(locale, r) for r in movie.reasons]
-        links = [
-            (text(locale, "email.moveTo", category=c.name), f"{base_url}/r/{movie.token}?c={c.key}")
-            for c in choices
-        ]
-        links.append((text(locale, "email.leave"), f"{base_url}/r/{movie.token}?c=intake"))
+        leave = f"{base_url}/r/{movie.token}?c=intake"
+        moves = [(c, f"{base_url}/r/{movie.token}?c={c.key}", _worth(locale, movie, c.key)) for c in choices]
         lines += [
             f"• {_label(movie)}",
             *[f"  {r}" for r in reasons],
-            *[f"  {label}: {url}" for label, url in links],
+            *[f"  {text(locale, 'email.moveTo', category=c.name)}{worth}: {url}" for c, url, worth in moves],
+            f"  {text(locale, 'email.leave')}: {leave}",
             "",
         ]
-        poster = (
-            f'<img src="{escape(movie.poster_url)}" alt="" width="60" style="border-radius:6px;margin-right:12px">'
-            if movie.poster_url
+        buttons = "".join(
+            _button(
+                f'{escape(c.name)}<span style="font-size:12px">{escape(worth)}</span>',
+                url,
+                category_color(c.id),
+                c.key == movie.suggested,
+            )
+            for c, url, worth in moves
+        )
+        buttons += _button(escape(text(locale, "email.leave")), leave, "#5a6275", False)
+        suggested = next((c for c in choices if c.key == movie.suggested), None)
+        hint = (
+            f'<p style="margin:4px 0 0;font-size:13px">'
+            f"{escape(text(locale, 'email.suggested', category=suggested.name))}</p>"
+            if suggested
             else ""
         )
-        buttons = "".join(
-            f'<a href="{escape(url)}" style="display:inline-block;margin:4px 6px 0 0;padding:8px 12px;'
-            f"border-radius:8px;background:{ACCENT if i < len(choices) else '#eef0f6'};"
-            f'color:{"#fff" if i < len(choices) else "#121624"};text-decoration:none;font-size:14px">'
-            f"{escape(label)}</a>"
-            for i, (label, url) in enumerate(links)
-        )
         blocks.append(
-            '<tr><td style="padding:12px 0;border-top:1px solid #dde1ea">'
-            f'<div style="display:flex">{poster}<div><strong>{escape(_label(movie))}</strong>'
-            f'<ul style="margin:4px 0;padding-left:18px;color:#5a6275;font-size:13px">'
-            f"{''.join(f'<li>{escape(r)}</li>' for r in reasons)}</ul>{buttons}</div></div></td></tr>"
+            '<tr><td style="padding:16px 0;border-top:1px solid #dde1ea">'
+            '<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>'
+            f'<td width="80" valign="top" style="width:80px;padding-right:12px">{_poster(movie)}</td>'
+            f'<td valign="top"><strong style="font-size:15px">{escape(_label(movie))}</strong>{hint}'
+            f'<ul style="margin:4px 0 0;padding-left:18px;color:#5a6275;font-size:13px">'
+            f"{''.join(f'<li>{escape(r)}</li>' for r in reasons)}</ul></td></tr>"
+            f'<tr><td colspan="2" style="padding-top:6px">{buttons}</td></tr></table></td></tr>'
         )
     lines += [f"{text(locale, 'email.openApp')}: {base_url}/review", text(locale, "email.footer", date=date)]
     html = (
-        '<div style="font-family:system-ui,sans-serif;max-width:640px;margin:auto;color:#121624">'
+        '<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:640px;'
+        'margin:auto;color:#121624">'
         f"<h2>{escape(subject)}</h2><p>{escape(text(locale, 'email.intro'))}</p>"
-        f'<table width="100%" cellspacing="0">{"".join(blocks)}</table>'
-        f'<p><a href="{escape(base_url)}/review" style="color:{ACCENT}">{escape(text(locale, "email.openApp"))}</a></p>'
+        f'<table role="presentation" width="100%" cellspacing="0" cellpadding="0">{"".join(blocks)}</table>'
+        f'<p style="margin-top:16px">{_button(escape(text(locale, "email.openApp")), f"{base_url}/review", ACCENT, True)}</p>'
         f'<p style="color:#5a6275;font-size:12px">{escape(text(locale, "email.footer", date=date))}</p></div>'
     )
     return subject, "\n".join(lines), html

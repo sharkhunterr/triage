@@ -23,16 +23,21 @@ MESSAGES: dict[str, dict[str, str]] = {
         "page.badTitle": "Unknown choice",
         "page.badText": "This category no longer exists or has no library.",
         "page.openApp": "Open the review queue",
+        "email.suggested": "Triage leans to {category}.",
+        "email.excluded": "ruled out",
+        "email.ai": "AI",
         "reason.no_categories": "No category is defined yet.",
-        "reason.no_metadata": "No genre, keyword or company is known for this movie.",
+        "reason.no_metadata": "Radarr and TMDB report no genre, keyword or company for this movie.",
         "reason.no_signal": "No category's rules matched.",
         "reason.low_confidence": "Confidence {confidence}, below the {threshold} threshold.",
         "reason.close_second": "Two categories are too close.",
-        "reason.decisive_conflict": "Several decisive rules disagree.",
+        "reason.decisive_conflict": "Several decisive rules disagree: {categories}.",
         "reason.ai_unavailable": "The AI could not answer.",
         "reason.ai_unsure": "The AI was not sure either.",
+        "reason.ai_only": "Only the AI has an opinion: Triage never moves a movie on its word alone.",
         "reason.category_without_folder": "The chosen category has no library yet.",
-        "reason.corrected_before": "You corrected this movie before.",
+        "reason.corrected_before": "You corrected this movie before: Triage only proposes.",
+        "reason.unknown": "Held for review.",
     },
     "fr": {
         "email.subject": "Triage : {count} film(s) à trancher",
@@ -53,16 +58,21 @@ MESSAGES: dict[str, dict[str, str]] = {
         "page.badTitle": "Choix inconnu",
         "page.badText": "Cette catégorie n'existe plus ou n'a pas de bibliothèque.",
         "page.openApp": "Ouvrir la liste à trancher",
+        "email.suggested": "Triage penche pour {category}.",
+        "email.excluded": "exclu",
+        "email.ai": "IA",
         "reason.no_categories": "Aucune catégorie n'est encore définie.",
-        "reason.no_metadata": "Aucun genre, mot-clé ou société n'est connu pour ce film.",
+        "reason.no_metadata": "Radarr et TMDB n'indiquent ni genre, ni mot-clé, ni société pour ce film.",
         "reason.no_signal": "Les règles d'aucune catégorie ne correspondent.",
         "reason.low_confidence": "Confiance {confidence}, sous le seuil de {threshold}.",
         "reason.close_second": "Deux catégories sont trop proches.",
-        "reason.decisive_conflict": "Plusieurs règles décisives se contredisent.",
+        "reason.decisive_conflict": "Plusieurs règles décisives se contredisent : {categories}.",
         "reason.ai_unavailable": "L'IA n'a pas pu répondre.",
         "reason.ai_unsure": "L'IA n'était pas sûre non plus.",
+        "reason.ai_only": "Seule l'IA a un avis : Triage ne déplace jamais un film sur sa seule parole.",
         "reason.category_without_folder": "La catégorie choisie n'a pas encore de bibliothèque.",
-        "reason.corrected_before": "Vous avez déjà corrigé ce film.",
+        "reason.corrected_before": "Vous avez déjà corrigé ce film : Triage se contente de proposer.",
+        "reason.unknown": "Mis de côté pour vous.",
     },
 }
 
@@ -74,11 +84,18 @@ def text(locale: str, key: str, **values: Any) -> str:
 
 def reason_text(locale: str, reason: dict[str, Any]) -> str:
     values = {
-        k: f"{round(float(v) * 100)}%" if k in ("confidence", "threshold") else v
+        k: f"{round(float(v) * 100)}%"
+        if k in ("confidence", "threshold")
+        else ", ".join(map(str, v))
+        if isinstance(v, list)
+        else v
         for k, v in reason.items()
         if k != "code"
     }
+    code = reason.get("code") or "unknown"
+    if f"reason.{code}" not in MESSAGES["en"]:
+        return text(locale, "reason.unknown")
     try:
-        return text(locale, f"reason.{reason.get('code')}", **values)
+        return text(locale, f"reason.{code}", **values)
     except (KeyError, ValueError):
-        return str(reason.get("code"))
+        return text(locale, "reason.unknown")

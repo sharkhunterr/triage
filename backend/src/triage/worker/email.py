@@ -45,7 +45,9 @@ async def send_email_job(ctx: JobContext, item: WorkItem) -> None:
     owner = await ctx.db.get(Owner, 1)
     locale = owner.locale if owner else "en"
     validity = ctx.settings.sorting.link_validity_days
-    choices = [Choice(c.key, c.name) for c in await active(ctx.db) if c.root_folder_path]
+    categories = await active(ctx.db)
+    choices = [Choice(c.key, c.name, c.id) for c in categories if c.root_folder_path]
+    keys = {c.id: c.key for c in categories}
     movies = []
     for decision in held:
         ref = await ctx.db.get(MovieRef, decision.radarr_id)
@@ -56,6 +58,12 @@ async def send_email_job(ctx: JobContext, item: WorkItem) -> None:
                 poster_url=ref.poster_url if ref else None,
                 reasons=decision.reasons or [],
                 token=await create_link(ctx.db, decision.id, validity),
+                suggested=keys.get(decision.top_category_id or 0),
+                scores=(decision.scores or {}).get("categories", {}),
+                excluded={
+                    str(s["category_key"]) for s in decision.signals or [] if s.get("kind") == "exclusion"
+                },
+                ai=decision.ai,
             )
         )
     base_url = ctx.settings.base_url or "http://localhost:9393"
