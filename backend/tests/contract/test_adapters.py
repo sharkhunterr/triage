@@ -145,7 +145,9 @@ async def test_ollama_chat_is_constrained_to_the_categories():
     )
     assert (verdict.category, verdict.confidence) == ("animation", 0.92)
     body = json.loads(rec.requests[0].content)
-    assert body["stream"] is False and body["options"] == {"temperature": 0}
+    assert body["stream"] is False and body["think"] is False
+    # capped, fixed-context generation so a batch never pins the GPU with long reasoning passes
+    assert body["options"] == {"temperature": 0, "num_ctx": 8192, "num_predict": 512}
     assert body["format"]["properties"]["category"]["enum"] == ["animation", "films", "unsure"]
 
 

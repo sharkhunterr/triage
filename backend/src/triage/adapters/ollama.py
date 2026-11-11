@@ -12,6 +12,11 @@ from triage.adapters.types import AiVerdict, ServiceCheck, ServiceError
 SERVICE = "Ollama"
 UNSURE = "unsure"
 
+# The answer is a short JSON object, so generation is capped and the context is fixed: each call
+# stays brief, and a fixed context never forces the model to reload (which would spike the GPU).
+NUM_CTX = 8192
+NUM_PREDICT = 512
+
 
 def answer_schema(category_keys: list[str]) -> dict[str, Any]:
     return {
@@ -75,8 +80,15 @@ class OllamaClient:
             json={
                 "model": self._model,
                 "stream": False,
+                # thinking models (qwen3…) otherwise generate a long reasoning pass before the JSON,
+                # which holds the GPU far longer than the verdict needs
+                "think": False,
                 "format": answer_schema(category_keys),
-                "options": {"temperature": 0},
+                "options": {
+                    "temperature": 0,
+                    "num_ctx": NUM_CTX,
+                    "num_predict": NUM_PREDICT,
+                },
                 "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             },
         )
