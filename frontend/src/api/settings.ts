@@ -32,7 +32,7 @@ export type SettingsView = {
 }
 
 export type Service = 'radarr' | 'tmdb' | 'ollama' | 'seerr' | 'smtp'
-export type Check = { ok: boolean; detail: string; latency_ms: number }
+export type Check = { ok: boolean; detail: string; latency_ms: number; models?: string[] }
 export type SettingsPatch = Record<string, unknown>
 
 export const useSettings = () =>

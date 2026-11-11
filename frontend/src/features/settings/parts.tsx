@@ -5,6 +5,7 @@ import {
   type Service,
   type SettingsPatch,
   type SettingsView,
+  useOllamaModels,
   useTestService,
 } from '../../api/settings'
 import { Button, Field, Input, Select } from '../../design-system'
@@ -159,5 +160,56 @@ export function TestButton({
         <CheckResult check={test.data} />
       )}
     </div>
+  )
+}
+
+/** The models a model can be picked from: those installed at the address being edited, known once it
+ * answers — the saved address when it is reachable, or the address just tested. Editing the address
+ * forgets them until it is tested. */
+export function useModelChoices(savedUrl: string, url: string) {
+  const saved = useOllamaModels(Boolean(savedUrl))
+  const [tested, setTested] = useState<{ url: string; models: string[] } | null>(null)
+  const models = tested?.url === url ? tested.models : url === savedUrl ? (saved.data ?? null) : null
+  const onTested = (check: Check) => setTested(check.ok ? { url, models: check.models ?? [] } : null)
+  return { models, onTested }
+}
+
+/** The model, chosen among the installed ones — never typed by hand. Until the address answers it
+ * stays disabled; a saved model the server no longer has is shown as such. */
+export function ModelPicker({
+  id,
+  desc,
+  value,
+  models,
+  onChange,
+}: {
+  id: string
+  desc?: string
+  value: string
+  models: string[] | null
+  onChange: (model: string) => void
+}) {
+  const t = useT()
+  const listed = models ?? []
+  const missing = value !== '' && !listed.includes(value)
+  return (
+    <Select
+      id={id}
+      aria-describedby={desc}
+      value={value}
+      disabled={listed.length === 0}
+      className="disabled:opacity-60"
+      onChange={(e) => onChange(e.target.value)}
+    >
+      <option value="">{listed.length ? '—' : t('settings.modelTestFirst')}</option>
+      {missing && (
+        <option value={value}>{listed.length ? t('settings.modelMissing', { name: value }) : value}</option>
+      )}
+      {listed.map((m) => (
+        <option key={m} value={m}>
+          {m}
+        </option>
+      ))}
+    </Select>
   )
 }

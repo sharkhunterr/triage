@@ -211,6 +211,8 @@
   "settings.aiHint": "Facultatif : consultée seulement quand les règles ne suffisent pas. Rien ne sort de votre réseau.",
   "settings.aiUrlHint": "Laissez vide pour trier avec les seules règles.",
   "settings.model": "Modèle",
+  "settings.modelTestFirst": "Testez la connexion pour lister les modèles",
+  "settings.modelMissing": "{name} (non installé)",
   "settings.aiTimeout": "Délai maximal (secondes)",
   "settings.aiTimeoutHint": "Sans carte graphique, gardez 180 s ou plus : la première question charge le modèle.",
   "settings.sorting": "Tri",

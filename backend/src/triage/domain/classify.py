@@ -113,7 +113,7 @@ def _verdict(names: dict[str, str], key: str | None, confidence: float) -> str:
 
 
 def _why_not_asked(settings: AppSettings, adapters: Adapters, conclusive: bool) -> str:
-    if adapters.ollama is None:
+    if adapters.ollama is None or not settings.ai_enabled:
         return "off"
     if settings.ollama.ask == "never":
         return "never"
@@ -168,6 +168,7 @@ async def classify_movie(
         skip("ai", "no_metadata")
     elif (
         adapters.ollama is not None
+        and settings.ai_enabled
         and _should_ask(settings.ollama.ask, result.conclusive)
         and not any(r["code"] == "decisive_conflict" for r in reasons)
     ):

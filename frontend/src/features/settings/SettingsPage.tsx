@@ -3,9 +3,9 @@ import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { useRootFolders } from '../../api/categories'
 import {
+  type Check,
   type Service,
   type SettingsPatch,
-  useOllamaModels,
   useRegenerateWebhookSecret,
   useSaveSettings,
   useSettings,
@@ -26,7 +26,7 @@ import {
 import { useT } from '../../i18n'
 import { RefreshFolders } from '../categories/RefreshFolders'
 import { ModeSwitch } from './ModeSwitch'
-import { SecretInput, TestButton, TmdbLanguage, useSection } from './parts'
+import { ModelPicker, SecretInput, TestButton, TmdbLanguage, useModelChoices, useSection } from './parts'
 
 function Section({
   title,
@@ -35,6 +35,7 @@ function Section({
   children,
   onSave,
   testPatch,
+  onTested,
   saving,
 }: {
   title: string
@@ -43,6 +44,7 @@ function Section({
   children: ReactNode
   onSave: () => void
   testPatch?: () => SettingsPatch
+  onTested?: (check: Check) => void
   saving: boolean
 }) {
   const t = useT()
@@ -62,7 +64,7 @@ function Section({
           <Button type="submit" variant="primary" loading={saving}>
             {t('common.save')}
           </Button>
-          {service && testPatch && <TestButton service={service} patch={testPatch} />}
+          {service && testPatch && <TestButton service={service} patch={testPatch} onResult={onTested} />}
         </div>
       </form>
     </Card>
@@ -96,7 +98,7 @@ export function SettingsPage() {
     'link_validity_days',
   ])
   const folders = useRootFolders()
-  const models = useOllamaModels(Boolean(view?.ollama.url))
+  const modelChoices = useModelChoices(view?.ollama.url ?? '', String(ollama.values.url ?? ''))
   const webhook = useRegenerateWebhookSecret()
   const [baseUrl, setBaseUrl] = useState('')
   useEffect(() => setBaseUrl(view?.base_url ?? ''), [view?.base_url])
@@ -237,6 +239,7 @@ export function SettingsPage() {
           service="ollama"
           saving={save.isPending}
           testPatch={() => ollama.patch()}
+          onTested={modelChoices.onTested}
           onSave={() => persist(ollama.patch())}
         >
           <Field label={t('settings.url')} hint={t('settings.aiUrlHint')}>
@@ -252,29 +255,15 @@ export function SettingsPage() {
             )}
           </Field>
           <Field label={t('settings.model')}>
-            {(id) =>
-              models.data?.length ? (
-                <Select
-                  id={id}
-                  value={String(ollama.values.model ?? '')}
-                  onChange={(e) => ollama.set('model', e.target.value)}
-                >
-                  <option value="">—</option>
-                  {models.data.map((m) => (
-                    <option key={m} value={m}>
-                      {m}
-                    </option>
-                  ))}
-                </Select>
-              ) : (
-                <Input
-                  id={id}
-                  placeholder="qwen3:8b"
-                  value={String(ollama.values.model ?? '')}
-                  onChange={(e) => ollama.set('model', e.target.value)}
-                />
-              )
-            }
+            {(id, desc) => (
+              <ModelPicker
+                id={id}
+                desc={desc}
+                value={String(ollama.values.model ?? '')}
+                models={modelChoices.models}
+                onChange={(model) => ollama.set('model', model)}
+              />
+            )}
           </Field>
           <Field
             label={t('settings.aiAsk')}

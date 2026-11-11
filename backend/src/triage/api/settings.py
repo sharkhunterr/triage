@@ -38,6 +38,7 @@ class CheckOut(BaseModel):
     ok: bool
     detail: str
     latency_ms: int
+    models: list[str] = []  # Ollama: the models installed at the address tested, for the picker
 
 
 class WebhookSecret(BaseModel):
@@ -109,7 +110,8 @@ async def test_service(
     except Exception as exc:  # a test always answers: the page shows why it failed
         log.exception("testing %s failed", service)
         return CheckOut(ok=False, detail=f"{exc.__class__.__name__}: {exc}", latency_ms=0)
-    return CheckOut(ok=check.ok, detail=check.detail, latency_ms=check.latency_ms)
+    models = await adapters.ollama.models() if service == "ollama" and check.ok and adapters.ollama else []
+    return CheckOut(ok=check.ok, detail=check.detail, latency_ms=check.latency_ms, models=models)
 
 
 @router.post("/settings/webhook-secret", response_model=WebhookSecret)
@@ -140,5 +142,5 @@ async def radarr_root_folders(settings: Settings, adapters: AdaptersDep) -> list
 @router.get("/ollama/models", response_model=list[str])
 async def ollama_models(adapters: AdaptersDep) -> list[str]:
     if adapters.ollama is None:
-        raise ServiceUnavailable("Set the Ollama address and model first", code="ollama_not_configured")
+        raise ServiceUnavailable("Set the Ollama address first", code="ollama_not_configured")
     return await adapters.ollama.models()

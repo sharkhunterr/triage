@@ -250,6 +250,32 @@ test('the activity page stops a check, the analyses, or everything; moves go thr
   expect(stops).toEqual([{ kind: 'scan', scan_id: 2 }, { kind: 'all' }])
 })
 
+test('the AI model is picked from the installed ones, once the address answers', async ({ page }) => {
+  await page.route('**/api/v1/settings/test/ollama', (route) =>
+    route.fulfill({
+      json: { ok: true, detail: '2 models', latency_ms: 4, models: ['gpt-oss:20b', 'qwen3:8b'] },
+    }),
+  )
+  await signIn(page)
+  await go(page, 'Settings')
+  const ai = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Local AI (Ollama)' }) })
+  const model = ai.getByLabel('Model')
+  await expect(model).toBeDisabled()
+  await expect(model).toHaveValue('')
+  await expect(model.locator('option').first()).toHaveText('Test the connection to list the models')
+
+  await ai.getByLabel('Address').fill('http://ollama.lan:11434')
+  await ai.getByRole('button', { name: 'Test' }).click()
+  await expect(model).toBeEnabled()
+  await model.selectOption('gpt-oss:20b')
+  await expect(model).toHaveValue('gpt-oss:20b')
+  await expectAccessible(page)
+
+  // another address: its models are unknown until it is tested
+  await ai.getByLabel('Address').fill('http://other:11434')
+  await expect(model).toBeDisabled()
+})
+
 test('settings and status pages', async ({ page }) => {
   await signIn(page)
   await go(page, 'Settings')

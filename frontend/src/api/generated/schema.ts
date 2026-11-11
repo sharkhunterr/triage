@@ -968,6 +968,11 @@ export interface components {
             detail: string;
             /** Latency Ms */
             latency_ms: number;
+            /**
+             * Models
+             * @default []
+             */
+            models: string[];
             /** Ok */
             ok: boolean;
         };

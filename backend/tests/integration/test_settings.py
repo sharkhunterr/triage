@@ -4,6 +4,7 @@ from httpx import AsyncClient
 
 from tests.conftest import Env
 from tests.fakes.ollama import FakeOllama
+from triage.adapters.types import ServiceError
 
 
 async def test_secrets_are_write_only(owner: AsyncClient):
@@ -49,7 +50,29 @@ async def test_connection_tests(owner: AsyncClient, env: Env):
     assert not down["ok"]
     env.fakes.ollama = None
     missing = (await owner.post("/api/v1/settings/test/ollama", json={})).json()
-    assert missing == {"ok": False, "detail": "not_configured", "latency_ms": 0}
+    assert missing == {"ok": False, "detail": "not_configured", "latency_ms": 0, "models": []}
+
+
+async def test_the_ollama_test_lists_the_models_for_the_picker(owner: AsyncClient, env: Env):
+    env.fakes.ollama = FakeOllama()
+    check = (await owner.post("/api/v1/settings/test/ollama", json={"ollama": {"model": ""}})).json()
+    assert check["ok"] and check["models"] == ["mistral:7b", "qwen3:8b"]
+    env.fakes.ollama.error = ServiceError("Ollama", "unreachable")
+    down = (await owner.post("/api/v1/settings/test/ollama", json={})).json()
+    assert not down["ok"] and down["models"] == []
+
+
+def test_the_ollama_adapter_needs_an_address_only():
+    import httpx
+
+    from triage.adapters.factory import build_adapters
+    from triage.core.settings import AppSettings
+
+    client = httpx.AsyncClient()
+    assert build_adapters(AppSettings(), client).ollama is None
+    address_only = AppSettings.model_validate({"ollama": {"url": "http://ollama.test"}})
+    assert build_adapters(address_only, client).ollama is not None
+    assert not address_only.ai_enabled
 
 
 async def test_a_connection_test_can_use_unsaved_values(owner: AsyncClient, env: Env):

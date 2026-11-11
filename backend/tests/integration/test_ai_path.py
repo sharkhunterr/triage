@@ -146,3 +146,15 @@ async def test_never_asks_the_ai(env: Env):
     (decision,) = await decisions(env)
     assert decision.status == "held" and decision.ai is None
     assert env.fakes.ollama.prompts == []
+
+
+async def test_an_address_without_a_model_never_asks_the_ai(env: Env):
+    """The address alone lets the settings test it and list its models; the AI waits for a model."""
+    await seed_categories(env)
+    await env.settings(ollama={"url": "http://ollama.test", "model": ""})
+    add_ambiguous(env)
+    env.fakes.ollama = FakeOllama(AiVerdict("animation", 0.9, "animated"))
+    await env.state.worker.tick(poll=True)
+    assert env.fakes.ollama.prompts == []
+    (decision,) = await decisions(env)
+    assert decision.status == "held"

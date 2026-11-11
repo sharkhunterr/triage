@@ -13,14 +13,20 @@ import { api } from '../../api/client'
 import {
   type SettingsPatch,
   type SettingsView,
-  useOllamaModels,
   useRegenerateWebhookSecret,
   useSaveSettings,
   useSettings,
 } from '../../api/settings'
 import { Badge, Button, Card, cx, ErrorState, Field, Input, Select, Spinner } from '../../design-system'
 import { type Locale, useLocale, useT } from '../../i18n'
-import { SecretInput, TestButton, TmdbLanguage, useSection } from '../settings/parts'
+import {
+  ModelPicker,
+  SecretInput,
+  TestButton,
+  TmdbLanguage,
+  useModelChoices,
+  useSection,
+} from '../settings/parts'
 
 const STEPS = ['welcome', 'radarr', 'intake', 'categories', 'tmdb', 'ai', 'email', 'seerr', 'finish'] as const
 type Step = (typeof STEPS)[number]
@@ -456,14 +462,7 @@ function TmdbStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
 function AiStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
   const t = useT()
   const ollama = useSection(view, 'ollama', ['url', 'model', 'ask'])
-  const queryClient = useQueryClient()
-  const save = useSaveSettings()
-  const models = useOllamaModels(Boolean(view.ollama.url))
-  // A successful test keeps the address, so the installed models can be listed.
-  const reached = () =>
-    save.mutate(ollama.patch(), {
-      onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ollama-models'] }),
-    })
+  const modelChoices = useModelChoices(view.ollama.url, String(ollama.values.url ?? ''))
   return (
     <Panel
       step="ai"
@@ -483,31 +482,15 @@ function AiStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
         )}
       </Field>
       <Field label={t('settings.model')} hint={t('wizard.ai.modelHint')}>
-        {(id, desc) =>
-          models.data?.length ? (
-            <Select
-              id={id}
-              aria-describedby={desc}
-              value={String(ollama.values.model ?? '')}
-              onChange={(e) => ollama.set('model', e.target.value)}
-            >
-              <option value="">—</option>
-              {models.data.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </Select>
-          ) : (
-            <Input
-              id={id}
-              aria-describedby={desc}
-              placeholder="qwen3:8b"
-              value={String(ollama.values.model ?? '')}
-              onChange={(e) => ollama.set('model', e.target.value)}
-            />
-          )
-        }
+        {(id, desc) => (
+          <ModelPicker
+            id={id}
+            desc={desc}
+            value={String(ollama.values.model ?? '')}
+            models={modelChoices.models}
+            onChange={(model) => ollama.set('model', model)}
+          />
+        )}
       </Field>
       <Field
         label={t('settings.aiAsk')}
@@ -528,7 +511,7 @@ function AiStep({ view, saving, error, saveAndNext, next, back }: StepProps) {
           </Select>
         )}
       </Field>
-      <TestButton service="ollama" patch={() => ollama.patch()} onResult={(c) => c.ok && reached()} />
+      <TestButton service="ollama" patch={() => ollama.patch()} onResult={modelChoices.onTested} />
     </Panel>
   )
 }

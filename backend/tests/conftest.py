@@ -69,6 +69,8 @@ async def env(tmp_path: Path, frozen_clock: FrozenClock) -> AsyncIterator[Env]:
     environment = Env(app, state, fakes, frozen_clock)
     await environment.settings(
         radarr={"url": "http://radarr.test", "api_key": "k", "intake_root_folders": ["/media/intake"]},
+        # the AI is configured (address and model); a test turns it off with ``env.fakes.ollama = None``
+        ollama={"url": "http://ollama.test", "model": "qwen3:8b"},
         base_url="http://triage.test",
     )
     yield environment

@@ -29,8 +29,10 @@ def build_adapters(settings: AppSettings, client: httpx.AsyncClient) -> Adapters
     return Adapters(
         radarr=RadarrClient(s.radarr.url, s.radarr.api_key, client) if s.radarr_configured else None,
         tmdb=TmdbClient(s.tmdb.api_key, client, language=s.tmdb.language) if s.tmdb.api_key else None,
+        # built from the address alone, to test it and list its models; the AI is asked only once a
+        # model is chosen too (settings.ai_enabled)
         ollama=(
-            OllamaClient(s.ollama.url, s.ollama.model, s.ollama.timeout_s, client) if s.ai_enabled else None
+            OllamaClient(s.ollama.url, s.ollama.model, s.ollama.timeout_s, client) if s.ollama.url else None
         ),
         seerr=SeerrClient(s.seerr.url, s.seerr.api_key, client) if s.seerr_configured else None,
         mailer=(

@@ -380,6 +380,14 @@
             "title": "Latency Ms",
             "type": "integer"
           },
+          "models": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
           "ok": {
             "title": "Ok",
             "type": "boolean"
