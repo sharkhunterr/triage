@@ -1,3 +1,57 @@
+# v0.5.0
+
+## 🎬 Triage 0.5.0 — check any library, a library slider, locks, a History timeline
+
+### ✨ Features
+
+- **A Check tab** — check any library for movies that belong in another. A check moves nothing: it
+  lists the gaps (a better library), the doubts and the movies already in place, and you settle them
+  like the review queue. The tab's badge counts what is left to settle, and the check picker gives
+  each check's count.
+- **Choose on a library slider** — the review queue, the Check tab and the movie sheet share one
+  control: one stop per library, a pin where the movie is, Triage's confidence over each stop (the
+  chosen one in a badge, *ruled out* where a rule excludes it), the way to the library chosen in
+  their colours. Slide or tap, then confirm; back on its own library, the movie stays there. On a
+  movie already moved, the same slider corrects the move.
+- **Locks** — a movie you sorted by hand (on its sheet, in the review queue, from the email, or in a
+  check) is locked in its library. A check respects locks by default, or ignores them. Applying
+  proposals in bulk never locks, undoing in bulk drops the lock. A discreet padlock shows the lock;
+  on the sheet, its details and *Unlock* are one tap away.
+- **History as a timeline** — grouped by day: each movie's poster with its status, where it went in
+  the categories' colours, who decided, the lock, the hour, and Triage's confidence as a ring. Each
+  day shows its libraries as a strip.
+
+### 🐛 Fixes
+
+- **A live-action/animated film is no cartoon** — when Wikidata says « live-action », Animation is
+  ruled out and the film counts for Films. Animation also rules out Shows and Concerts.
+- **In place means in place** — a movie whose best choice is the library it is in is counted as in
+  place, sure or not.
+- **A cleaner movie sheet** — *Why this decision* no longer repeats in a sentence what the score
+  chips show, and the *Radarr and TMDB* box links to the movie on TMDB, like the Wikipedia one.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` Live-action/animated films no longer count as cartoons.
+- `bug` The Check badge and the Check page agree: the page shows what the other checks still wait
+  on, and the picker gives each check's count.
+
+#### New
+
+- `feat` A Check tab: check any library for movies that belong in another, settled like the review
+  queue.
+- `feat` A movie's library is locked after a choice made by hand; checks respect or ignore locks.
+- `feat` A modern History: a timeline per day, and the same cards with a library slider in the
+  review queue, the Check tab and on the movie sheet.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.5.0
+```
+
 # v0.4.1
 
 ## 🎬 Triage 0.4.1 — a clearer review email, a working email test
