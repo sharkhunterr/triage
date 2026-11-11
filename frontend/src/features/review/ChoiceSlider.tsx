@@ -86,10 +86,62 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
   const to = categoryColor(chosen.id)
   const left = Math.min(at(origin), at(index))
   const width = Math.abs(at(index) - at(origin))
+  const forward = index >= origin
+  // a text over or under a stop, centred on it; at the ends, kept inside the row's padding
+  const anchor = (i: number) => ({
+    left: `${at(i)}%`,
+    transform:
+      stops.length > 1 && i === 0
+        ? 'translateX(max(-50%, -1.75rem))'
+        : stops.length > 1 && i === last
+          ? 'translateX(min(-50%, calc(1.75rem - 100%)))'
+          : 'translateX(-50%)',
+  })
+  const percent = (stop: Stop) =>
+    stop.key ? `${Math.round(choiceConfidence(decision, stop.key) * 100)} %` : null
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <div className="px-7 pt-8">
+      <div className="px-7">
+        {/* how sure Triage is of each library; the chosen one in a badge */}
+        <div className="relative mb-1 h-5" aria-hidden>
+          {stops.map((stop, i) => {
+            const isAi = Boolean(ai && !ai.error && stop.key && ai.category === stop.key)
+            const out = stop.key !== null && decision.excluded.includes(stop.key)
+            if (i === index)
+              return (
+                <span
+                  key={stop.id ?? 'here'}
+                  className="absolute top-0 inline-flex h-5 items-center gap-1 rounded-full px-2 text-[11px] font-semibold whitespace-nowrap text-surface tabular-nums shadow-sm transition-[left] duration-200"
+                  style={{ ...anchor(i), background: to }}
+                >
+                  {stays ? <MapPin className="size-3" /> : null}
+                  {excluded ? t('choice.excluded') : percent(stop)}
+                  {aiPicked && ai && !stays ? (
+                    <>
+                      <Bot className="size-3" />
+                      {Math.round(Number(ai.confidence) * 100)} %
+                    </>
+                  ) : null}
+                </span>
+              )
+            const text = percent(stop)
+            if (!text) return null
+            return (
+              <span
+                key={stop.id ?? 'here'}
+                className={cx(
+                  'absolute top-0 inline-flex h-5 items-center gap-0.5 text-[11px] font-medium whitespace-nowrap tabular-nums',
+                  out && 'opacity-40',
+                )}
+                style={{ ...anchor(i), color: categoryColor(stop.id) }}
+              >
+                {isAi ? <Bot className="size-3" /> : null}
+                {text}
+              </span>
+            )
+          })}
+        </div>
         <div
           ref={track}
           role="slider"
@@ -105,15 +157,28 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
           className="relative h-6 cursor-pointer touch-none rounded-full outline-offset-8 select-none focus-visible:outline-2"
         >
           <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-surface-2" />
-          {/* the way from where it is to where it goes */}
+          {/* the way from where it is to where it goes, as an arrow */}
           <div
-            className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full transition-all duration-200"
+            className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-all duration-200"
             style={{
               left: `${left}%`,
               width: `${width}%`,
-              background: `linear-gradient(to ${index >= origin ? 'right' : 'left'}, ${from}, ${to})`,
+              background: `linear-gradient(to ${forward ? 'right' : 'left'}, ${from}, ${to})`,
             }}
           />
+          {stays ? null : (
+            <span
+              aria-hidden
+              className="absolute top-1/2 h-3 w-2.5 transition-[left] duration-200"
+              style={{
+                // its tip against the thumb
+                left: forward ? `calc(${at(index)}% - 0.8rem)` : `calc(${at(index)}% + 0.8rem)`,
+                transform: `translate(${forward ? '-100%' : '0'}, -50%)`,
+                background: to,
+                clipPath: forward ? 'polygon(0 0, 100% 50%, 0 100%)' : 'polygon(100% 0, 0 50%, 100% 100%)',
+              }}
+            />
+          )}
           {stops.map((stop, i) => (
             <span
               key={stop.id ?? 'here'}
@@ -132,42 +197,12 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
               {i === origin ? <MapPin className="size-3" style={{ color: categoryColor(stop.id) }} /> : null}
             </span>
           ))}
-          {/* the thumb, and how sure Triage is of this choice */}
+          {/* the thumb */}
           <span
             aria-hidden
-            className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left] duration-200"
-            style={{ left: `${at(index)}%` }}
-          >
-            <span
-              className="block size-6 rounded-full border-4 border-surface shadow-md ring-1 ring-border"
-              style={{ background: to }}
-            />
-            <span
-              className="absolute bottom-full left-1/2 mb-1.5 inline-flex -translate-x-1/2 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-surface tabular-nums shadow-sm"
-              style={{ background: to }}
-            >
-              {stays ? (
-                <>
-                  <MapPin className="size-3" />
-                  {chosen.key && !excluded
-                    ? `${Math.round(choiceConfidence(decision, chosen.key) * 100)} %`
-                    : null}
-                </>
-              ) : excluded ? (
-                t('choice.excluded')
-              ) : (
-                <>
-                  {chosen.key ? `${Math.round(choiceConfidence(decision, chosen.key) * 100)} %` : null}
-                  {aiPicked && ai ? (
-                    <>
-                      <Bot className="size-3" />
-                      {Math.round(Number(ai.confidence) * 100)} %
-                    </>
-                  ) : null}
-                </>
-              )}
-            </span>
-          </span>
+            className="absolute top-1/2 block size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-surface shadow-md ring-1 ring-border transition-[left] duration-200"
+            style={{ left: `${at(index)}%`, background: to }}
+          />
         </div>
         {/* the libraries' names, under their stops */}
         <div className="relative mt-1.5 h-4" aria-hidden>
@@ -179,18 +214,9 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
               onClick={() => setPicked(i)}
               className={cx(
                 'absolute top-0 inline-flex max-w-[6.5rem] items-center gap-0.5 truncate text-[11px] leading-4',
-                // the ends keep inside the row: the first starts at its edge, the last ends at it
-                stops.length > 1 && i === 0
-                  ? '-left-7'
-                  : stops.length > 1 && i === last
-                    ? '-right-7'
-                    : '-translate-x-1/2',
                 i === index ? 'font-semibold' : 'text-muted',
               )}
-              style={{
-                left: stops.length > 1 && (i === 0 || i === last) ? undefined : `${at(i)}%`,
-                color: i === index ? to : undefined,
-              }}
+              style={{ ...anchor(i), color: i === index ? to : undefined }}
             >
               {i === origin ? <MapPin className="size-2.5 shrink-0" /> : null}
               <span className="truncate">{stop.name}</span>
