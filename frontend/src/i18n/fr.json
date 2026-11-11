@@ -212,6 +212,7 @@
   "settings.aiUrlHint": "Laissez vide pour trier avec les seules règles.",
   "settings.model": "Modèle",
   "settings.aiTimeout": "Délai maximal (secondes)",
+  "settings.aiTimeoutHint": "Sans carte graphique, gardez 180 s ou plus : la première question charge le modèle.",
   "settings.sorting": "Tri",
   "settings.sortingHint": "À quel point Triage doit être sûr avant de déplacer un film tout seul.",
   "settings.threshold": "Seuil de confiance (%)",

@@ -148,7 +148,17 @@ async def test_ollama_chat_is_constrained_to_the_categories():
     assert body["stream"] is False and body["think"] is False
     # capped, fixed-context generation so a batch never pins the GPU with long reasoning passes
     assert body["options"] == {"temperature": 0, "num_ctx": 8192, "num_predict": 512}
+    assert body["keep_alive"] == "30m"  # no reload between the movies of a batch
     assert body["format"]["properties"]["category"]["enum"] == ["animation", "films", "unsure"]
+
+
+async def test_gpt_oss_gets_the_lowest_reasoning_level_not_false():
+    """gpt-oss answers an empty message when ``think`` is False."""
+    rec = Recorder({("POST", "/api/chat"): payload("ollama_chat.json")})
+    await OllamaClient("http://ollama:11434", "gpt-oss:20b", 60, rec.client()).classify(
+        "system", "user", ["animation", "films"]
+    )
+    assert json.loads(rec.requests[0].content)["think"] == "low"
 
 
 @pytest.mark.parametrize(

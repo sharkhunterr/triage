@@ -295,14 +295,15 @@ export function SettingsPage() {
               </Select>
             )}
           </Field>
-          <Field label={t('settings.aiTimeout')}>
-            {(id) => (
+          <Field label={t('settings.aiTimeout')} hint={t('settings.aiTimeoutHint')}>
+            {(id, desc) => (
               <Input
                 id={id}
+                aria-describedby={desc}
                 type="number"
                 min={5}
                 max={600}
-                value={Number(ollama.values.timeout_s ?? 60)}
+                value={Number(ollama.values.timeout_s ?? 180)}
                 onChange={(e) => ollama.set('timeout_s', Number(e.target.value))}
               />
             )}

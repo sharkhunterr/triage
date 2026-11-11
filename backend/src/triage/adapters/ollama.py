@@ -16,6 +16,14 @@ UNSURE = "unsure"
 # stays brief, and a fixed context never forces the model to reload (which would spike the GPU).
 NUM_CTX = 8192
 NUM_PREDICT = 512
+# Kept loaded between the movies of a batch: on a CPU, reloading a model takes tens of seconds.
+KEEP_ALIVE = "30m"
+
+
+def think_mode(model: str) -> bool | str:
+    """No reasoning pass before the verdict. gpt-oss takes a reasoning level, not a boolean: with
+    ``False`` it answers an empty message, so it gets the lowest level instead."""
+    return "low" if model.startswith("gpt-oss") else False
 
 
 def answer_schema(category_keys: list[str]) -> dict[str, Any]:
@@ -80,9 +88,10 @@ class OllamaClient:
             json={
                 "model": self._model,
                 "stream": False,
+                "keep_alive": KEEP_ALIVE,
                 # thinking models (qwen3…) otherwise generate a long reasoning pass before the JSON,
                 # which holds the GPU far longer than the verdict needs
-                "think": False,
+                "think": think_mode(self._model),
                 "format": answer_schema(category_keys),
                 "options": {
                     "temperature": 0,

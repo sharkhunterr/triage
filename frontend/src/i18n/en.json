@@ -212,6 +212,7 @@
   "settings.aiUrlHint": "Leave empty to sort with the rules alone.",
   "settings.model": "Model",
   "settings.aiTimeout": "Timeout (seconds)",
+  "settings.aiTimeoutHint": "Without a graphics card, keep 180 s or more: the first question loads the model.",
   "settings.sorting": "Sorting",
   "settings.sortingHint": "How sure Triage must be before it moves a movie on its own.",
   "settings.threshold": "Confidence threshold (%)",
