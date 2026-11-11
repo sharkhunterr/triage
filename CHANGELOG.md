@@ -3,6 +3,35 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.5.0](https://github.com/sharkhunterr/triage/compare/v0.4.1...v0.5.0) (2026-11-11)
+
+
+### Features
+
+* **check:** a Check tab — check any library for movies that belong in another, and settle them like the review queue ([8ba2612](https://github.com/sharkhunterr/triage/commit/8ba2612795f3b0c36125cbacf30f44552a275ecf))
+* **check:** a waiting movie's card — the title on the whole width, the way and the ring under it, a rule, the slider across, then its status beside the confirm button ([0e332d8](https://github.com/sharkhunterr/triage/commit/0e332d85bef05f410204a018a44c34d5ceadf228))
+* **check:** choose a check's library on a slider — one stop per library, a pin where the movie is, the way to the one chosen in their colours, its confidence on the thumb, then confirm ([330b0b0](https://github.com/sharkhunterr/triage/commit/330b0b075ebe6a00f498da93a16bcdae91906ad4))
+* **check:** compact choices on the check's rows — slim category chips with their confidence, an icon to leave it ([4184d92](https://github.com/sharkhunterr/triage/commit/4184d92bf71f362b6df721f67d044befcc43bd9d))
+* **check:** the check's movies as timeline rows, the choices under each ([3fb4634](https://github.com/sharkhunterr/triage/commit/3fb4634833d4b88d5e9bf0aac0a5e23d74d57cac))
+* **check:** the slider's thumb points the way and a light runs along it; a ruled-out library says so over its stop ([897abfe](https://github.com/sharkhunterr/triage/commit/897abfec3781b0348f2a9f731fa74c4742436e2d))
+* **check:** the slider's way is an arrow, and every library shows its confidence over its stop — the chosen one in a badge kept inside the card ([aeb64d8](https://github.com/sharkhunterr/triage/commit/aeb64d8096555ad7724b9ddef399dd192a564887))
+* **decision:** the sheet chooses or corrects on the library slider too — undo stays its own button; fix the slider's names with two libraries ([f728c2c](https://github.com/sharkhunterr/triage/commit/f728c2cea4db714915323b79f408394e0ab7b4a7))
+* **decision:** the sheet's why drops the sentence the score chips already tell, and the TMDB box links to the movie on TMDB ([644e414](https://github.com/sharkhunterr/triage/commit/644e4147e22c694ed3958430e2c27e3b5701585f))
+* **decision:** the stills drop their TMDB link, the metadata box already has it ([2a3814b](https://github.com/sharkhunterr/triage/commit/2a3814b428ae74f63d664606253897f6a1d1d417))
+* **history:** a timeline per day — status on the poster, confidence as a ring in the category's colour, the day's libraries as a strip ([741d414](https://github.com/sharkhunterr/triage/commit/741d4146e554764f1ecf40cdb0f9d4fe832d8d7a))
+* **locks:** a movie sorted by hand is locked in its library; checks respect locks or ignore them; modern History (#18 #19 #20) ([5e96cb0](https://github.com/sharkhunterr/triage/commit/5e96cb059b41d041c7c15ebe80234e47bf942752))
+* **review:** the review queue shows its movies as the check does — the timeline card with the library slider and its confirm button ([bd31d14](https://github.com/sharkhunterr/triage/commit/bd31d14868e2b3076d387519d0b08a2ef2678284))
+
+
+### Bug Fixes
+
+* **check:** a badge on the Check tab for its gaps and doubts; Animation rules out Shows and Concerts ([2c4d0c2](https://github.com/sharkhunterr/triage/commit/2c4d0c2f011b04c2958d9fba4ae9a94b130e4958))
+* **check:** a movie whose best choice is the library it is in is in place, sure or not ([89555a0](https://github.com/sharkhunterr/triage/commit/89555a0a3d6db56363852bb7b1f09868be4d8fd0))
+* **check:** the check's progress bar in the theme's colours, not the device's native green ([367225d](https://github.com/sharkhunterr/triage/commit/367225d8f81e8b6b6b81ab8032e1bf81dba8e18a))
+* **check:** the slider's library names keep to their own column — as wide as the gap between two stops, on two lines when long, never over their neighbour ([b256926](https://github.com/sharkhunterr/triage/commit/b2569263df2ebe5a69e8f78b2e097c7cfb4623ff))
+* **locks:** a discreet padlock — by the title on the sheet, its details and Unlock in a popover; an icon with a tooltip in the lists ([3392d07](https://github.com/sharkhunterr/triage/commit/3392d0785857c3c954a9253fed3f6e015d07b69d))
+* **presets:** a live-action/animated film is no cartoon — Wikidata « live-action » rules Animation out and counts for Films ([0e91332](https://github.com/sharkhunterr/triage/commit/0e91332e2394b1e872ee3ce92982679fbc19ebef))
+
 ### [0.4.1](https://github.com/sharkhunterr/triage/compare/v0.4.0...v0.4.1) (2026-11-10)
 
 
