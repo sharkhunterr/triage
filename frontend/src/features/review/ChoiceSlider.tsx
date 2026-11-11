@@ -1,5 +1,5 @@
 import { Ban, Bot, Check, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
-import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
+import { type KeyboardEvent, type PointerEvent, type ReactNode, useRef, useState } from 'react'
 import { useCategories } from '../../api/categories'
 import type { DecisionSummary } from '../../api/decisions'
 import { Button, cx } from '../../design-system'
@@ -15,7 +15,7 @@ const trim = (path: string) => path.replace(/\/+$/, '')
 /** Where a waiting movie goes, as a line of the libraries: the one it is in (a pin), the one chosen
  * (the thumb, with its confidence), the way between them in their colors. Slide or tap, then confirm;
  * back on its own library, the movie is left there. */
-export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
+export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; aside?: ReactNode }) {
   const t = useT()
   const categories = useCategories()
   const action = useDecisionAction()
@@ -229,11 +229,15 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
           ))}
         </div>
       </div>
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">{aside}</div>
         <Button
           size="sm"
           variant="ghost"
-          className={cx('border', stays ? 'border-border' : 'cat-fill hover:opacity-90')}
+          className={cx(
+            'shrink-0 border whitespace-nowrap',
+            stays ? 'border-border' : 'cat-fill hover:opacity-90',
+          )}
           style={stays ? undefined : tint(chosen.id)}
           icon={stays ? <MapPin className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
           loading={action.isPending}

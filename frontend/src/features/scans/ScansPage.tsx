@@ -218,9 +218,12 @@ export function ScansPage() {
               {compact ? (
                 <TimelineRow decision={d} place={place} />
               ) : (
-                <TimelineRow decision={d} place={place} note={d.status === 'held'}>
-                  <ChoiceSlider decision={d} />
-                </TimelineRow>
+                <TimelineRow
+                  decision={d}
+                  place={place}
+                  note={d.status === 'held'}
+                  choose={(meta) => <ChoiceSlider decision={d} aside={meta} />}
+                />
               )}
             </li>
           ))}
