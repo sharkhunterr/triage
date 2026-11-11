@@ -14,8 +14,19 @@ const trim = (path: string) => path.replace(/\/+$/, '')
 
 /** Where a waiting movie goes, as a line of the libraries: the one it is in (a pin), the one chosen
  * (the thumb, with its confidence), the way between them in their colors. Slide or tap, then confirm;
- * back on its own library, the movie is left there. */
-export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; aside?: ReactNode }) {
+ * back on its own library, the movie is left there. `correct`: a movie already moved — the line starts
+ * where it is now, and another library corrects the move. `via`: where the choice is made (the lock). */
+export function ChoiceSlider({
+  decision,
+  aside,
+  correct = false,
+  via,
+}: {
+  decision: DecisionSummary
+  aside?: ReactNode
+  correct?: boolean
+  via?: 'sheet'
+}) {
   const t = useT()
   const categories = useCategories()
   const action = useDecisionAction()
@@ -24,7 +35,8 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
   const libraries: Stop[] = (categories.data ?? [])
     .filter((c) => c.root_folder_path)
     .map((c) => ({ id: c.id, key: c.key, name: c.name }))
-  const here = decision.from_root_folder ? trim(decision.from_root_folder) : null
+  const folder = correct ? decision.target_root_folder : decision.from_root_folder
+  const here = folder ? trim(folder) : null
   const hereCategory = (categories.data ?? []).find(
     (c) => c.root_folder_path && here !== null && trim(c.root_folder_path) === here,
   )
@@ -33,7 +45,7 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
     ? libraries
     : [{ id: null, key: null, name: here?.split('/').pop() || '—' }, ...libraries]
   const origin = hereCategory ? stops.findIndex((s) => s.id === hereCategory.id) : 0
-  const proposed = decision.target_category ?? decision.top_category
+  const proposed = correct ? hereCategory : (decision.target_category ?? decision.top_category)
   const suggested = stops.findIndex((s) => s.id === proposed?.id)
   const [picked, setPicked] = useState<number | null>(null)
   const index = picked ?? (suggested >= 0 ? suggested : origin)
@@ -75,10 +87,15 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
   }
   const confirm = () => {
     if (stays) {
+      if (correct) return
       if (decision.status === 'proposed') action.mutate({ id: decision.id, action: 'dismiss' })
-      else action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })
+      else action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake', via } })
     } else if (chosen.id !== null) {
-      action.mutate({ id: decision.id, action: 'apply', body: { category_id: chosen.id } })
+      action.mutate({
+        id: decision.id,
+        action: correct ? 'correct' : 'apply',
+        body: { category_id: chosen.id, via },
+      })
     }
   }
 
@@ -214,7 +231,12 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
         <div
           className="mt-1.5 grid gap-x-1"
           style={{
-            gridTemplateColumns: stops.length > 1 ? `0.5fr repeat(${stops.length - 2}, 1fr) 0.5fr` : '1fr',
+            gridTemplateColumns:
+              stops.length > 2
+                ? `0.5fr repeat(${stops.length - 2}, 1fr) 0.5fr`
+                : stops.length === 2
+                  ? '1fr 1fr'
+                  : '1fr',
           }}
           aria-hidden
         >
@@ -240,30 +262,34 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
           ))}
         </div>
       </div>
-      <div className="flex items-center justify-between gap-2">
+      <div className={cx('flex items-center justify-between gap-2', correct && stays && !aside && 'hidden')}>
         <div className="min-w-0">{aside}</div>
-        <Button
-          size="sm"
-          variant="ghost"
-          className={cx(
-            'shrink-0 border whitespace-nowrap',
-            stays ? 'border-border' : 'cat-fill hover:opacity-90',
-          )}
-          style={stays ? undefined : tint(chosen.id)}
-          icon={stays ? <MapPin className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />}
-          loading={action.isPending}
-          onClick={confirm}
-        >
-          {stays
-            ? t(
-                decision.scan_id != null
-                  ? 'check.leave'
-                  : decision.status === 'proposed'
-                    ? 'decision.dismiss'
-                    : 'decision.leave',
-              )
-            : t('choice.send', { name: chosen.name })}
-        </Button>
+        {correct && stays ? null : (
+          <Button
+            size="sm"
+            variant="ghost"
+            className={cx(
+              'shrink-0 border whitespace-nowrap',
+              stays ? 'border-border' : 'cat-fill hover:opacity-90',
+            )}
+            style={stays ? undefined : tint(chosen.id)}
+            icon={
+              stays ? <MapPin className="size-4" aria-hidden /> : <Check className="size-4" aria-hidden />
+            }
+            loading={action.isPending}
+            onClick={confirm}
+          >
+            {stays
+              ? t(
+                  decision.scan_id != null
+                    ? 'check.leave'
+                    : decision.status === 'proposed'
+                      ? 'decision.dismiss'
+                      : 'decision.leave',
+                )
+              : t('choice.send', { name: chosen.name })}
+          </Button>
+        )}
       </div>
     </div>
   )
