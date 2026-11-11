@@ -209,8 +209,15 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
             )}
           </span>
         </div>
-        {/* the libraries' names, under their stops */}
-        <div className="relative mt-1.5 h-4" aria-hidden>
+        {/* the libraries' names, under their stops: each in a column as wide as the gap between two
+            stops (the ends reach into the row's padding), on two lines when long — never on its neighbour */}
+        <div
+          className="mt-1.5 grid gap-x-1"
+          style={{
+            gridTemplateColumns: stops.length > 1 ? `0.5fr repeat(${stops.length - 2}, 1fr) 0.5fr` : '1fr',
+          }}
+          aria-hidden
+        >
           {stops.map((stop, i) => (
             <button
               key={stop.id ?? 'here'}
@@ -218,13 +225,17 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
               tabIndex={-1}
               onClick={() => setPicked(i)}
               className={cx(
-                'absolute top-0 inline-flex max-w-[6.5rem] items-center gap-0.5 truncate text-[11px] leading-4',
+                'line-clamp-2 min-w-0 self-start text-[11px] leading-4 break-words hyphens-auto',
+                stops.length > 1 && i === 0
+                  ? '-ml-7 text-left'
+                  : stops.length > 1 && i === last
+                    ? '-mr-7 text-right'
+                    : 'text-center',
                 i === index ? 'font-semibold' : 'text-muted',
               )}
-              style={{ ...anchor(i), color: i === index ? to : undefined }}
+              style={{ color: i === index ? to : undefined }}
             >
-              {i === origin ? <MapPin className="size-2.5 shrink-0" /> : null}
-              <span className="truncate">{stop.name}</span>
+              {stop.name}
             </button>
           ))}
         </div>
