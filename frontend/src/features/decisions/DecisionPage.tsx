@@ -507,7 +507,7 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
       <h2 className="flex items-center gap-2 text-lg font-semibold">
         <Film className="size-5" aria-hidden /> {t('sheet.title')}
       </h2>
-      <MatchCheck radarrId={decision.movie.radarr_id} tmdbId={decision.movie.tmdb_id} />
+      <MatchCheck radarrId={decision.movie.radarr_id} />
       <div>
         <h3 className="flex items-center gap-2 font-semibold">
           <Database className="size-4" aria-hidden /> {t('decision.metadata')}

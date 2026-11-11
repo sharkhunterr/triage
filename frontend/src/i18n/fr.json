@@ -469,7 +469,6 @@
   "work.refresh_titles": "Mettre à jour les titres",
   "activity.step.titles": "Titres",
   "match.title": "Est-ce le bon film ?",
-  "match.tmdb": "Voir sur TMDB",
   "match.still": "Image {n} de TMDB",
   "match.noImages": "TMDB n'a pas d'image pour ce film.",
   "common.back": "Retour",

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, Images } from 'lucide-react'
+import { Images } from 'lucide-react'
 import { api, type Schemas } from '../../api/client'
 import { Spinner } from '../../design-system'
 import { useT } from '../../i18n'
@@ -10,7 +10,7 @@ const IMAGE = 'https://image.tmdb.org/t/p'
 
 /** A few TMDB stills, to see at a glance whether Radarr matched the right movie. Read apart from
  * the decision: the page shows without them when TMDB is down. */
-export function MatchCheck({ radarrId, tmdbId }: { radarrId: number; tmdbId: number | null }) {
+export function MatchCheck({ radarrId }: { radarrId: number }) {
   const t = useT()
   const media = useQuery({
     queryKey: ['movie-media', radarrId],
@@ -20,21 +20,9 @@ export function MatchCheck({ radarrId, tmdbId }: { radarrId: number; tmdbId: num
   const images = media.data?.images ?? []
   return (
     <section className="flex flex-col gap-3" aria-labelledby="match-check">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <h3 id="match-check" className="flex items-center gap-2 font-semibold">
-          <Images className="size-4" aria-hidden /> {t('match.title')}
-        </h3>
-        {tmdbId ? (
-          <a
-            href={`https://www.themoviedb.org/movie/${tmdbId}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
-          >
-            {t('match.tmdb')} <ExternalLink className="size-3" aria-hidden />
-          </a>
-        ) : null}
-      </div>
+      <h3 id="match-check" className="flex items-center gap-2 font-semibold">
+        <Images className="size-4" aria-hidden /> {t('match.title')}
+      </h3>
       {media.isPending ? (
         <Spinner label={t('common.loading')} />
       ) : images.length === 0 ? (
