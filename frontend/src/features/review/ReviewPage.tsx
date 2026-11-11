@@ -1,15 +1,13 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Ban, CheckCheck, ChevronLeft, ChevronRight, FolderInput } from 'lucide-react'
+import { CheckCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Tabs } from 'radix-ui'
 import { type ReactNode, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { useCategories } from '../../api/categories'
+import { useSearchParams } from 'react-router'
 import type { Schemas } from '../../api/client'
 import { api } from '../../api/client'
 import type { DecisionSummary } from '../../api/decisions'
 import {
   Button,
-  Card,
   Dialog,
   EmptyState,
   ErrorState,
@@ -19,9 +17,8 @@ import {
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
-import { categoryButton } from '../categories/colors'
-import { useDecisionAction } from '../decisions/DecisionActions'
-import { ChoiceInfo, ConfidenceMeter, Poster, ReasonText, StatusBadge, useFromHere } from '../decisions/parts'
+import { TimelineRow, usePlaces } from '../decisions/Timeline'
+import { ChoiceSlider } from './ChoiceSlider'
 import { Reanalyze, ReviewAll } from './ReviewAll'
 
 type ReviewPageData = Schemas['ReviewPage']
@@ -102,107 +99,6 @@ export function Pager({
   )
 }
 
-const sameFolder = (a?: string | null, b?: string | null) =>
-  Boolean(a && b && a.replace(/\/+$/, '') === b.replace(/\/+$/, ''))
-
-/** The choices on a waiting movie: a button per library (the suggested one filled), and leave it.
- * In a check (`checked`), the library the movie is already in is not offered. */
-export function ChoiceButtons({
-  decision,
-  checked = false,
-}: {
-  decision: DecisionSummary
-  checked?: boolean
-}) {
-  const t = useT()
-  const categories = useCategories()
-  const action = useDecisionAction()
-  const proposal = decision.status === 'proposed'
-  const proposed = decision.target_category ?? decision.top_category
-  const choices = (categories.data ?? []).filter(
-    (c) => c.root_folder_path && !(checked && sameFolder(c.root_folder_path, decision.from_root_folder)),
-  )
-  const leave = () =>
-    proposal
-      ? action.mutate({ id: decision.id, action: 'dismiss' })
-      : action.mutate({ id: decision.id, action: 'apply', body: { target: 'intake' } })
-  const leaveLabel = checked ? t('check.leave') : proposal ? t('decision.dismiss') : t('decision.leave')
-  return (
-    <>
-      {choices.map((category) => (
-        <Button
-          key={category.id}
-          size="sm"
-          {...categoryButton(category.id, proposed?.id === category.id)}
-          icon={<FolderInput className="size-4" aria-hidden />}
-          loading={action.isPending}
-          onClick={() =>
-            action.mutate({ id: decision.id, action: 'apply', body: { category_id: category.id } })
-          }
-        >
-          {category.name}
-          <ChoiceInfo decision={decision} categoryKey={category.key} />
-        </Button>
-      ))}
-      <Button
-        size="sm"
-        variant="ghost"
-        icon={<Ban className="size-4" aria-hidden />}
-        loading={action.isPending}
-        onClick={leave}
-      >
-        {leaveLabel}
-      </Button>
-    </>
-  )
-}
-
-/** A movie waiting for the owner: its reasons and one button per library. `checked`: a check's result —
- * it says where the movie is now, offers the other libraries, and "leave it where it is". */
-export function ReviewCard({ decision, checked = false }: { decision: DecisionSummary; checked?: boolean }) {
-  const t = useT()
-  const here = useFromHere()
-  const proposal = decision.status === 'proposed'
-  const proposed = decision.target_category ?? decision.top_category
-
-  return (
-    <Card className="flex flex-col gap-3">
-      <div className="flex gap-3">
-        <Poster url={decision.movie.poster_url} title={decision.movie.title} />
-        <div className="min-w-0 flex-1">
-          <Link to={`/decisions/${decision.id}`} state={here} className="font-medium hover:underline">
-            {decision.movie.title}
-            {decision.movie.year ? <span className="text-muted"> ({decision.movie.year})</span> : null}
-          </Link>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <StatusBadge status={decision.status} />
-            <ConfidenceMeter value={decision.confidence} />
-          </div>
-          {checked && decision.from_root_folder ? (
-            <p className="mt-1 truncate text-xs text-muted">
-              {t('check.now', { folder: decision.from_root_folder })}
-            </p>
-          ) : null}
-          {proposal && proposed ? (
-            <p className="mt-1 text-sm">{t('review.wouldMove', { category: proposed.name })}</p>
-          ) : (
-            <ul className="mt-1 list-disc pl-4 text-xs text-muted">
-              {decision.reasons.map((reason) => (
-                <li key={JSON.stringify(reason)}>
-                  <ReasonText reason={reason} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <ChoiceButtons decision={decision} checked={checked} />
-      </div>
-    </Card>
-  )
-}
-
 /** Applies every sure proposal — of the review queue, or of one check when `scanId` is given. */
 export function ApplyConfident({ count, scanId }: { count: number; scanId?: number }) {
   const t = useT()
@@ -257,6 +153,7 @@ export function ReviewPage() {
   const page = Math.max(1, Number(params.get('page')) || 1)
   const [perPage, setPerPage] = useState(storedPerPage)
   const review = useReviewPage(tab, page, perPage)
+  const place = usePlaces()
   const current = review.data
   // nothing held but proposals waiting: open on the proposals (unless a tab was asked)
   useEffect(() => {
@@ -302,10 +199,18 @@ export function ReviewPage() {
       empty
     ) : (
       <>
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2" aria-busy={review.isFetching || undefined}>
+        <ul
+          className="mx-auto max-w-3xl divide-y divide-border overflow-hidden rounded-card border border-border bg-surface"
+          aria-busy={review.isFetching || undefined}
+        >
           {items.map((d) => (
             <li key={d.id}>
-              <ReviewCard decision={d} />
+              <TimelineRow
+                decision={d}
+                place={place}
+                note={d.status === 'held'}
+                choose={(meta) => <ChoiceSlider decision={d} aside={meta} />}
+              />
             </li>
           ))}
         </ul>

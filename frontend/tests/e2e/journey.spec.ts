@@ -126,9 +126,16 @@ test('the review queue: apply the confident proposals, decide a held movie', asy
   await expect(page.getByText(/being moved/)).toBeVisible()
 
   await page.getByRole('tab', { name: /To decide/ }).click()
-  const held = page.locator('section').filter({ hasText: 'Who Framed Roger Rabbit' }).first()
+  const held = page.getByRole('listitem').filter({ hasText: 'Who Framed Roger Rabbit' }).first()
   await expect(held).toBeVisible()
-  await held.getByRole('button', { name: 'Animation' }).click()
+  // the slider starts in the intake folder or on Triage's best guess; walk it to Animation
+  const slider = held.getByRole('slider', { name: 'Library chosen' })
+  await slider.press('Home')
+  await expect(slider).toHaveAttribute('aria-valuetext', /Stay in/)
+  await expect(held.getByRole('button', { name: 'Leave in intake' })).toBeVisible()
+  for (let i = 0; i < 5 && (await slider.getAttribute('aria-valuetext')) !== 'Animation'; i++)
+    await slider.press('ArrowRight')
+  await held.getByRole('button', { name: 'Send to Animation' }).click()
   await expect(page.getByText('Done')).toBeVisible()
   await expectAccessible(page)
 })

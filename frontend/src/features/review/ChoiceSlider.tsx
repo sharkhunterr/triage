@@ -243,7 +243,15 @@ export function ChoiceSlider({ decision, aside }: { decision: DecisionSummary; a
           loading={action.isPending}
           onClick={confirm}
         >
-          {stays ? t('check.leave') : t('choice.send', { name: chosen.name })}
+          {stays
+            ? t(
+                decision.scan_id != null
+                  ? 'check.leave'
+                  : decision.status === 'proposed'
+                    ? 'decision.dismiss'
+                    : 'decision.leave',
+              )
+            : t('choice.send', { name: chosen.name })}
         </Button>
       </div>
     </div>
