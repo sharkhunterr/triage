@@ -3,6 +3,13 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.6.0](https://github.com/sharkhunterr/triage/compare/v0.5.0...v0.6.0) (2026-11-11)
+
+
+### Features
+
+* **activity:** stop work from the Activity page — what waits, by group, each with Stop; the running analysis or check is interrupted and rolled back; Stop all; moves and emails always go through ([6740ecf](https://github.com/sharkhunterr/triage/commit/6740ecfa80bd0ea0d4b16bece78265350512622b))
+
 ## [0.5.0](https://github.com/sharkhunterr/triage/compare/v0.4.1...v0.5.0) (2026-11-11)
 
 
