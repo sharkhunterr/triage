@@ -1,3 +1,32 @@
+# v0.6.0
+
+## 🎬 Triage 0.6.0 — stop work from the Activity page
+
+### ✨ Features
+
+- **Stop what runs or waits** — the Activity page lists what waits, by group: a library check,
+  the movie analyses (a full analysis or the new movies), the title updates, the Seerr requests.
+  Each group has *Stop*, the job running now has its own, and *Stop all* stops everything at once.
+  The job running now is interrupted even while the AI thinks, and what it had started is not kept.
+- **Nothing is lost** — a stopped movie stays where it is: a new movie is counted among the new
+  ones to analyse later, and a stopped check keeps the results it already has. Moves and the review
+  email are never stopped: they show as *always goes through*, so no movie is left half moved.
+- **Cancel a check** on the Check page now does the same: its queued movies are dropped and the
+  movie being checked is interrupted.
+
+### Closed issues
+
+#### New
+
+- `feat` Stop running or queued work from the Activity page: a check, the analyses, the title
+  updates, the Seerr requests; moves and emails always go through.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.6.0
+```
+
 # v0.5.0
 
 ## 🎬 Triage 0.5.0 — check any library, a library slider, locks, a History timeline
