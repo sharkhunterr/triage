@@ -1,4 +1,4 @@
-import { Bot, Check, MapPin } from 'lucide-react'
+import { Ban, Bot, Check, ChevronLeft, ChevronRight, MapPin } from 'lucide-react'
 import { type KeyboardEvent, type PointerEvent, useRef, useState } from 'react'
 import { useCategories } from '../../api/categories'
 import type { DecisionSummary } from '../../api/decisions'
@@ -125,19 +125,16 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
                   ) : null}
                 </span>
               )
-            const text = percent(stop)
+            const text = out ? t('choice.excluded') : percent(stop)
             if (!text) return null
             return (
               <span
                 key={stop.id ?? 'here'}
-                className={cx(
-                  'absolute top-0 inline-flex h-5 items-center gap-0.5 text-[11px] font-medium whitespace-nowrap tabular-nums',
-                  out && 'opacity-40',
-                )}
-                style={{ ...anchor(i), color: categoryColor(stop.id) }}
+                className="absolute top-0 inline-flex h-5 items-center gap-0.5 text-[11px] font-medium whitespace-nowrap tabular-nums"
+                style={{ ...anchor(i), color: out ? undefined : categoryColor(stop.id) }}
               >
-                {isAi ? <Bot className="size-3" /> : null}
-                {text}
+                {out ? <Ban className="size-3 text-muted" /> : isAi ? <Bot className="size-3" /> : null}
+                <span className={out ? 'text-muted' : undefined}>{text}</span>
               </span>
             )
           })}
@@ -157,28 +154,28 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
           className="relative h-6 cursor-pointer touch-none rounded-full outline-offset-8 select-none focus-visible:outline-2"
         >
           <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-surface-2" />
-          {/* the way from where it is to where it goes, as an arrow */}
+          {/* the way from where it is to where it goes, a light running along it toward the thumb */}
           <div
-            className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-all duration-200"
+            className="absolute top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full transition-all duration-200"
             style={{
               left: `${left}%`,
               width: `${width}%`,
               background: `linear-gradient(to ${forward ? 'right' : 'left'}, ${from}, ${to})`,
             }}
-          />
-          {stays ? null : (
-            <span
-              aria-hidden
-              className="absolute top-1/2 h-3 w-2.5 transition-[left] duration-200"
-              style={{
-                // its tip against the thumb
-                left: forward ? `calc(${at(index)}% - 0.8rem)` : `calc(${at(index)}% + 0.8rem)`,
-                transform: `translate(${forward ? '-100%' : '0'}, -50%)`,
-                background: to,
-                clipPath: forward ? 'polygon(0 0, 100% 50%, 0 100%)' : 'polygon(100% 0, 0 50%, 100% 100%)',
-              }}
-            />
-          )}
+          >
+            {stays ? null : (
+              <span
+                className={cx(
+                  'absolute inset-y-0 left-0 w-2/5 motion-reduce:hidden',
+                  forward ? 'flow-forward' : 'flow-backward',
+                )}
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 75%, transparent), transparent)',
+                }}
+              />
+            )}
+          </div>
           {stops.map((stop, i) => (
             <span
               key={stop.id ?? 'here'}
@@ -197,12 +194,20 @@ export function ChoiceSlider({ decision }: { decision: DecisionSummary }) {
               {i === origin ? <MapPin className="size-3" style={{ color: categoryColor(stop.id) }} /> : null}
             </span>
           ))}
-          {/* the thumb */}
+          {/* the thumb, pointing the way (a pin when the movie stays) */}
           <span
             aria-hidden
-            className="absolute top-1/2 block size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-surface shadow-md ring-1 ring-border transition-[left] duration-200"
+            className="absolute top-1/2 grid size-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[3px] border-surface text-surface shadow-md ring-1 ring-border transition-[left] duration-200"
             style={{ left: `${at(index)}%`, background: to }}
-          />
+          >
+            {stays ? (
+              <MapPin className="size-3.5" strokeWidth={2.5} />
+            ) : forward ? (
+              <ChevronRight className="size-4" strokeWidth={3} />
+            ) : (
+              <ChevronLeft className="size-4" strokeWidth={3} />
+            )}
+          </span>
         </div>
         {/* the libraries' names, under their stops */}
         <div className="relative mt-1.5 h-4" aria-hidden>

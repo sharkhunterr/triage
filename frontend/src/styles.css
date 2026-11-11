@@ -109,6 +109,22 @@ body {
   outline-offset: 2px;
 }
 
+/* a light running along a way, in its direction (the check's choice slider) */
+@keyframes flow {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.flow-forward {
+  animation: flow 1.8s ease-in-out infinite;
+}
+.flow-backward {
+  animation: flow 1.8s ease-in-out infinite reverse;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
