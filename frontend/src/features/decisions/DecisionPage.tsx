@@ -262,42 +262,9 @@ function Why({
   const t = useT()
   const signals = decision.signals as Signal[]
   const exclusions = signals.filter((s) => s.kind === 'exclusion')
-  const facts = signals.filter((s) => s.kind === 'fact')
-  const fallback = signals.find((s) => s.kind === 'fallback')
-  const decisive = facts.find((s) => s.decisive && !s.ignored)
-  const aiOnly = (decision.reasons as { code: string; category?: string }[]).find((r) => r.code === 'ai_only')
   const ranked = Object.entries(decision.scores).sort(([, a], [, b]) => b - a)
   const max = Math.max(1, ...ranked.map(([, v]) => v))
   const settled = ['moved', 'moving', 'in_place', 'corrected'].includes(decision.status)
-
-  const headline: ReactNode[] = []
-  for (const s of exclusions)
-    headline.push(
-      t('why.excluded', {
-        category: name(s.category_key),
-        field: t(`field.${s.field}`),
-        value: String(s.value),
-      }),
-    )
-  if (decisive)
-    headline.push(
-      t('why.decisive', {
-        category: name(decisive.category_key),
-        field: t(`field.${decisive.field}`),
-        value: String(decisive.value),
-      }),
-    )
-  else if (aiOnly) headline.push(t('why.aiOnly', { category: name(aiOnly.category) }))
-  else if (fallback) headline.push(t('why.fallback', { category: name(fallback.category_key) }))
-  else if (ranked[0] && ranked[0][1] > 0)
-    headline.push(
-      t('why.scores', {
-        top: name(ranked[0][0]),
-        topScore: ranked[0][1],
-        second: ranked[1] ? name(ranked[1][0]) : '—',
-        secondScore: ranked[1]?.[1] ?? 0,
-      }),
-    )
 
   return (
     <Card className="flex flex-col gap-5">
@@ -305,17 +272,8 @@ function Why({
         <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
           <Gavel className="size-5" aria-hidden /> {t('why.title')}
         </h2>
-        {headline.length > 0 ? (
-          <ul className="flex flex-col gap-1 text-sm">
-            {headline.map((line) => (
-              <li key={String(line)}>{line}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted">{t('decision.noSignal')}</p>
-        )}
         {!settled && decision.reasons.length > 0 && (
-          <div className="mt-3 rounded-lg border border-warning/40 bg-warning/5 p-3">
+          <div className="rounded-lg border border-warning/40 bg-warning/5 p-3">
             <p className="mb-1 text-sm font-medium">{t('why.waiting')}</p>
             <ul className="list-disc pl-5 text-sm">
               {decision.reasons.map((reason) => (
@@ -574,7 +532,14 @@ function MovieSheet({ decision, cats }: { decision: DecisionDetail; cats: Cats }
           <p className="text-muted">{t('sheet.legend')}</p>
         </div>
       )}
-      <Source title={t('sheet.fromTmdb')}>
+      <Source
+        title={t('sheet.fromTmdb')}
+        link={
+          decision.movie.tmdb_id
+            ? { href: `https://www.themoviedb.org/movie/${decision.movie.tmdb_id}`, label: 'TMDB' }
+            : undefined
+        }
+      >
         {decision.overview ? (
           <p className="text-sm leading-relaxed">{decision.overview}</p>
         ) : (
