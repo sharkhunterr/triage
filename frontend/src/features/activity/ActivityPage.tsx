@@ -1,7 +1,25 @@
-import { CheckCircle2, CircleDashed, Loader2, MinusCircle, XCircle } from 'lucide-react'
+import { CheckCircle2, CircleDashed, Loader2, MinusCircle, Square, XCircle } from 'lucide-react'
 import { Link } from 'react-router'
-import { type Activity, type ActivityEntry, isWorking, useActivity } from '../../api/activity'
-import { Badge, Card, cx, EmptyState, ErrorState, PageHeader, Spinner } from '../../design-system'
+import {
+  type Activity,
+  type ActivityEntry,
+  groupOf,
+  isWorking,
+  type StopBody,
+  useActivity,
+  useStopWork,
+} from '../../api/activity'
+import {
+  Badge,
+  Button,
+  Card,
+  cx,
+  EmptyState,
+  ErrorState,
+  PageHeader,
+  Spinner,
+  useToast,
+} from '../../design-system'
 import { useT } from '../../i18n'
 import { StatusBadge, useFromHere } from '../decisions/parts'
 
@@ -18,7 +36,8 @@ const DECISION_STATUSES = new Set([
   'dismissed',
 ])
 
-/** The work in progress: how far the current run is, the job running now step by step, the last ones. */
+/** The work in progress: how far the current run is, the job running now step by step, what waits
+ * (each group stoppable, but moves and emails), the last ones. */
 export function ActivityPage() {
   const t = useT()
   const query = useActivity()
@@ -35,11 +54,46 @@ export function ActivityPage() {
         <RunCard activity={activity} />
         {activity.running && (
           <Card className="border-info/40">
-            <h2 className="mb-3 flex items-center gap-2 font-semibold">
-              <Loader2 className="size-4 animate-spin text-info" aria-hidden /> {t('activity.now')}
-            </h2>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 font-semibold">
+                <Loader2 className="size-4 animate-spin text-info" aria-hidden /> {t('activity.now')}
+              </h2>
+              {activity.running.stoppable && (
+                <StopButton
+                  body={{
+                    kind: groupOf(activity.running.kind) as StopBody['kind'],
+                    scan_id: activity.running.scan_id,
+                  }}
+                />
+              )}
+            </div>
             <EntryView entry={activity.running} expanded />
           </Card>
+        )}
+        {activity.queue.length > 0 && (
+          <section>
+            <h2 className="mb-2 font-semibold">{t('activity.queued')}</h2>
+            <ul className="divide-y divide-border rounded-card border border-border bg-surface">
+              {activity.queue.map((group) => (
+                <li key={`${group.kind}-${group.scan_id}`} className="flex items-center gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
+                      {group.kind === 'scan'
+                        ? t('activity.queue.scan', { folder: group.folder ?? '—' })
+                        : t(`activity.queue.${group.kind}`)}
+                    </p>
+                    <p className="text-xs text-muted">
+                      {t('activity.queue.count', { count: group.count })}
+                      {group.stoppable ? null : ` · ${t('activity.queue.always')}`}
+                    </p>
+                  </div>
+                  {group.stoppable && (
+                    <StopButton body={{ kind: group.kind as StopBody['kind'], scan_id: group.scan_id }} />
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
         <section>
           <h2 className="mb-2 font-semibold">{t('activity.recent')}</h2>
@@ -69,17 +123,44 @@ export function runProgress(activity?: Activity) {
   return { done: run.done, total, percent: total ? Math.round((run.done / total) * 100) : 100 }
 }
 
+/** Stops a group of work; the movies stay where they are, to analyse or check again later. */
+function StopButton({ body, label }: { body: StopBody; label?: string }) {
+  const t = useT()
+  const toast = useToast()
+  const stop = useStopWork()
+  return (
+    <Button
+      size="sm"
+      className="shrink-0 text-danger"
+      icon={<Square className="size-3.5 fill-current" aria-hidden />}
+      loading={stop.isPending}
+      onClick={() =>
+        stop.mutate(body, {
+          onSuccess: ({ stopped }) => toast(t('activity.stopped', { count: stopped }), 'success'),
+          onError: (error) => toast(error.message, 'danger'),
+        })
+      }
+    >
+      {label ?? t('activity.stop')}
+    </Button>
+  )
+}
+
 function RunCard({ activity }: { activity: Activity }) {
   const t = useT()
   const run = activity.run
   const working = isWorking(activity)
   const { done, total, percent } = runProgress(activity)
+  const stoppable = activity.running?.stoppable || activity.queue.some((group) => group.stoppable)
   if (!run) return <p className="text-sm text-muted">{t('activity.idle')}</p>
   return (
     <Card>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold">{working ? t('activity.running') : t('activity.finished')}</h2>
-        <span className="text-sm tabular-nums text-muted">{t('activity.progress', { done, total })}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm tabular-nums text-muted">{t('activity.progress', { done, total })}</span>
+          {stoppable && <StopButton body={{ kind: 'all' }} label={t('activity.stopAll')} />}
+        </div>
       </div>
       <div
         className="mt-2 h-2.5 overflow-hidden rounded-full bg-surface-2"

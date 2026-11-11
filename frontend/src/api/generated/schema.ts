@@ -24,6 +24,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/activity/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop Work
+         * @description Stops a group of work: the queued items are cancelled, the running one is interrupted.
+         *     Moves and emails never stop.
+         */
+        post: operations["stop_work_api_v1_activity_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -830,6 +851,8 @@ export interface components {
     schemas: {
         /** ActivityOut */
         ActivityOut: {
+            /** Queue */
+            queue: components["schemas"]["QueuedOut"][];
             /** Recent */
             recent: components["schemas"]["EntryOut"][];
             run: components["schemas"]["RunOut"] | null;
@@ -1181,6 +1204,8 @@ export interface components {
             radarr_id: number | null;
             /** Retry */
             retry: boolean;
+            /** Scan Id */
+            scan_id: number | null;
             /**
              * Started At
              * Format: date-time
@@ -1188,6 +1213,8 @@ export interface components {
             started_at: string;
             /** Steps */
             steps: components["schemas"]["StepOut"][];
+            /** Stoppable */
+            stoppable: boolean;
             /** Title */
             title: string | null;
         };
@@ -1312,6 +1339,19 @@ export interface components {
             missing_rules: number;
             /** Name */
             name: string;
+        };
+        /** QueuedOut */
+        QueuedOut: {
+            /** Count */
+            count: number;
+            /** Folder */
+            folder: string | null;
+            /** Kind */
+            kind: string;
+            /** Scan Id */
+            scan_id: number | null;
+            /** Stoppable */
+            stoppable: boolean;
         };
         /** ReanalyzeBody */
         ReanalyzeBody: {
@@ -1608,6 +1648,18 @@ export interface components {
             /** State */
             state: string;
         };
+        /** StopBody */
+        StopBody: {
+            /** Kind */
+            kind: "all" | ("classify" | "scan" | "refresh_titles" | "seerr_requests");
+            /** Scan Id */
+            scan_id?: number | null;
+        };
+        /** Stopped */
+        Stopped: {
+            /** Stopped */
+            stopped: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -1658,6 +1710,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityOut"];
+                };
+            };
+        };
+    };
+    stop_work_api_v1_activity_stop_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StopBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stopped"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

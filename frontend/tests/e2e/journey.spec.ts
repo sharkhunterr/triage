@@ -201,6 +201,55 @@ test('the activity page shows the last analyses step by step', async ({ page }) 
   await expectAccessible(page)
 })
 
+test('the activity page stops a check, the analyses, or everything; moves go through', async ({ page }) => {
+  const started = new Date().toISOString()
+  const stops: unknown[] = []
+  await page.route('**/api/v1/activity', (route) =>
+    route.fulfill({
+      json: {
+        running: {
+          id: 7,
+          kind: 'scan_movie',
+          title: 'Heat',
+          radarr_id: 10,
+          started_at: started,
+          finished_at: null,
+          outcome: null,
+          decision_id: null,
+          error: null,
+          retry: false,
+          scan_id: 2,
+          stoppable: true,
+          steps: [{ name: 'ai', state: 'running', detail: null, ms: null }],
+        },
+        run: { started_at: started, finished_at: null, done: 3, failed: 0, pending: 6 },
+        recent: [],
+        queue: [
+          { kind: 'scan', scan_id: 2, folder: '/movies/Films', count: 4, stoppable: true },
+          { kind: 'classify', scan_id: null, folder: null, count: 1, stoppable: true },
+          { kind: 'move', scan_id: null, folder: null, count: 1, stoppable: false },
+        ],
+      },
+    }),
+  )
+  await page.route('**/api/v1/activity/stop', (route) => {
+    stops.push(route.request().postDataJSON())
+    return route.fulfill({ json: { stopped: 5 } })
+  })
+  await signIn(page)
+  await page.goto('/activity')
+  const waiting = page.getByRole('listitem').filter({ hasText: 'Check of /movies/Films' })
+  await expect(waiting).toContainText('4 waiting')
+  await expect(page.getByRole('listitem').filter({ hasText: 'Moves' })).toContainText('always goes through')
+  await expect(page.getByRole('listitem').filter({ hasText: 'Moves' }).getByRole('button')).toHaveCount(0)
+  await expectAccessible(page)
+
+  await waiting.getByRole('button', { name: 'Stop' }).click()
+  await expect(page.getByText('5 tasks stopped')).toBeVisible()
+  await page.getByRole('button', { name: 'Stop all' }).click()
+  expect(stops).toEqual([{ kind: 'scan', scan_id: 2 }, { kind: 'all' }])
+})
+
 test('settings and status pages', async ({ page }) => {
   await signIn(page)
   await go(page, 'Settings')

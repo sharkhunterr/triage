@@ -61,6 +61,8 @@ class Worker:
         self._wake = asyncio.Event()
         self._stop = asyncio.Event()
         self._task: asyncio.Task[None] | None = None
+        self._job: asyncio.Task[None] | None = None  # the handler running now
+        self._interrupted: int | None = None  # the item the owner stopped
         self.last_poll_at: datetime | None = None
         self.last_poll_error: str | None = None
         self.next_poll_at: datetime | None = None
@@ -82,6 +84,18 @@ class Worker:
         self.next_poll_at = now
         self._follow_ups = sorted({*self._follow_ups, *(now + timedelta(seconds=s) for s in follow_up_s)})
         self._wake.set()
+
+    def interrupt(self, kinds: tuple[str, ...], scan_id: int | None = None) -> bool:
+        """Stops the job running now if it is one of these kinds (of this check): what it did is
+        rolled back and its item cancelled. Returns whether one was stopped."""
+        entry = self.activity.current
+        if self._job is None or entry is None or entry.kind not in kinds:
+            return False
+        if scan_id is not None and entry.scan_id != scan_id:
+            return False
+        self._interrupted = entry.id
+        self._job.cancel()
+        return True
 
     # ------------------------------------------------------------------ one round
     async def tick(self, *, poll: bool = False) -> int:
@@ -138,15 +152,33 @@ class Worker:
                 assert item is not None
                 settings = await load_settings(db)
                 handler = self.handlers.get(item.kind)
-                entry = self.activity.start(item_id, item.kind)
+                entry = self.activity.start(item_id, item.kind, item.ref.get("scan_id"))
                 entry_token = current_entry.set(entry)
                 try:
                     if handler is None:
                         raise JobError(f"no handler for {item.kind}")
-                    await handler(JobContext(db, settings, self.adapter_factory(settings)), item)
+                    # its own task, so that the owner can stop it (``interrupt``)
+                    self._job = asyncio.ensure_future(
+                        handler(JobContext(db, settings, self.adapter_factory(settings)), item)
+                    )
+                    try:
+                        await self._job
+                    finally:
+                        self._job = None
                     await queue.complete(db, item)
                     await db.commit()
                     self.activity.finish(entry)
+                except asyncio.CancelledError:
+                    if self._interrupted != item_id:
+                        raise  # the worker itself is cancelled (shutdown)
+                    self._interrupted = None
+                    await db.rollback()
+                    item = await db.get(WorkItem, item_id)
+                    assert item is not None
+                    item.state, item.updated_at = queue.CANCELLED, clock.now()
+                    await db.commit()
+                    self.activity.finish(entry, stopped=True)
+                    log.info("work item stopped", extra={"kind": item.kind})
                 except (ServiceError, JobError) as exc:
                     await db.rollback()
                     item = await db.get(WorkItem, item_id)

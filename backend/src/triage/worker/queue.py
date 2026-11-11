@@ -18,6 +18,7 @@ PENDING = "pending"
 RUNNING = "running"
 DONE = "done"
 FAILED = "failed"
+CANCELLED = "cancelled"  # stopped by the owner before it ran
 
 
 def backoff(attempts: int) -> timedelta:
@@ -43,6 +44,8 @@ async def enqueue(db: AsyncSession, kind: str, ref: dict[str, Any], *, delay_s: 
 
 # Analyses can be long (an AI call each): what the owner is waiting for goes first.
 BACKGROUND = ("classify", "scan_start", "scan_movie", "refresh_titles", "seerr_requests")
+# What the owner may stop from the interface; a move or an email, once queued, always goes through.
+STOPPABLE = BACKGROUND
 _priority = case((WorkItem.kind.in_(BACKGROUND), 1), else_=0)
 
 
@@ -90,6 +93,23 @@ async def retry_now(db: AsyncSession, item: WorkItem) -> None:
     item.next_attempt_at = clock.now()
     item.updated_at = clock.now()
     await db.flush()
+
+
+async def cancel(db: AsyncSession, kinds: tuple[str, ...], **ref: Any) -> int:
+    """Queued items of these kinds (and this ref) that will not run. Returns how many."""
+    items = await db.scalars(select(WorkItem).where(WorkItem.kind.in_(kinds), WorkItem.state == PENDING))
+    cancelled = 0
+    for item in items:
+        if all(item.ref.get(k) == v for k, v in ref.items()):
+            item.state = CANCELLED
+            item.updated_at = clock.now()
+            cancelled += 1
+    await db.flush()
+    return cancelled
+
+
+async def pending(db: AsyncSession) -> list[WorkItem]:
+    return list(await db.scalars(select(WorkItem).where(WorkItem.state == PENDING).order_by(WorkItem.id)))
 
 
 async def recover(db: AsyncSession) -> int:

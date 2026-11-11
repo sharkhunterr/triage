@@ -17,6 +17,7 @@ from typing import Any
 from triage.core import clock
 
 RUNNING, DONE, SKIPPED, FAILED = "running", "done", "skipped", "failed"
+STOPPED = "stopped"  # an outcome: the owner stopped the job
 
 
 @dataclass
@@ -40,6 +41,7 @@ class Entry:
     decision_id: int | None = None
     error: str | None = None
     retry: bool = False
+    scan_id: int | None = None  # the check it belongs to
 
 
 @dataclass
@@ -83,17 +85,23 @@ class Activity:
     def running(self) -> Entry | None:
         return self.current or next(iter(self.manual), None)
 
-    def start(self, item_id: int, kind: str) -> Entry:
+    def start(self, item_id: int, kind: str, scan_id: int | None = None) -> Entry:
         if self.run is None or self.run.finished_at is not None:
             self.run = Run(started_at=clock.now())
-        self.current = Entry(id=item_id, kind=kind, started_at=clock.now())
+        self.current = Entry(id=item_id, kind=kind, started_at=clock.now(), scan_id=scan_id)
         return self.current
 
-    def finish(self, entry: Entry, *, error: str | None = None, retry: bool = False) -> None:
+    def finish(
+        self, entry: Entry, *, error: str | None = None, retry: bool = False, stopped: bool = False
+    ) -> None:
         entry.finished_at = clock.now()
         entry.error, entry.retry = error, retry
+        if stopped:
+            entry.outcome = STOPPED
         for step in entry.steps:
-            if step.state == RUNNING:
+            if step.state == RUNNING and stopped:
+                step.state, step.detail = SKIPPED, STOPPED
+            elif step.state == RUNNING:
                 step.state = FAILED if error else DONE
         self.recent.appendleft(entry)
         if self.run is not None:

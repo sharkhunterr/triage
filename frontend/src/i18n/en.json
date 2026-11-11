@@ -567,5 +567,21 @@
   "history.confidence": "Confidence {value}%",
   "choice.slider": "Library chosen",
   "choice.stayIn": "Stay in {name}",
-  "choice.send": "Send to {name}"
+  "choice.send": "Send to {name}",
+  "work.seerr_requests": "Read the Seerr requests",
+  "activity.stop": "Stop",
+  "activity.stopAll": "Stop all",
+  "activity.stopped": "{count, plural, =0 {Nothing left to stop} one {# task stopped} other {# tasks stopped}}",
+  "activity.queued": "Waiting",
+  "activity.queue.count": "{count} waiting",
+  "activity.queue.always": "always goes through",
+  "activity.queue.scan": "Check of {folder}",
+  "activity.queue.classify": "Movie analyses",
+  "activity.queue.refresh_titles": "Title updates",
+  "activity.queue.seerr_requests": "Seerr requests",
+  "activity.queue.move": "Moves",
+  "activity.queue.send_email": "Review email",
+  "activity.queue.verify_request": "Request checks",
+  "activity.outcome.stopped": "stopped",
+  "activity.skip.stopped": "stopped"
 }

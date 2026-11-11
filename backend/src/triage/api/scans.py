@@ -14,8 +14,8 @@ from triage.core.errors import Conflict, NotFound, TriageError
 from triage.core.settings import normalize_folder, same_folder
 from triage.domain import decisions as d
 from triage.models import Decision, Scan
-from triage.worker import queue
-from triage.worker.scan import CANCELLED, RUNNING
+from triage.worker import queue, stop
+from triage.worker.scan import RUNNING
 
 router = APIRouter(tags=["scans"], dependencies=[Owner])
 
@@ -183,10 +183,11 @@ async def scan_page(
 
 
 @router.post("/scans/{scan_id}/cancel", response_model=ScanOut)
-async def cancel_scan(scan_id: int, db: Db) -> Scan:
+async def cancel_scan(scan_id: int, db: Db, state: State) -> Scan:
     scan = await _scan(db, scan_id)
     if scan.state == RUNNING:
-        scan.state = CANCELLED
-        scan.finished_at = clock.now()
+        await stop.cancel(db, "scan", scan_id)
         await db.commit()
+        state.worker.interrupt(stop.GROUPS["scan"], scan_id)
+        await db.refresh(scan)
     return scan

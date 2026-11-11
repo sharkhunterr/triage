@@ -3,6 +3,13 @@
     "schemas": {
       "ActivityOut": {
         "properties": {
+          "queue": {
+            "items": {
+              "$ref": "#/components/schemas/QueuedOut"
+            },
+            "title": "Queue",
+            "type": "array"
+          },
           "recent": {
             "items": {
               "$ref": "#/components/schemas/EntryOut"
@@ -34,7 +41,8 @@
         "required": [
           "running",
           "run",
-          "recent"
+          "recent",
+          "queue"
         ],
         "title": "ActivityOut",
         "type": "object"
@@ -1145,6 +1153,17 @@
             "title": "Retry",
             "type": "boolean"
           },
+          "scan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scan Id"
+          },
           "started_at": {
             "format": "date-time",
             "title": "Started At",
@@ -1156,6 +1175,10 @@
             },
             "title": "Steps",
             "type": "array"
+          },
+          "stoppable": {
+            "title": "Stoppable",
+            "type": "boolean"
           },
           "title": {
             "anyOf": [
@@ -1180,6 +1203,8 @@
           "decision_id",
           "error",
           "retry",
+          "scan_id",
+          "stoppable",
           "steps"
         ],
         "title": "EntryOut",
@@ -1531,6 +1556,53 @@
           "categories"
         ],
         "title": "PresetOut",
+        "type": "object"
+      },
+      "QueuedOut": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Folder"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "scan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scan Id"
+          },
+          "stoppable": {
+            "title": "Stoppable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "scan_id",
+          "folder",
+          "count",
+          "stoppable"
+        ],
+        "title": "QueuedOut",
         "type": "object"
       },
       "ReanalyzeBody": {
@@ -2239,6 +2311,57 @@
         "title": "StepOut",
         "type": "object"
       },
+      "StopBody": {
+        "properties": {
+          "kind": {
+            "anyOf": [
+              {
+                "const": "all",
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "classify",
+                  "scan",
+                  "refresh_titles",
+                  "seerr_requests"
+                ],
+                "type": "string"
+              }
+            ],
+            "title": "Kind"
+          },
+          "scan_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scan Id"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "StopBody",
+        "type": "object"
+      },
+      "Stopped": {
+        "properties": {
+          "stopped": {
+            "title": "Stopped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stopped"
+        ],
+        "title": "Stopped",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -2341,6 +2464,48 @@
           }
         },
         "summary": "Activity",
+        "tags": [
+          "status"
+        ]
+      }
+    },
+    "/api/v1/activity/stop": {
+      "post": {
+        "description": "Stops a group of work: the queued items are cancelled, the running one is interrupted.\nMoves and emails never stop.",
+        "operationId": "stop_work_api_v1_activity_stop_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StopBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Stopped"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop Work",
         "tags": [
           "status"
         ]

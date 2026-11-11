@@ -567,5 +567,21 @@
   "history.confidence": "Confiance {value} %",
   "choice.slider": "Bibliothèque choisie",
   "choice.stayIn": "Rester dans {name}",
-  "choice.send": "Envoyer vers {name}"
+  "choice.send": "Envoyer vers {name}",
+  "work.seerr_requests": "Lire les demandes Seerr",
+  "activity.stop": "Arrêter",
+  "activity.stopAll": "Tout arrêter",
+  "activity.stopped": "{count, plural, =0 {Plus rien à arrêter} one {# tâche arrêtée} other {# tâches arrêtées}}",
+  "activity.queued": "En attente",
+  "activity.queue.count": "{count} en attente",
+  "activity.queue.always": "va jusqu'au bout",
+  "activity.queue.scan": "Contrôle de {folder}",
+  "activity.queue.classify": "Analyses de films",
+  "activity.queue.refresh_titles": "Mise à jour des titres",
+  "activity.queue.seerr_requests": "Demandes Seerr",
+  "activity.queue.move": "Déplacements",
+  "activity.queue.send_email": "Email à trancher",
+  "activity.queue.verify_request": "Vérification des demandes",
+  "activity.outcome.stopped": "arrêtée",
+  "activity.skip.stopped": "arrêté"
 }

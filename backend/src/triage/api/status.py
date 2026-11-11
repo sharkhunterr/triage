@@ -1,7 +1,7 @@
 """Status page, "check now", retry of failed work (contracts/http-api.md — Status & operations)."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
@@ -15,7 +15,7 @@ from triage.domain import decisions as d
 from triage.domain.categories import active
 from triage.domain.health import HealthCache, folder_warnings
 from triage.models import Decision, WorkItem
-from triage.worker import queue
+from triage.worker import queue, stop
 
 router = APIRouter(tags=["status"], dependencies=[Owner])
 
@@ -128,6 +128,8 @@ class EntryOut(BaseModel):
     decision_id: int | None
     error: str | None
     retry: bool
+    scan_id: int | None
+    stoppable: bool  # running, and the owner may stop it
     steps: list[StepOut]
 
 
@@ -139,15 +141,26 @@ class RunOut(BaseModel):
     pending: int
 
 
+class QueuedOut(BaseModel):
+    kind: str  # the group: classify, scan (one check), refresh_titles, seerr_requests, move…
+    scan_id: int | None
+    folder: str | None  # a check's library
+    count: int
+    stoppable: bool
+
+
 class ActivityOut(BaseModel):
     running: EntryOut | None
     run: RunOut | None
     recent: list[EntryOut]
+    queue: list[QueuedOut]
 
 
 def _entry(entry: Entry) -> EntryOut:
     return EntryOut(
         **{k: v for k, v in entry.__dict__.items() if k != "steps"},
+        # a job of the worker (an analysis asked from the movie page answers its own request)
+        stoppable=entry.id != 0 and entry.finished_at is None and entry.kind in queue.STOPPABLE,
         steps=[StepOut(**s.__dict__) for s in entry.steps],
     )
 
@@ -162,4 +175,29 @@ async def activity(db: Db, state: State) -> ActivityOut:
         running=_entry(tracker.running) if tracker.running else None,
         run=RunOut(**run.__dict__, pending=pending) if run else None,
         recent=[_entry(e) for e in tracker.recent],
+        queue=[QueuedOut(**g) for g in await stop.queued(db)],
     )
+
+
+class StopBody(BaseModel):
+    kind: Literal["all"] | stop.Group
+    scan_id: int | None = None  # one check (kind "scan"); every check without it
+
+
+class Stopped(BaseModel):
+    stopped: int
+
+
+@router.post("/activity/stop", response_model=Stopped)
+async def stop_work(body: StopBody, db: Db, state: State) -> Stopped:
+    """Stops a group of work: the queued items are cancelled, the running one is interrupted.
+    Moves and emails never stop."""
+    groups = list(stop.GROUPS) if body.kind == "all" else [body.kind]
+    count = 0
+    for group in groups:
+        count += await stop.cancel(db, group, body.scan_id if group == "scan" else None)
+    await db.commit()
+    kinds = tuple(k for g in groups for k in stop.GROUPS[g])
+    scan_id = body.scan_id if body.kind == "scan" else None
+    count += state.worker.interrupt(kinds, scan_id)
+    return Stopped(stopped=count)
