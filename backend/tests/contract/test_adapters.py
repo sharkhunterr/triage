@@ -8,7 +8,13 @@ from typing import Any
 import httpx
 import pytest
 
-from triage.adapters.ollama import REASONING_MAX, OllamaClient, parse_verdict
+from triage.adapters.ollama import (
+    GRAMMAR_REPETITION_LIMIT,
+    REASONING_MAX,
+    OllamaClient,
+    answer_schema,
+    parse_verdict,
+)
 from triage.adapters.radarr import RadarrClient
 from triage.adapters.seerr import SeerrClient
 from triage.adapters.tmdb import RateLimiter, TmdbClient
@@ -162,6 +168,11 @@ async def test_the_ai_reasons_before_it_chooses():
     schema = json.loads(rec.requests[0].content)["format"]
     assert list(schema["properties"]) == ["reasoning", "category", "confidence"]
     assert schema["required"] == ["reasoning", "category", "confidence"]
+
+
+def test_the_reasoning_cap_stays_under_ollamas_grammar_limit():
+    """Ollama answered HTTP 400 ("failed to parse grammar") to a 2000-character cap."""
+    assert answer_schema(["films"])["properties"]["reasoning"]["maxLength"] < GRAMMAR_REPETITION_LIMIT
 
 
 async def test_gpt_oss_gets_the_lowest_reasoning_level_not_false():

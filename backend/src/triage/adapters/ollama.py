@@ -11,8 +11,11 @@ from triage.adapters.types import AiVerdict, ServiceCheck, ServiceError
 
 SERVICE = "Ollama"
 UNSURE = "unsure"
-# the reasoning's length is the owner's call (their instructions); the cap only guards a runaway
-REASONING_MAX = 2000
+# the reasoning's length is the owner's call (their instructions); the cap only guards a runaway.
+# Ollama turns it into a grammar repetition, and refuses 2000 or more (HTTP 400 "failed to parse
+# grammar"): kept well below.
+REASONING_MAX = 1500
+GRAMMAR_REPETITION_LIMIT = 2000
 SENTENCE_ENDS = (".", "!", "?", "…")
 
 # The answer is a short JSON object, so generation is capped and the context is fixed: each call
