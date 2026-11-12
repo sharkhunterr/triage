@@ -27,7 +27,7 @@ TRANSITIONS: dict[str, set[str]] = {
     MOVING: {MOVED, FAILED, SUPERSEDED},
     FAILED: {MOVING, SUPERSEDED},
     MOVED: {CORRECTED},
-    IN_PLACE: set(),
+    IN_PLACE: {CORRECTED},  # moved by hand all the same
     SIMULATED: set(),
     DISMISSED: set(),
     LEFT_IN_INTAKE: set(),

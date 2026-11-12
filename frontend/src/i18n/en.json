@@ -153,6 +153,8 @@
   "decision.decideHint": "Move the movie to a library, or leave it where it is.",
   "decision.correctTitle": "Correct this move",
   "decision.correctHint": "Move it elsewhere. Triage will never sort this movie on its own again.",
+  "decision.moveTitle": "Move it to another library",
+  "decision.moveHint": "It is already in the right library. Move it elsewhere if you prefer: Triage will never sort this movie on its own again.",
   "decision.moveTo": "Move to {category}",
   "decision.leave": "Leave in intake",
   "decision.dismiss": "Dismiss",

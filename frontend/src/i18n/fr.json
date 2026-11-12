@@ -153,6 +153,8 @@
   "decision.decideHint": "Déplacez le film vers une bibliothèque, ou laissez-le où il est.",
   "decision.correctTitle": "Corriger ce déplacement",
   "decision.correctHint": "Déplacez-le ailleurs. Triage ne rangera plus jamais ce film tout seul.",
+  "decision.moveTitle": "Le déplacer dans une autre bibliothèque",
+  "decision.moveHint": "Il est déjà dans la bonne bibliothèque. Déplacez-le ailleurs si vous préférez : Triage ne rangera plus jamais ce film tout seul.",
   "decision.moveTo": "Déplacer vers {category}",
   "decision.leave": "Laisser dans l'entrée",
   "decision.dismiss": "Ignorer",

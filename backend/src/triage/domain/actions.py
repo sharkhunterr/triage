@@ -73,11 +73,14 @@ async def category_by_key(db: AsyncSession, key: str) -> Category | None:
 async def correct(
     db: AsyncSession, decision: Decision, choice: int | str, intake_folders: list[str]
 ) -> Decision:
-    """Move a movie Triage moved somewhere else (FR-021). The movie is marked corrected: Triage
-    will only ever propose for it from now on, and it is locked in its new library (put back in the
-    intake folder, it is to be sorted again: no lock). Returns the correction decision."""
-    if decision.status != d.MOVED:
-        raise Conflict("Only a moved movie can be corrected", code="not_moved")
+    """Move a movie Triage moved, or found already in place, somewhere else (FR-021). The movie is
+    marked corrected: Triage will only ever propose for it from now on, and it is locked in its new
+    library (put back in the intake folder, it is to be sorted again: no lock). Returns the
+    correction decision."""
+    if decision.status not in {d.MOVED, d.IN_PLACE}:
+        raise Conflict("Only a moved or in-place movie can be corrected", code="not_moved")
+    # in place, the movie is where the check found it; its target is what the rules say today
+    here = decision.from_root_folder if decision.status == d.IN_PLACE else decision.target_root_folder
     snapshot = list(decision.categories_snapshot or [])
     if choice == INTAKE:
         target = decision.from_root_folder if decision.source == "intake" else None
@@ -98,7 +101,7 @@ async def correct(
         await locks.unlock(db, decision.radarr_id)
     else:
         await locks.lock(db, decision.radarr_id, target, locks.SHEET)
-    return await _move_again(db, decision, target, category_id, snapshot)
+    return await _move_again(db, decision, target, category_id, snapshot, here=here)
 
 
 async def revert(db: AsyncSession, decision: Decision, *, lock: bool = True) -> Decision:
@@ -151,6 +154,7 @@ async def _move_again(
     snapshot: list[Any],
     *,
     reasons: list[dict[str, Any]] | None = None,
+    here: str | None = None,
 ) -> Decision:
     ref = await db.get(MovieRef, decision.radarr_id)
     if ref is not None:
@@ -158,7 +162,7 @@ async def _move_again(
     correction = Decision(
         radarr_id=decision.radarr_id,
         source="correction",
-        from_root_folder=decision.target_root_folder,
+        from_root_folder=here or decision.target_root_folder,
         signals=decision.signals,
         ai=decision.ai,
         scores=decision.scores,

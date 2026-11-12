@@ -36,9 +36,11 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
   const t = useT()
   const action = useDecisionAction()
   const awaiting = decision.status === 'held' || decision.status === 'proposed'
-  const correctable = decision.status === 'moved'
+  const inPlace = decision.status === 'in_place'
+  // moved by Triage, or found already in place by a check: either can still go elsewhere by hand
+  const correctable = decision.status === 'moved' || inPlace
   if (!awaiting && !correctable && decision.status !== 'failed') return null
-  const undo = correctable && decision.from_root_folder && (
+  const undo = decision.status === 'moved' && decision.from_root_folder && (
     <Button
       size="sm"
       variant="ghost"
@@ -53,10 +55,18 @@ export function DecisionActions({ decision }: { decision: DecisionSummary }) {
   return (
     <Card>
       <h2 className="mb-1 font-semibold">
-        {correctable ? t('decision.correctTitle') : t('decision.decideTitle')}
+        {inPlace
+          ? t('decision.moveTitle')
+          : correctable
+            ? t('decision.correctTitle')
+            : t('decision.decideTitle')}
       </h2>
       <p className="mb-3 text-sm text-muted">
-        {correctable ? t('decision.correctHint') : t('decision.decideHint')}
+        {inPlace
+          ? t('decision.moveHint')
+          : correctable
+            ? t('decision.correctHint')
+            : t('decision.decideHint')}
       </p>
       {awaiting || correctable ? (
         <ChoiceSlider decision={decision} correct={correctable} via="sheet" />

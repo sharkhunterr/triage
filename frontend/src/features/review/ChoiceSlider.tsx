@@ -35,7 +35,9 @@ export function ChoiceSlider({
   const libraries: Stop[] = (categories.data ?? [])
     .filter((c) => c.root_folder_path)
     .map((c) => ({ id: c.id, key: c.key, name: c.name }))
-  const folder = correct ? decision.target_root_folder : decision.from_root_folder
+  // moved: it is in its target; in place (or waiting): where it was found
+  const folder =
+    correct && decision.status !== 'in_place' ? decision.target_root_folder : decision.from_root_folder
   const here = folder ? trim(folder) : null
   const hereCategory = (categories.data ?? []).find(
     (c) => c.root_folder_path && here !== null && trim(c.root_folder_path) === here,
