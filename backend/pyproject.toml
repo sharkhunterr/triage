@@ -1,6 +1,6 @@
 [project]
 name = "triage"
-version = "0.7.0"
+version = "0.8.0"
 description = "Sorts newly requested movies into the right Radarr library, with metadata rules and a local AI."
 requires-python = ">=3.12,<3.13"
 license = { text = "MIT" }

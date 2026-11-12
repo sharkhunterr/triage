@@ -3,6 +3,13 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.8.0](https://github.com/sharkhunterr/triage/compare/v0.7.0...v0.8.0) (2026-11-12)
+
+
+### Features
+
+* **ai:** the owner chooses in Settings › AI whether the model thinks before its verdict — off by default (a short verdict), on for a closer judgement on hard cases, with room left for the reasoning; a switch's description no longer belongs to its name ([8818044](https://github.com/sharkhunterr/triage/commit/8818044c17712636249e0258f2fcbeb23c1fb069))
+
 ## [0.7.0](https://github.com/sharkhunterr/triage/compare/v0.6.0...v0.7.0) (2026-11-12)
 
 
