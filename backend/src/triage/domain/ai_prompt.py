@@ -19,8 +19,9 @@ The rules are the owner's own criteria:
 Metadata tags are often missing or misleading: a keyword alone does not make a category (a drama
 about a singer is tagged "concert", it is not a concert film). Judge what the movie actually is from
 its title, overview and your own knowledge of it, and use the rules as hints.
+First write one or two sentences of reasoning, written in {language}: what the movie actually is.
+Then choose the category that reasoning leads to, and give a confidence between 0 and 1.
 If you cannot decide with reasonable certainty, answer "unsure".
-Give a confidence between 0 and 1 and one or two sentences of reasoning, written in {language}.
 
 Categories:
 {categories}"""

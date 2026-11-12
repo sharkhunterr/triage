@@ -152,6 +152,18 @@ async def test_ollama_chat_is_constrained_to_the_categories():
     assert body["format"]["properties"]["category"]["enum"] == ["animation", "films", "unsure"]
 
 
+async def test_the_ai_reasons_before_it_chooses():
+    """The model writes the fields in the schema's order: asked for the category first, it commits
+    before any reasoning and leans on the first category, then contradicts itself."""
+    rec = Recorder({("POST", "/api/chat"): payload("ollama_chat.json")})
+    await OllamaClient("http://ollama:11434", "qwen3:8b", 60, rec.client()).classify(
+        "system", "user", ["animation", "films"]
+    )
+    schema = json.loads(rec.requests[0].content)["format"]
+    assert list(schema["properties"]) == ["reasoning", "category", "confidence"]
+    assert schema["required"] == ["reasoning", "category", "confidence"]
+
+
 async def test_gpt_oss_gets_the_lowest_reasoning_level_not_false():
     """gpt-oss answers an empty message when ``think`` is False."""
     rec = Recorder({("POST", "/api/chat"): payload("ollama_chat.json")})

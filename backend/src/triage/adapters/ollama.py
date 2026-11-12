@@ -32,14 +32,17 @@ def think_mode(model: str, thinking: bool = False) -> bool | str:
 
 
 def answer_schema(category_keys: list[str]) -> dict[str, Any]:
+    """The model writes the fields in this order, so the reasoning comes first: asked for the
+    category first, it commits before any reasoning (leaning on the first category), then writes a
+    reasoning that contradicts its own choice."""
     return {
         "type": "object",
         "properties": {
+            "reasoning": {"type": "string", "maxLength": 600},
             "category": {"type": "string", "enum": [*category_keys, UNSURE]},
             "confidence": {"type": "number", "minimum": 0, "maximum": 1},
-            "reasoning": {"type": "string", "maxLength": 600},
         },
-        "required": ["category", "confidence", "reasoning"],
+        "required": ["reasoning", "category", "confidence"],
     }
 
 
