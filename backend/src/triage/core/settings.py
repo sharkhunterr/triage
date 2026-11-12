@@ -42,6 +42,8 @@ class OllamaSettings(BaseModel):
     timeout_s: int = Field(180, ge=5, le=600)  # a CPU-only Ollama loads the model before answering
     # when_unsure: only when the rules are not conclusive; always: a second opinion on every movie
     ask: Literal["when_unsure", "always", "never"] = "when_unsure"
+    # a reasoning pass before the verdict: closer on hard cases, but minutes per movie on a CPU
+    thinking: bool = False
 
     @field_validator("url")
     @classmethod

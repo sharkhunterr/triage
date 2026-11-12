@@ -276,6 +276,28 @@ test('the AI model is picked from the installed ones, once the address answers',
   await expect(model).toBeDisabled()
 })
 
+test('the AI thinks before its verdict only once the owner turns it on', async ({ page }) => {
+  await signIn(page)
+  await go(page, 'Settings')
+  const ai = () =>
+    page.locator('section').filter({ has: page.getByRole('heading', { name: 'Local AI (Ollama)' }) })
+  const thinking = () => ai().getByRole('switch', { name: 'Think before answering' })
+  const saveAndReload = async () => {
+    await ai().getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByText('Saved')).toBeVisible()
+    await page.reload()
+  }
+  await expect(thinking()).not.toBeChecked()
+  await thinking().click()
+  await saveAndReload()
+  await expect(thinking()).toBeChecked()
+  await expectAccessible(page)
+  // back to the short verdict: the demo data is shared with the other project's run
+  await thinking().click()
+  await saveAndReload()
+  await expect(thinking()).not.toBeChecked()
+})
+
 test('settings and status pages', async ({ page }) => {
   await signIn(page)
   await go(page, 'Settings')

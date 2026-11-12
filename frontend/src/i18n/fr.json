@@ -398,6 +398,8 @@
   "settings.aiAsk.when_unsureHint": "L'IA ne tranche que les films que les règles ne savent pas classer. Rapide, et le réglage par défaut.",
   "settings.aiAsk.alwaysHint": "Chaque film reçoit aussi l'avis de l'IA. Si elle contredit les règles, le film vous attend. Plus lent.",
   "settings.aiAsk.neverHint": "Règles seules : les films qu'elles ne savent pas classer vous attendent.",
+  "settings.aiThinking": "Réflexion avant la réponse",
+  "settings.aiThinkingHint": "Désactivée : un verdict court, le plus rapide. Activée : le modèle raisonne avant de répondre, plus juste sur les cas difficiles mais plusieurs fois plus lent (des minutes par film sans carte graphique) : augmentez le délai maximal.",
   "categories.ruleEffect": "Effet",
   "categories.effect.weight": "Ajoute son poids",
   "categories.effect.decisive": "Décisive (tranche la catégorie)",

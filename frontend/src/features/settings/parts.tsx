@@ -11,7 +11,7 @@ import {
 import { Button, Field, Input, Select } from '../../design-system'
 import { useT } from '../../i18n'
 
-export type Values = Record<string, string | number | string[]>
+export type Values = Record<string, string | number | boolean | string[]>
 
 export function useSection(view: SettingsView | undefined, section: keyof SettingsView, fields: string[]) {
   const [values, setValues] = useState<Values>({})

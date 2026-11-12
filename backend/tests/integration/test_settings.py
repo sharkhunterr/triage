@@ -73,6 +73,13 @@ def test_the_ollama_adapter_needs_an_address_only():
     address_only = AppSettings.model_validate({"ollama": {"url": "http://ollama.test"}})
     assert build_adapters(address_only, client).ollama is not None
     assert not address_only.ai_enabled
+    assert address_only.ollama.thinking is False  # a short verdict unless the owner asks for more
+
+
+async def test_the_thinking_choice_is_saved(owner: AsyncClient):
+    saved = (await owner.patch("/api/v1/settings", json={"ollama": {"thinking": True}})).json()
+    assert saved["ollama"]["thinking"] is True
+    assert (await owner.get("/api/v1/settings")).json()["ollama"]["thinking"] is True
 
 
 async def test_a_connection_test_can_use_unsaved_values(owner: AsyncClient, env: Env):

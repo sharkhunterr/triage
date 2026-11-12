@@ -398,6 +398,8 @@
   "settings.aiAsk.when_unsureHint": "The AI settles only the movies the rules cannot decide. Fast, and the default.",
   "settings.aiAsk.alwaysHint": "Every movie also gets the AI's view. If it disagrees with the rules, the movie waits for you. Slower.",
   "settings.aiAsk.neverHint": "Rules only: movies the rules cannot decide wait for you.",
+  "settings.aiThinking": "Think before answering",
+  "settings.aiThinkingHint": "Off: a short verdict, the fastest. On: the model reasons before it answers, closer on hard cases but several times slower (minutes per movie without a graphics card): raise the timeout.",
   "categories.ruleEffect": "Effect",
   "categories.effect.weight": "Adds its weight",
   "categories.effect.decisive": "Decisive (settles the category)",

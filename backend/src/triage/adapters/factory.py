@@ -32,7 +32,9 @@ def build_adapters(settings: AppSettings, client: httpx.AsyncClient) -> Adapters
         # built from the address alone, to test it and list its models; the AI is asked only once a
         # model is chosen too (settings.ai_enabled)
         ollama=(
-            OllamaClient(s.ollama.url, s.ollama.model, s.ollama.timeout_s, client) if s.ollama.url else None
+            OllamaClient(s.ollama.url, s.ollama.model, s.ollama.timeout_s, client, thinking=s.ollama.thinking)
+            if s.ollama.url
+            else None
         ),
         seerr=SeerrClient(s.seerr.url, s.seerr.api_key, client) if s.seerr_configured else None,
         mailer=(

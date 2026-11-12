@@ -161,6 +161,18 @@ async def test_gpt_oss_gets_the_lowest_reasoning_level_not_false():
     assert json.loads(rec.requests[0].content)["think"] == "low"
 
 
+@pytest.mark.parametrize(("model", "think"), [("qwen3:8b", True), ("gpt-oss:20b", "medium")])
+async def test_the_owner_can_let_the_ai_think_before_its_verdict(model: str, think: bool | str):
+    rec = Recorder({("POST", "/api/chat"): payload("ollama_chat.json")})
+    await OllamaClient("http://ollama:11434", model, 600, rec.client(), thinking=True).classify(
+        "system", "user", ["animation", "films"]
+    )
+    body = json.loads(rec.requests[0].content)
+    assert body["think"] == think
+    # the reasoning counts in the answer cap: it leaves room for it, so the verdict is never cut off
+    assert body["options"]["num_predict"] == 4096
+
+
 @pytest.mark.parametrize(
     "content",
     [

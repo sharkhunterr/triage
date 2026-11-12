@@ -165,12 +165,20 @@ export function Switch({
   const id = useId()
   return (
     <div className="flex items-start justify-between gap-4">
-      <label htmlFor={id} className="flex flex-col">
-        <span className="text-sm font-medium">{label}</span>
-        {description && <span className="text-xs text-muted">{description}</span>}
-      </label>
+      {/* the label names the switch; the description is read after it, not as part of its name */}
+      <div className="flex flex-col">
+        <label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </label>
+        {description && (
+          <span id={`${id}-desc`} className="text-xs text-muted">
+            {description}
+          </span>
+        )}
+      </div>
       <RadixSwitch.Root
         id={id}
+        aria-describedby={description ? `${id}-desc` : undefined}
         checked={checked}
         onCheckedChange={onCheckedChange}
         className="relative h-6 w-11 shrink-0 rounded-full bg-surface-2 border border-border transition-colors data-[state=checked]:bg-accent"

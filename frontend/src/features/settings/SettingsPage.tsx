@@ -79,7 +79,7 @@ export function SettingsPage() {
   const view = settings.data
   const radarr = useSection(view, 'radarr', ['url', 'api_key', 'intake_root_folders'])
   const tmdb = useSection(view, 'tmdb', ['api_key', 'language'])
-  const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s', 'ask'])
+  const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s', 'ask', 'thinking'])
   const seerr = useSection(view, 'seerr', ['url', 'api_key'])
   const smtp = useSection(view, 'smtp', [
     'host',
@@ -284,6 +284,12 @@ export function SettingsPage() {
               </Select>
             )}
           </Field>
+          <Switch
+            label={t('settings.aiThinking')}
+            description={t('settings.aiThinkingHint')}
+            checked={ollama.values.thinking === true}
+            onCheckedChange={(thinking) => ollama.set('thinking', thinking)}
+          />
           <Field label={t('settings.aiTimeout')} hint={t('settings.aiTimeoutHint')}>
             {(id, desc) => (
               <Input

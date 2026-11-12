@@ -9,7 +9,13 @@ export type SettingsView = {
   webhook_url: string
   radarr: { url: string; api_key: Secret; intake_root_folders: string[] }
   tmdb: { api_key: Secret; language: string }
-  ollama: { url: string; model: string; timeout_s: number; ask: 'when_unsure' | 'always' | 'never' }
+  ollama: {
+    url: string
+    model: string
+    timeout_s: number
+    ask: 'when_unsure' | 'always' | 'never'
+    thinking: boolean
+  }
   seerr: { url: string; api_key: Secret; webhook_secret: Secret }
   smtp: {
     host: string
