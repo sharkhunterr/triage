@@ -1,3 +1,41 @@
+# v0.9.0
+
+## 🎬 Triage 0.9.0 — AI verdicts that follow their reasoning, your own AI instructions, any movie moved by hand
+
+### ✨ Features
+
+- **Your own AI instructions** — Settings › AI shows what the AI reads before each movie, prefilled
+  with Triage's default. Rewrite it as you like (`{language}` stands for the reasoning language), or
+  restore the default in one click. Your categories and the movie's facts are always appended.
+- **A movie already in place can be moved by hand** — the sheet of a movie a check found in the right
+  library now offers the library slider too. It moves from where the check found it, is locked in its
+  new library, and Triage only proposes for it afterwards.
+- **Verdicts that follow their reasoning** — the AI now writes its reasoning before it chooses the
+  category, judges only on the facts listed for the movie, and a long reasoning ends on its last whole
+  sentence.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` The AI could give a reasoning that said "a live-action film" and still choose the animation
+  category; it now reasons first and chooses what its reasoning leads to.
+- `bug` The AI's reasoning was cut in the middle of a word, and a small model assumed a genre the
+  movie did not have; it now uses only the listed facts and ends on a whole sentence.
+- `bug` Every AI call answered HTTP 400 ("failed to parse grammar") after the reasoning limit was
+  raised; the limit now stays under what Ollama accepts.
+
+#### New
+
+- `feat` The AI instructions are edited in Settings › AI, from Triage's default.
+- `feat` A movie already in place can be moved to another library from its sheet.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.9.0
+```
+
 # v0.8.0
 
 ## 🎬 Triage 0.8.0 — choose whether the AI thinks before its verdict
