@@ -1,3 +1,31 @@
+# v0.8.0
+
+## 🎬 Triage 0.8.0 — choose whether the AI thinks before its verdict
+
+### ✨ Features
+
+- **Think before answering** — a new switch in Settings › AI. Off (the default), the model gives a
+  short verdict, the fastest. On, it reasons before it answers: closer on hard cases, but several
+  times slower, minutes per movie without a graphics card, so raise the timeout (up to 600 s).
+  gpt-oss then uses its medium reasoning level, and the answer leaves room for the reasoning so the
+  verdict is never cut off.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` A switch's description is no longer read as part of its name by screen readers.
+
+#### New
+
+- `feat` Choose whether the AI thinks before its verdict.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.8.0
+```
+
 # v0.7.0
 
 ## 🎬 Triage 0.7.0 — lighter AI calls, ready for a CPU-only Ollama, the model picked from a list
