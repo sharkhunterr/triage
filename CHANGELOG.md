@@ -3,6 +3,15 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.7.0](https://github.com/sharkhunterr/triage/compare/v0.6.0...v0.7.0) (2026-11-12)
+
+
+### Features
+
+* **ai:** gpt-oss gets the lowest reasoning level instead of think false (it answered empty), the model stays loaded 30 min between a batch's movies, and the AI timeout defaults to 180 s for a CPU-only Ollama ([27f22ca](https://github.com/sharkhunterr/triage/commit/27f22ca9637fa9148e6f00edf7073c6fb595a320))
+* **ai:** lighter Ollama calls — think off, capped num_predict, fixed num_ctx so a batch no longer pins the GPU with long reasoning passes ([e9e0819](https://github.com/sharkhunterr/triage/commit/e9e0819e024dea3ca0354aaf941ecac22bf5d2ac))
+* **settings:** the AI model is picked from the models installed at the address, listed once it answers (saved and reachable, or just tested) — never typed; an address alone is enough to test Ollama, the AI still waits for a model ([0b6c2e6](https://github.com/sharkhunterr/triage/commit/0b6c2e68affc3fe6e0b88ed5cb59bae7eb5577cb))
+
 ## [0.6.0](https://github.com/sharkhunterr/triage/compare/v0.5.0...v0.6.0) (2026-11-11)
 
 
