@@ -11,6 +11,8 @@ from triage.adapters.types import AiVerdict, ServiceCheck, ServiceError
 
 SERVICE = "Ollama"
 UNSURE = "unsure"
+REASONING_MAX = 600
+SENTENCE_ENDS = (".", "!", "?", "…")
 
 # The answer is a short JSON object, so generation is capped and the context is fixed: each call
 # stays brief, and a fixed context never forces the model to reload (which would spike the GPU).
@@ -38,12 +40,22 @@ def answer_schema(category_keys: list[str]) -> dict[str, Any]:
     return {
         "type": "object",
         "properties": {
-            "reasoning": {"type": "string", "maxLength": 600},
+            "reasoning": {"type": "string", "maxLength": REASONING_MAX},
             "category": {"type": "string", "enum": [*category_keys, UNSURE]},
             "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         },
         "required": ["reasoning", "category", "confidence"],
     }
+
+
+def whole_sentences(reasoning: str) -> str:
+    """The schema caps the reasoning, so a long one is cut mid-word: it ends on its last whole
+    sentence instead, or with an ellipsis when it has none."""
+    text = reasoning.strip()
+    if len(reasoning) < REASONING_MAX or text.endswith(SENTENCE_ENDS):
+        return text
+    end = max(text.rfind(f"{mark} ") for mark in SENTENCE_ENDS)
+    return text[: end + 1] if end > 0 else text.rstrip(" ,;:") + "…"
 
 
 def parse_verdict(content: str, category_keys: list[str], duration_ms: int = 0) -> AiVerdict:
@@ -61,7 +73,7 @@ def parse_verdict(content: str, category_keys: list[str], duration_ms: int = 0) 
         confidence = min(1.0, max(0.0, float(data.get("confidence", 0))))
     except (TypeError, ValueError) as exc:
         raise ServiceError(SERVICE, "gave no usable confidence", retryable=False) from exc
-    reasoning = str(data.get("reasoning") or "")[:600]
+    reasoning = whole_sentences(str(data.get("reasoning") or "")[:REASONING_MAX])
     return AiVerdict(category=category, confidence=confidence, reasoning=reasoning, duration_ms=duration_ms)
 
 

@@ -19,7 +19,10 @@ The rules are the owner's own criteria:
 Metadata tags are often missing or misleading: a keyword alone does not make a category (a drama
 about a singer is tagged "concert", it is not a concert film). Judge what the movie actually is from
 its title, overview and your own knowledge of it, and use the rules as hints.
+Use only the facts listed for the movie: a genre, keyword or company counts only if it is listed,
+never assume one that is not.
 First write one or two sentences of reasoning, written in {language}: what the movie actually is.
+Keep the reasoning short: two sentences, under 300 characters.
 Then choose the category that reasoning leads to, and give a confidence between 0 and 1.
 If you cannot decide with reasonable certainty, answer "unsure".
 

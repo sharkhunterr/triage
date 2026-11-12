@@ -15,6 +15,14 @@ def test_the_ai_sees_each_category_with_its_folder_and_rules():
     assert "written in French" in french
 
 
+def test_the_ai_judges_on_the_listed_facts_in_a_short_reasoning():
+    """A small model otherwise assumes a genre the movie does not have (a live-action film "is
+    animated") and runs its reasoning into the length cap."""
+    system, _ = build_prompt(facts(genres=["Comedy"]), [ANIMATION_NO_HORROR, FILMS])
+    assert "counts only if it is listed" in system
+    assert "under 300 characters" in system
+
+
 def test_the_ai_sees_what_is_ruled_out_but_not_the_points():
     """A second opinion, not an echo: the exclusions are the owner's hard rules, the tally is not shown."""
     movie = facts(genres=["Animation", "Thriller"])

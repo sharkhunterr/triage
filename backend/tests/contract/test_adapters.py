@@ -185,6 +185,22 @@ async def test_the_owner_can_let_the_ai_think_before_its_verdict(model: str, thi
     assert body["options"]["num_predict"] == 4096
 
 
+def test_a_reasoning_cut_by_the_length_cap_ends_on_its_last_whole_sentence():
+    capped = "Un drame familial. Les règles excluent les concerts. " + "Le film " * 80
+    verdict = parse_verdict(
+        json.dumps({"reasoning": capped[:600], "category": "films", "confidence": 0.9}), ["films"]
+    )
+    assert verdict.reasoning == "Un drame familial. Les règles excluent les concerts."
+    no_sentence = parse_verdict(
+        json.dumps({"reasoning": "mot " * 150, "category": "films", "confidence": 1}), ["films"]
+    )
+    assert no_sentence.reasoning.endswith("…") and len(no_sentence.reasoning) <= 601
+    short = parse_verdict(
+        json.dumps({"reasoning": "Un drame, pas un concert", "category": "films", "confidence": 1}), ["films"]
+    )
+    assert short.reasoning == "Un drame, pas un concert"  # under the cap: kept as written
+
+
 @pytest.mark.parametrize(
     "content",
     [
