@@ -1,5 +1,5 @@
 from tests.unit.test_scoring import ANIMATION_NO_HORROR, FILMS, facts
-from triage.domain.ai_prompt import build_prompt
+from triage.domain.ai_prompt import DEFAULT_INSTRUCTIONS, build_prompt
 from triage.domain.scoring import score
 
 
@@ -15,12 +15,21 @@ def test_the_ai_sees_each_category_with_its_folder_and_rules():
     assert "written in French" in french
 
 
-def test_the_ai_judges_on_the_listed_facts_in_a_short_reasoning():
+def test_the_ai_judges_on_the_listed_facts_only():
     """A small model otherwise assumes a genre the movie does not have (a live-action film "is
-    animated") and runs its reasoning into the length cap."""
+    animated"). The length of its reasoning is the owner's call, not a fixed limit."""
     system, _ = build_prompt(facts(genres=["Comedy"]), [ANIMATION_NO_HORROR, FILMS])
     assert "counts only if it is listed" in system
-    assert "under 300 characters" in system
+    assert "300 characters" not in system and "two sentences" not in system
+
+
+def test_the_owners_instructions_replace_the_default_but_keep_the_categories():
+    custom = "Tri de films. Réponds en {language}. {not a placeholder}"
+    system, _ = build_prompt(facts(genres=["Comedy"]), [ANIMATION_NO_HORROR, FILMS], instructions=custom)
+    assert system.startswith("Tri de films. Réponds en English. {not a placeholder}")
+    assert "/media/animation" in system  # the categories are always appended
+    blank, _ = build_prompt(facts(genres=["Comedy"]), [ANIMATION_NO_HORROR, FILMS], instructions="  ")
+    assert blank.startswith(DEFAULT_INSTRUCTIONS.split("\n")[0])  # blank means the default
 
 
 def test_the_ai_sees_what_is_ruled_out_but_not_the_points():

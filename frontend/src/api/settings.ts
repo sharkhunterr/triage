@@ -7,6 +7,7 @@ export type SettingsView = {
   wizard_completed: boolean
   base_url: string
   webhook_url: string
+  ai_instructions_default: string
   radarr: { url: string; api_key: Secret; intake_root_folders: string[] }
   tmdb: { api_key: Secret; language: string }
   ollama: {
@@ -15,6 +16,7 @@ export type SettingsView = {
     timeout_s: number
     ask: 'when_unsure' | 'always' | 'never'
     thinking: boolean
+    instructions: string
   }
   seerr: { url: string; api_key: Secret; webhook_secret: Secret }
   smtp: {

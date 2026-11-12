@@ -11,13 +11,14 @@ from triage.adapters.types import AiVerdict, ServiceCheck, ServiceError
 
 SERVICE = "Ollama"
 UNSURE = "unsure"
-REASONING_MAX = 600
+# the reasoning's length is the owner's call (their instructions); the cap only guards a runaway
+REASONING_MAX = 2000
 SENTENCE_ENDS = (".", "!", "?", "…")
 
 # The answer is a short JSON object, so generation is capped and the context is fixed: each call
 # stays brief, and a fixed context never forces the model to reload (which would spike the GPU).
 NUM_CTX = 8192
-NUM_PREDICT = 512
+NUM_PREDICT = 1024
 # The reasoning counts in the cap: with thinking on, it leaves room for it before the verdict.
 NUM_PREDICT_THINKING = 4096
 # Kept loaded between the movies of a batch: on a CPU, reloading a model takes tens of seconds.

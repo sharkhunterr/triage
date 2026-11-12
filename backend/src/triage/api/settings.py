@@ -10,6 +10,7 @@ from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
 from triage.core.errors import TriageError
 from triage.core.security import new_token
 from triage.core.settings import AppSettings, merge_update, public_view, same_folder, save_settings
+from triage.domain.ai_prompt import DEFAULT_INSTRUCTIONS
 from triage.worker import queue
 
 router = APIRouter(tags=["settings"], dependencies=[Owner])
@@ -49,6 +50,8 @@ def _view(settings: AppSettings) -> dict[str, Any]:
     data = public_view(settings)
     base = settings.base_url or ""
     data["webhook_url"] = f"{base}/api/v1/webhooks/seerr"
+    # shown when the owner has not written their own, and to reset to
+    data["ai_instructions_default"] = DEFAULT_INSTRUCTIONS
     return data
 
 

@@ -21,6 +21,7 @@ import {
   Select,
   Spinner,
   Switch,
+  Textarea,
   useToast,
 } from '../../design-system'
 import { useT } from '../../i18n'
@@ -79,7 +80,7 @@ export function SettingsPage() {
   const view = settings.data
   const radarr = useSection(view, 'radarr', ['url', 'api_key', 'intake_root_folders'])
   const tmdb = useSection(view, 'tmdb', ['api_key', 'language'])
-  const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s', 'ask', 'thinking'])
+  const ollama = useSection(view, 'ollama', ['url', 'model', 'timeout_s', 'ask', 'thinking', 'instructions'])
   const seerr = useSection(view, 'seerr', ['url', 'api_key'])
   const smtp = useSection(view, 'smtp', [
     'host',
@@ -108,6 +109,17 @@ export function SettingsPage() {
       onSuccess: () => toast(t('common.saved'), 'success'),
       onError: (error) => toast(error.message, 'danger'),
     })
+
+  // Triage's default instructions are shown until the owner writes their own; saved unchanged, they
+  // stay "the default" (empty), so a better default in a later version still reaches them.
+  const defaultInstructions = view?.ai_instructions_default ?? ''
+  const instructions = String(ollama.values.instructions || defaultInstructions)
+  const aiPatch = () => {
+    const patch = ollama.patch()
+    const ai = patch.ollama as Record<string, unknown>
+    if (String(ai.instructions ?? '').trim() === defaultInstructions.trim()) ai.instructions = ''
+    return patch
+  }
 
   if (settings.isPending) return <Spinner label={t('common.loading')} />
   if (settings.isError || !view)
@@ -240,7 +252,7 @@ export function SettingsPage() {
           saving={save.isPending}
           testPatch={() => ollama.patch()}
           onTested={modelChoices.onTested}
-          onSave={() => persist(ollama.patch())}
+          onSave={() => persist(aiPatch())}
         >
           <Field label={t('settings.url')} hint={t('settings.aiUrlHint')}>
             {(id, desc) => (
@@ -290,6 +302,31 @@ export function SettingsPage() {
             checked={ollama.values.thinking === true}
             onCheckedChange={(thinking) => ollama.set('thinking', thinking)}
           />
+          <Field
+            label={t('settings.aiInstructions')}
+            hint={t('settings.aiInstructionsHint', { language: '{language}' })}
+          >
+            {(id, desc) => (
+              <Textarea
+                id={id}
+                aria-describedby={desc}
+                rows={14}
+                className="font-mono text-xs"
+                value={instructions}
+                onChange={(e) => ollama.set('instructions', e.target.value)}
+              />
+            )}
+          </Field>
+          <div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={instructions.trim() === defaultInstructions.trim()}
+              onClick={() => ollama.set('instructions', '')}
+            >
+              {t('settings.aiInstructionsReset')}
+            </Button>
+          </div>
           <Field label={t('settings.aiTimeout')} hint={t('settings.aiTimeoutHint')}>
             {(id, desc) => (
               <Input

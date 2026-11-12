@@ -8,7 +8,9 @@ The answer is constrained by a JSON schema (adapters.ollama); the prompt only ex
 from triage.domain.scoring import CategoryDef, RuleDef, ScoreResult
 from triage.domain.signals import MovieFacts
 
-SYSTEM = """You sort movies into a home media library. Each category is a folder of the library.
+# What the AI reads before each movie; the owner can rewrite it in the AI settings (empty: this one).
+# {language} stands for the reasoning language. The categories and the movie's facts always follow.
+DEFAULT_INSTRUCTIONS = """You sort movies into a home media library. Each category is a folder of the library.
 Choose the one category that fits the movie best, using the movie's facts, the category
 descriptions and the owner's rules.
 
@@ -21,10 +23,11 @@ about a singer is tagged "concert", it is not a concert film). Judge what the mo
 its title, overview and your own knowledge of it, and use the rules as hints.
 Use only the facts listed for the movie: a genre, keyword or company counts only if it is listed,
 never assume one that is not.
-First write one or two sentences of reasoning, written in {language}: what the movie actually is.
-Keep the reasoning short: two sentences, under 300 characters.
+First write your reasoning, written in {language}: what the movie actually is.
 Then choose the category that reasoning leads to, and give a confidence between 0 and 1.
-If you cannot decide with reasonable certainty, answer "unsure".
+If you cannot decide with reasonable certainty, answer "unsure"."""
+
+SYSTEM = """{instructions}
 
 Categories:
 {categories}"""
@@ -92,11 +95,13 @@ def build_prompt(
     categories: list[CategoryDef],
     result: ScoreResult | None = None,
     language: str = "en-US",
+    instructions: str = "",
 ) -> tuple[str, str]:
-    system = SYSTEM.format(
-        categories="\n".join(_category(c) for c in categories),
-        language=LANGUAGES.get(language.split("-")[0], "English"),
+    # the owner's text is free: only {language} is replaced, any other brace is kept as written
+    told = (instructions.strip() or DEFAULT_INSTRUCTIONS).replace(
+        "{language}", LANGUAGES.get(language.split("-")[0], "English")
     )
+    system = SYSTEM.format(instructions=told, categories="\n".join(_category(c) for c in categories))
 
     summary = facts.summary()
     user_lines = [f"Title: {facts.title}" + (f" ({facts.year})" if facts.year else "")]

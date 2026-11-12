@@ -76,6 +76,17 @@ def test_the_ollama_adapter_needs_an_address_only():
     assert address_only.ollama.thinking is False  # a short verdict unless the owner asks for more
 
 
+async def test_the_ai_instructions_start_from_the_default_and_can_be_edited(owner: AsyncClient):
+    view = (await owner.get("/api/v1/settings")).json()
+    assert view["ollama"]["instructions"] == ""  # empty: Triage's default, kept up to date
+    assert "You sort movies into a home media library" in view["ai_instructions_default"]
+    saved = (await owner.patch("/api/v1/settings", json={"ollama": {"instructions": "Mine"}})).json()
+    assert saved["ollama"]["instructions"] == "Mine"
+    # the default comes back from the view, never stored as the owner's own text
+    echoed = (await owner.patch("/api/v1/settings", json={"ai_instructions_default": "x"})).json()
+    assert "You sort movies" in echoed["ai_instructions_default"]
+
+
 async def test_the_thinking_choice_is_saved(owner: AsyncClient):
     saved = (await owner.patch("/api/v1/settings", json={"ollama": {"thinking": True}})).json()
     assert saved["ollama"]["thinking"] is True

@@ -29,6 +29,20 @@ async def test_the_ai_settles_an_ambiguous_movie(env: Env):
     assert "Perfect Blue" in user
 
 
+async def test_the_ai_reads_the_owners_own_instructions(env: Env):
+    await seed_categories(env)
+    await automatic(env)
+    await env.settings(ollama={"instructions": "Sort my movies. Explain in {language}, in detail."})
+    add_ambiguous(env)
+    env.fakes.ollama = FakeOllama(AiVerdict("animation", 0.9, "An animated psychological thriller"))
+    await env.state.worker.tick(poll=True)
+
+    (system, _, _) = env.fakes.ollama.prompts[0]
+    assert system.startswith("Sort my movies. Explain in English, in detail.")
+    assert "You sort movies into a home media library" not in system  # replaced, not appended to
+    assert "Animated films for children and families" in system  # the categories still follow
+
+
 async def test_an_ai_outage_falls_back_to_the_rules_and_holds(env: Env):
     await seed_categories(env)
     await automatic(env)

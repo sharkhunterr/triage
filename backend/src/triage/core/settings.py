@@ -44,6 +44,8 @@ class OllamaSettings(BaseModel):
     ask: Literal["when_unsure", "always", "never"] = "when_unsure"
     # a reasoning pass before the verdict: closer on hard cases, but minutes per movie on a CPU
     thinking: bool = False
+    # what the AI reads before each movie; empty: Triage's default (ai_prompt.DEFAULT_INSTRUCTIONS)
+    instructions: str = Field("", max_length=8000)
 
     @field_validator("url")
     @classmethod

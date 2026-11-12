@@ -298,6 +298,31 @@ test('the AI thinks before its verdict only once the owner turns it on', async (
   await expect(thinking()).not.toBeChecked()
 })
 
+test('the AI instructions start from the default, can be rewritten and restored', async ({ page }) => {
+  await signIn(page)
+  await go(page, 'Settings')
+  const ai = () =>
+    page.locator('section').filter({ has: page.getByRole('heading', { name: 'Local AI (Ollama)' }) })
+  const text = () => ai().getByLabel('AI instructions')
+  const reset = () => ai().getByRole('button', { name: 'Restore the default instructions' })
+  const saveAndReload = async () => {
+    await ai().getByRole('button', { name: 'Save' }).click()
+    await expect(page.getByText('Saved')).toBeVisible()
+    await page.reload()
+  }
+  await expect(text()).toHaveValue(/You sort movies into a home media library/)
+  await expect(reset()).toBeDisabled()
+  await text().fill('Sort my movies, explain in {language}.')
+  await saveAndReload()
+  await expect(text()).toHaveValue('Sort my movies, explain in {language}.')
+  await expectAccessible(page)
+  // back to the default: the demo data is shared with the other project's run
+  await reset().click()
+  await expect(text()).toHaveValue(/You sort movies into a home media library/)
+  await saveAndReload()
+  await expect(reset()).toBeDisabled()
+})
+
 test('settings and status pages', async ({ page }) => {
   await signIn(page)
   await go(page, 'Settings')

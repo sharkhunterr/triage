@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 import pytest
 
-from triage.adapters.ollama import OllamaClient, parse_verdict
+from triage.adapters.ollama import REASONING_MAX, OllamaClient, parse_verdict
 from triage.adapters.radarr import RadarrClient
 from triage.adapters.seerr import SeerrClient
 from triage.adapters.tmdb import RateLimiter, TmdbClient
@@ -147,7 +147,7 @@ async def test_ollama_chat_is_constrained_to_the_categories():
     body = json.loads(rec.requests[0].content)
     assert body["stream"] is False and body["think"] is False
     # capped, fixed-context generation so a batch never pins the GPU with long reasoning passes
-    assert body["options"] == {"temperature": 0, "num_ctx": 8192, "num_predict": 512}
+    assert body["options"] == {"temperature": 0, "num_ctx": 8192, "num_predict": 1024}
     assert body["keep_alive"] == "30m"  # no reload between the movies of a batch
     assert body["format"]["properties"]["category"]["enum"] == ["animation", "films", "unsure"]
 
@@ -186,15 +186,15 @@ async def test_the_owner_can_let_the_ai_think_before_its_verdict(model: str, thi
 
 
 def test_a_reasoning_cut_by_the_length_cap_ends_on_its_last_whole_sentence():
-    capped = "Un drame familial. Les règles excluent les concerts. " + "Le film " * 80
+    capped = "Un drame familial. Les règles excluent les concerts. " + "Le film " * REASONING_MAX
     verdict = parse_verdict(
-        json.dumps({"reasoning": capped[:600], "category": "films", "confidence": 0.9}), ["films"]
+        json.dumps({"reasoning": capped[:REASONING_MAX], "category": "films", "confidence": 0.9}), ["films"]
     )
     assert verdict.reasoning == "Un drame familial. Les règles excluent les concerts."
     no_sentence = parse_verdict(
-        json.dumps({"reasoning": "mot " * 150, "category": "films", "confidence": 1}), ["films"]
+        json.dumps({"reasoning": "mot " * REASONING_MAX, "category": "films", "confidence": 1}), ["films"]
     )
-    assert no_sentence.reasoning.endswith("…") and len(no_sentence.reasoning) <= 601
+    assert no_sentence.reasoning.endswith("…") and len(no_sentence.reasoning) <= REASONING_MAX + 1
     short = parse_verdict(
         json.dumps({"reasoning": "Un drame, pas un concert", "category": "films", "confidence": 1}), ["films"]
     )
