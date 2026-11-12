@@ -1,3 +1,40 @@
+# v0.7.0
+
+## 🎬 Triage 0.7.0 — lighter AI calls, ready for a CPU-only Ollama, the model picked from a list
+
+### ✨ Features
+
+- **Lighter AI calls** — Triage asks Ollama for a short verdict without a long reasoning pass
+  (thinking off, a capped answer, a fixed context), so a full analysis or a check no longer keeps
+  the GPU or the CPU busy for minutes on each movie. gpt-oss, which cannot turn its reasoning off,
+  uses its lowest reasoning level.
+- **Ready for a CPU-only Ollama** — the model stays loaded 30 minutes between a batch's movies, and
+  the AI timeout now defaults to 180 s. A timeout saved earlier keeps its value: raise it in
+  Settings › AI if your Ollama runs on the CPU.
+- **The AI model is picked from a list** — Settings and the setup wizard list the models installed
+  at the Ollama address once it answers (saved and reachable, or just tested). The address alone is
+  enough to test Ollama; the AI waits until a model is chosen.
+
+### Closed issues
+
+#### Fixed
+
+- `bug` gpt-oss answered empty when its reasoning was turned off: it now uses its lowest reasoning
+  level.
+
+#### New
+
+- `feat` Lighter Ollama requests: thinking off, a capped answer, a fixed context.
+- `feat` A CPU-only Ollama works out of the box: the model stays loaded between a batch's movies and
+  the AI timeout defaults to 180 s.
+- `feat` The AI model is picked from the models installed at the Ollama address.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.7.0
+```
+
 # v0.6.0
 
 ## 🎬 Triage 0.6.0 — stop work from the Activity page
