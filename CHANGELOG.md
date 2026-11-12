@@ -3,6 +3,21 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.9.0](https://github.com/sharkhunterr/triage/compare/v0.8.0...v0.9.0) (2026-11-12)
+
+
+### Features
+
+* **ai:** the AI instructions are edited in Settings › AI — prefilled with Triage's default, restorable, the categories and the movie's facts still appended; the default no longer limits the reasoning to two sentences (cap 2000 characters, 1024 tokens) ([9c0bf37](https://github.com/sharkhunterr/triage/commit/9c0bf37821882273176b4058be3733d8294ccdc8))
+* **decisions:** a movie already in place can be moved to another library from its sheet — corrected like a move, from where the check found it ([ace6d61](https://github.com/sharkhunterr/triage/commit/ace6d617e11a0aea621a11a11cebaa95803e6cee))
+
+
+### Bug Fixes
+
+* **ai:** the AI judges on the listed facts only, in a short reasoning, and a reasoning cut by the length cap ends on its last whole sentence — a small model assumed a genre it was not given and ran into the cap mid-word ([8755f04](https://github.com/sharkhunterr/triage/commit/8755f0476e1de181c308d26aa9a25fa33495e704))
+* **ai:** the model writes its reasoning before it chooses — asked for the category first, it committed before reasoning, leaned on the first category and contradicted itself ([259f39d](https://github.com/sharkhunterr/triage/commit/259f39dace160d2c2e2fc01472f9be5a59318382))
+* **ai:** the reasoning cap is 1500 characters — Ollama refuses a grammar repetition of 2000 or more and every AI call answered HTTP 400 ([c93c4d0](https://github.com/sharkhunterr/triage/commit/c93c4d0f082749913e53e2e1cb3e7ba30a1f317e))
+
 ## [0.8.0](https://github.com/sharkhunterr/triage/compare/v0.7.0...v0.8.0) (2026-11-12)
 
 
