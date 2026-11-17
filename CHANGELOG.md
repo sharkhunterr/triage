@@ -3,6 +3,13 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+### [0.9.1](https://github.com/sharkhunterr/triage/compare/v0.9.0...v0.9.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **review:** a movie whose re-analysis was stopped or failed is counted again with the new ones — a superseded decision is no decision ([d9bc57e](https://github.com/sharkhunterr/triage/commit/d9bc57e7505bb33e0216210042249efa550d75ba))
+
 ## [0.9.0](https://github.com/sharkhunterr/triage/compare/v0.8.0...v0.9.0) (2026-11-12)
 
 
