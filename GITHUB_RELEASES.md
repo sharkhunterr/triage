@@ -1,3 +1,25 @@
+# v0.10.0
+
+## 🎬 Triage 0.10.0 — delete the checks you no longer need
+
+### ✨ Features
+
+- **Delete a check** — the Check page has a « Delete this check » button for the check shown. Its gaps,
+  doubts and movies in place are removed after a confirmation, and no movie moves. The moves it already
+  led to stay in the history. A running check is stopped first.
+
+### Closed issues
+
+#### New
+
+- `feat` A finished check can be deleted from the Check page.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.10.0
+```
+
 # v0.9.1
 
 ## 🎬 Triage 0.9.1 — no movie of the intake folder left out of sight
