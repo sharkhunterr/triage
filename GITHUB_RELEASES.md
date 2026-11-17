@@ -8,7 +8,7 @@
 
 - `bug` After a re-analysis that was stopped from Activity or that failed, movies still in the intake
   folder vanished from every count (740 in the folder, 47 shown). They are now counted with the new
-  ones: « Analyze › New only » sends them to be analysed again.
+  ones: « Analyze… › New only » sends them to be analysed again.
 
 ### 🐳 Update
 
