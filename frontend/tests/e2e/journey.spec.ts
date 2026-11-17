@@ -95,6 +95,23 @@ test('a check of a library shows its gaps, moves nothing, and keeps them out of 
   await expect(page.getByText('Spirited Away')).toHaveCount(0)
 })
 
+test('a finished check can be deleted, after a confirmation', async ({ page }) => {
+  await signIn(page)
+  await go(page, 'Check')
+  await page.getByLabel('Folder to scan').selectOption('/movies/Films')
+  await page.getByRole('button', { name: 'Start the scan' }).click()
+  await expect(page.getByText(/^Finished/)).toBeVisible({ timeout: 20_000 })
+  const scans = async () => (await (await page.request.get('/api/v1/scans')).json()).length
+  const before = await scans()
+  await page.getByRole('button', { name: 'Delete this check' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Delete the check of /movies/Films?' })
+  await expect(dialog).toBeVisible()
+  await expectAccessible(page)
+  await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expect(page.getByText('Check deleted')).toBeVisible()
+  await expect.poll(scans).toBe(before - 1)
+})
+
 test('decide all, and analyze with a choice of scope', async ({ page }) => {
   await signIn(page)
   await go(page, 'Review')

@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { FolderSearch, Lock, LockOpen, Square } from 'lucide-react'
+import { FolderSearch, Lock, LockOpen, Square, Trash2 } from 'lucide-react'
 import { Tabs } from 'radix-ui'
 import { type FormEvent, type ReactNode, useState } from 'react'
 import { useIntl } from 'react-intl'
@@ -10,6 +10,7 @@ import type { DecisionSummary } from '../../api/decisions'
 import {
   Button,
   Card,
+  Dialog,
   EmptyState,
   ErrorState,
   Field,
@@ -139,6 +140,51 @@ function StartCheck({ running }: { running?: Scan }) {
   )
 }
 
+/** Delete a finished check: its gaps, doubts and movies in place go; the moves it led to stay. */
+function DeleteCheck({ scan, onDeleted }: { scan: Scan; onDeleted: () => void }) {
+  const t = useT()
+  const toast = useToast()
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const remove = useMutation({
+    mutationFn: () => api(`/scans/${scan.id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      setOpen(false)
+      toast(t('check.deleted'), 'success')
+      onDeleted()
+      return queryClient.invalidateQueries()
+    },
+    onError: (error) => toast(error.message, 'danger'),
+  })
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        aria-label={t('check.delete')}
+        title={t('check.delete')}
+        onClick={() => setOpen(true)}
+      >
+        <Trash2 className="size-4" aria-hidden />
+      </Button>
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t('check.deleteTitle', { folder: scan.root_folder_path })}
+        description={t('check.deleteDescription')}
+        closeLabel={t('common.close')}
+      >
+        <div className="flex justify-end gap-2">
+          <Button onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+          <Button variant="danger" loading={remove.isPending} onClick={() => remove.mutate()}>
+            {t('common.delete')}
+          </Button>
+        </div>
+      </Dialog>
+    </>
+  )
+}
+
 /** Check a library for movies that belong in another one, and settle them like the review queue. */
 export function ScansPage() {
   const t = useT()
@@ -264,24 +310,41 @@ export function ScansPage() {
               {t(scan.respect_locks ? 'check.locksRespected' : 'check.locksIgnored')}
             </p>
           </div>
-          {(scans.data?.length ?? 0) > 1 && (
-            <Select
-              aria-label={t('check.pick')}
-              className="h-9 w-auto max-w-full"
-              value={String(scan.id)}
-              onChange={(e) => go({ scan: Number(e.target.value) })}
-            >
-              {scans.data?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {t('check.option', {
-                    folder: s.root_folder_path,
-                    date: intl.formatDate(s.started_at, { dateStyle: 'short', timeStyle: 'short' }),
-                  })}
-                  {s.waiting ? ` · ${t('check.waiting', { count: s.waiting })}` : ''}
-                </option>
-              ))}
-            </Select>
-          )}
+          <div className="flex max-w-full items-center gap-1">
+            {(scans.data?.length ?? 0) > 1 && (
+              <Select
+                aria-label={t('check.pick')}
+                className="h-9 w-auto max-w-full"
+                value={String(scan.id)}
+                onChange={(e) => go({ scan: Number(e.target.value) })}
+              >
+                {scans.data?.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {t('check.option', {
+                      folder: s.root_folder_path,
+                      date: intl.formatDate(s.started_at, { dateStyle: 'short', timeStyle: 'short' }),
+                    })}
+                    {s.waiting ? ` · ${t('check.waiting', { count: s.waiting })}` : ''}
+                  </option>
+                ))}
+              </Select>
+            )}
+            {scan.state !== 'running' && (
+              <DeleteCheck
+                scan={scan}
+                onDeleted={() =>
+                  setParams(
+                    (p) => {
+                      p.delete('scan')
+                      p.delete('page')
+                      return p
+                    },
+                    { replace: true },
+                  )
+                }
+              />
+            )}
+          </div>
         </div>
         {scan.state === 'running' && (
           // drawn with the theme's colors: a native <progress> takes the device's (green on Android, dark)

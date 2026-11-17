@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, update
 
 from triage.api.decisions import DecisionSummary, summaries
 from triage.api.deps import AdaptersDep, Db, Owner, Settings, State
@@ -191,3 +191,27 @@ async def cancel_scan(scan_id: int, db: Db, state: State) -> Scan:
         state.worker.interrupt(stop.GROUPS["scan"], scan_id)
         await db.refresh(scan)
     return scan
+
+
+# what a check led to — a move done, under way or failed, or corrected since — is history: it stays
+KEPT = (d.MOVING, d.MOVED, d.FAILED, d.CORRECTED)
+
+
+@router.delete("/scans/{scan_id}", status_code=204)
+async def delete_scan(scan_id: int, db: Db) -> None:
+    """Delete a check and what it left undecided (gaps, doubts, movies in place). The moves it led to stay
+    in the history, no longer tied to it. A running check is stopped first; a move under way is awaited."""
+    scan = await _scan(db, scan_id)
+    if scan.state == RUNNING:
+        raise Conflict("Stop the check before deleting it", code="scan_running")
+    moving = await db.scalar(
+        select(func.count()).where(Decision.scan_id == scan.id, Decision.status == d.MOVING)
+    )
+    if moving:
+        raise Conflict("A move of this check is under way", code="scan_move_in_flight")
+    await db.execute(
+        update(Decision).where(Decision.scan_id == scan.id, Decision.status.in_(KEPT)).values(scan_id=None)
+    )
+    await db.execute(delete(Decision).where(Decision.scan_id == scan.id))
+    await db.delete(scan)
+    await db.commit()

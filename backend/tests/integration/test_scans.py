@@ -191,3 +191,31 @@ async def test_a_movie_whose_best_choice_is_its_own_library_is_in_place_even_uns
     page = (await owner.get(f"/api/v1/scans/{scan['id']}/page")).json()
     assert (page["gaps"], page["held"], page["in_place"]) == (0, 0, 1)
     assert (await owner.get("/api/v1/review/count")).json()["check"] == 0
+
+
+async def test_a_finished_check_is_deleted_with_what_it_left_undecided(owner: AsyncClient, env: Env):
+    """A check is deleted from the Check page: its gaps, doubts and movies in place go with it; the moves it
+    led to stay in the history (Constitution I and III), no longer tied to it."""
+    await seed_categories(env)
+    library(env)
+    scan = await run_scan(owner, env)
+    await owner.post("/api/v1/decisions/apply-confident", json={"scan_id": scan["id"]})
+    await env.state.worker.tick()  # Spirited Away moved through the check; Heat in place
+    other = await run_scan(owner, env, folder=ANIMATION_FOLDER)
+
+    response = await owner.delete(f"/api/v1/scans/{scan['id']}")
+    assert response.status_code == 204, response.text
+    assert (await owner.get(f"/api/v1/scans/{scan['id']}")).status_code == 404
+    assert [s["id"] for s in (await owner.get("/api/v1/scans")).json()] == [other["id"]]
+    left = [(x.radarr_id, x.status, x.scan_id) for x in await decisions(env) if x.scan_id != other["id"]]
+    assert left == [(11, "moved", None)]  # Heat's « in place » went with the check
+    assert env.fakes.radarr is not None and env.fakes.radarr.library[11].root_folder_path == ANIMATION_FOLDER
+
+
+async def test_a_running_check_is_stopped_before_it_is_deleted(owner: AsyncClient, env: Env):
+    await seed_categories(env)
+    library(env)
+    started = (await owner.post("/api/v1/scans", json={"root_folder_path": FILMS_FOLDER})).json()
+    response = await owner.delete(f"/api/v1/scans/{started['id']}")
+    assert response.status_code == 409 and response.json()["error"]["code"] == "scan_running"
+    assert (await owner.delete("/api/v1/scans/999")).status_code == 404

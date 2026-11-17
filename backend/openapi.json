@@ -2451,7 +2451,7 @@
   },
   "info": {
     "title": "Triage",
-    "version": "0.9.1"
+    "version": "0.8.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -3905,6 +3905,40 @@
       }
     },
     "/api/v1/scans/{scan_id}": {
+      "delete": {
+        "description": "Delete a check and what it left undecided (gaps, doubts, movies in place). The moves it led to stay\nin the history, no longer tied to it. A running check is stopped first; a move under way is awaited.",
+        "operationId": "delete_scan_api_v1_scans__scan_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scan_id",
+            "required": true,
+            "schema": {
+              "title": "Scan Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Scan",
+        "tags": [
+          "scans"
+        ]
+      },
       "get": {
         "operationId": "get_scan_api_v1_scans__scan_id__get",
         "parameters": [

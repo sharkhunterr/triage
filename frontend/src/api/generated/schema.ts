@@ -642,7 +642,12 @@ export interface paths {
         get: operations["get_scan_api_v1_scans__scan_id__get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete Scan
+         * @description Delete a check and what it left undecided (gaps, doubts, movies in place). The moves it led to stay
+         *     in the history, no longer tied to it. A running check is stopped first; a move under way is awaited.
+         */
+        delete: operations["delete_scan_api_v1_scans__scan_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2760,6 +2765,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ScanOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_scan_api_v1_scans__scan_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scan_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
