@@ -1,3 +1,21 @@
+# v0.9.1
+
+## 🎬 Triage 0.9.1 — no movie of the intake folder left out of sight
+
+### Closed issues
+
+#### Fixed
+
+- `bug` After a re-analysis that was stopped from Activity or that failed, movies still in the intake
+  folder vanished from every count (740 in the folder, 47 shown). They are now counted with the new
+  ones: « Analyze › New only » sends them to be analysed again.
+
+### 🐳 Update
+
+```bash
+docker pull sharkhunterr/triage:0.9.1
+```
+
 # v0.9.0
 
 ## 🎬 Triage 0.9.0 — AI verdicts that follow their reasoning, your own AI instructions, any movie moved by hand
