@@ -110,3 +110,22 @@ async def test_analyze_only_the_new_ones(owner: AsyncClient, env: Env):
     await env.state.worker.tick()
     statuses = sorted(d.status for d in await decisions(env))
     assert statuses == ["corrected", "held", "moved", "proposed"]  # the held one was left alone
+
+
+async def test_a_reanalysis_stopped_halfway_leaves_no_movie_out_of_sight(owner: AsyncClient, env: Env):
+    """A re-analysis supersedes the old decision first: when the new analysis never comes (stopped from
+    the Activity page, or failed), the movie is still in the intake folder with no live decision — it is
+    counted with the new ones and analysed again, instead of vanishing from every count."""
+    await seed_categories(env)
+    add_ambiguous(env)  # held
+    await env.state.worker.tick(poll=True)
+    await owner.post("/api/v1/decisions/reanalyze", json={})  # old decision superseded, analysis queued
+    assert (await owner.post("/api/v1/activity/stop", json={"kind": "classify"})).json() == {"stopped": 1}
+    await env.state.worker.tick(poll=True)
+    assert [d.status for d in await decisions(env)] == ["superseded"]
+
+    counts = (await owner.post("/api/v1/decisions/reanalyze", json={"dry_run": True})).json()
+    assert counts == {"count": 1, "all": 1, "waiting": 0, "new": 1}
+    await owner.post("/api/v1/decisions/reanalyze", json={"scope": "new"})
+    await env.state.worker.tick()
+    assert [d.status for d in await decisions(env)] == ["superseded", "held"]

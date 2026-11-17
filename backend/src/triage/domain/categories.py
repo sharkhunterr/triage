@@ -102,7 +102,11 @@ async def reanalyze(db: AsyncSession, scope: str = "all", *, dry_run: bool = Fal
             )
         )
     )
-    decided = select(Decision.arrival_id).where(Decision.arrival_id.is_not(None))
+    # a superseded decision is no decision: a re-analysis stopped or failed after superseding it left the
+    # movie in the intake folder out of every count (#33)
+    decided = select(Decision.arrival_id).where(
+        Decision.arrival_id.is_not(None), Decision.status != d.SUPERSEDED
+    )
     never = [
         a
         for a in await db.scalars(
