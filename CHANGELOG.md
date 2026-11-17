@@ -3,6 +3,13 @@
 All notable changes to Triage. The release pages (GitLab, GitHub) show the curated notes of
 [GITHUB_RELEASES.md](GITHUB_RELEASES.md); this file is generated from the commits by `npm run release`.
 
+## [0.10.0](https://github.com/sharkhunterr/triage/compare/v0.9.1...v0.10.0) (2026-11-17)
+
+
+### Features
+
+* **check:** a finished check can be deleted with what it left undecided — the moves it led to stay in the history ([188f8a6](https://github.com/sharkhunterr/triage/commit/188f8a6e14fef95f603a66200ab1c72569689b01))
+
 ### [0.9.1](https://github.com/sharkhunterr/triage/compare/v0.9.0...v0.9.1) (2026-11-17)
 
 
